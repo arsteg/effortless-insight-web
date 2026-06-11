@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Home() {
   return (
@@ -6,14 +7,28 @@ export default function Home() {
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-primary-600">
-            EffortlessInsight
-          </div>
+          <Link href="/">
+            <Image
+              src="/logo.png"
+              alt="EffortlessInsight"
+              width={480}
+              height={112}
+              className="h-28"
+              style={{ width: 'auto', height: '112px' }}
+              priority
+            />
+          </Link>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-gray-600 hover:text-gray-900">
+            <Link
+              href="/login"
+              className="px-6 py-2.5 text-base font-semibold border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
+            >
               Login
             </Link>
-            <Link href="/register" className="btn-primary">
+            <Link
+              href="/register"
+              className="px-6 py-2.5 text-base bg-primary text-white font-semibold rounded-lg hover:bg-primary-600 transition-colors"
+            >
               Get Started
             </Link>
           </div>
