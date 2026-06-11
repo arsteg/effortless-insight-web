@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
@@ -25,12 +25,15 @@ import {
   CollaborationPanel,
   ResponseEditor,
 } from '@/components/features/notices'
+import { WorkflowPanel } from '@/components/features/workflow'
 import { useNotice, useDeleteNotice } from '@/hooks/use-notices'
 import {
   useAttachments,
   useDeleteAttachment,
   useDownloadAttachment,
 } from '@/hooks/use-attachments'
+import { useWorkflowPanel } from '@/hooks/use-workflow'
+import { useMembers } from '@/hooks/use-team'
 import { noticesApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import type { NoticeActivity } from '@/components/features/notices/activity-timeline'
@@ -55,8 +58,27 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const deleteAttachmentMutation = useDeleteAttachment(noticeId)
   const downloadAttachmentMutation = useDownloadAttachment(noticeId)
 
-  // Mock activity data - in real app, this would come from API
-  const [activities] = useState<NoticeActivity[]>([])
+  // Workflow data
+  const workflow = useWorkflowPanel(noticeId)
+
+  // Team members for assignment
+  const { data: membersData } = useMembers()
+  const teamMembers = (membersData?.members || []).map((member) => ({
+    id: member.user.id,
+    name: member.user.name,
+    email: member.user.email,
+    role: member.role,
+  }))
+
+  // Convert workflow history to activity format for the activity tab
+  const workflowActivities: NoticeActivity[] = workflow.workflowHistory.map((h) => ({
+    id: h.id,
+    type: h.eventType as NoticeActivity['type'],
+    description: h.description || h.eventType,
+    userId: h.performedById || 'system',
+    userName: h.performedByName || h.performedBySystem || 'System',
+    createdAt: h.createdAt,
+  }))
 
   // Handlers
   const handleDelete = async () => {
@@ -128,20 +150,24 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         onDelete={() => setShowDeleteDialog(true)}
       />
 
-      {/* Workflow Timeline */}
-      {notice && (
-        <Card>
-          <CardContent className="pt-6">
-            <WorkflowTimeline
-              noticeStatus={notice.status}
-              processingStatus={notice.processingStatus}
-            />
-          </CardContent>
-        </Card>
-      )}
+      {/* Main Content with Workflow Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Processing Status Timeline (for notices being processed) */}
+          {notice && (notice.status === 'uploaded' || notice.status === 'processing' || notice.status === 'failed') && (
+            <Card>
+              <CardContent className="pt-6">
+                <WorkflowTimeline
+                  noticeStatus={notice.status}
+                  processingStatus={notice.processingStatus}
+                />
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Tab Navigation */}
-      <Tabs defaultValue="overview">
+          {/* Tab Navigation */}
+          <Tabs defaultValue="overview">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
           <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-6">
             <TabsTrigger value="overview" className="flex-1 md:flex-none">Overview</TabsTrigger>
@@ -190,12 +216,37 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
         <TabsContent value="activity" className="mt-6">
           <ActivityTimeline
-            activities={activities}
-            isLoading={isLoadingNotice}
+            activities={workflowActivities}
+            isLoading={isLoadingNotice || workflow.isLoading}
             emptyMessage="No activity recorded for this notice yet."
           />
         </TabsContent>
       </Tabs>
+        </div>
+
+        {/* Right Column - Workflow Panel */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-6">
+            <WorkflowPanel
+              noticeId={noticeId}
+              workflowInstance={workflow.workflowInstance}
+              workflowProgress={workflow.workflowProgress}
+              workflowHistory={workflow.workflowHistory}
+              slaStatus={workflow.slaStatus}
+              availableTransitions={workflow.availableTransitions}
+              teamMembers={teamMembers}
+              onTransition={workflow.transitionStage}
+              onAssign={workflow.assignWorkflow}
+              onPause={workflow.pauseWorkflow}
+              onResume={workflow.resumeWorkflow}
+              onCancel={workflow.cancelWorkflow}
+              onStartWorkflow={workflow.startWorkflow}
+              isLoading={workflow.isLoading}
+              isTransitioning={workflow.isMutating}
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
