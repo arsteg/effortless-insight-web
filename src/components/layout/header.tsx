@@ -65,7 +65,7 @@ export function Header() {
       {/* Logo */}
       <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
         <Image
-          src="/small-logo.png"
+          src="/small-logo.svg"
           alt="EffortlessInsight"
           width={32}
           height={32}

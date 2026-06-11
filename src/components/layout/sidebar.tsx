@@ -154,7 +154,7 @@ export function Sidebar() {
           <Link href="/dashboard" className="flex items-center gap-2">
             {sidebarCollapsed ? (
               <Image
-                src="/small-logo.png"
+                src="/small-logo.svg"
                 alt="EffortlessInsight"
                 width={32}
                 height={32}
@@ -162,7 +162,7 @@ export function Sidebar() {
               />
             ) : (
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="EffortlessInsight"
                 width={140}
                 height={32}
@@ -190,7 +190,7 @@ export function Sidebar() {
         <div className="flex h-16 items-center border-b px-4 md:hidden">
           <Link href="/dashboard">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="EffortlessInsight"
               width={140}
               height={32}

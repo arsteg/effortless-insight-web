@@ -9,7 +9,7 @@ export default function Home() {
         <nav className="flex items-center justify-between">
           <Link href="/">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="EffortlessInsight"
               width={480}
               height={112}

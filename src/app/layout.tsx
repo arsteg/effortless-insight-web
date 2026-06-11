@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   title: 'EffortlessInsight - GST Notice Management',
   description: 'AI-powered GST Notice Operating System for Indian businesses',
   icons: {
-    icon: '/small-logo.png',
-    apple: '/small-logo.png',
+    icon: '/small-logo.svg',
+    apple: '/small-logo.svg',
   },
 }
 

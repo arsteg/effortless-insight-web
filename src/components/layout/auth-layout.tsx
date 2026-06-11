@@ -41,7 +41,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <header className="flex h-16 items-center px-4 md:px-6 border-b">
         <Link href="/" className="flex items-center gap-3 font-semibold">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="EffortlessInsight"
             width={140}
             height={32}
