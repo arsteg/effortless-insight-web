@@ -53,37 +53,151 @@
   * {
     @apply border-border;
   }
+
+  html {
+    @apply scroll-smooth;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Typography improvements */
+  h1 {
+    @apply text-3xl font-bold tracking-tight leading-tight md:text-4xl lg:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl font-bold tracking-tight leading-snug md:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl font-semibold leading-snug;
+  }
+
+  h4 {
+    @apply text-lg font-semibold leading-snug;
+  }
+
+  p {
+    @apply leading-relaxed;
   }
 }
 
 @layer components {
+  /* Button styles */
   .btn-primary {
-    @apply bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors;
+    @apply bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors;
   }
 
   .btn-secondary {
-    @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors;
+    @apply bg-secondary text-secondary-foreground px-4 py-2 rounded-lg font-medium hover:bg-secondary/80 transition-colors;
   }
 
+  .btn-outline {
+    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2 rounded-lg font-medium transition-colors;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-card text-card-foreground rounded-lg border shadow-sm;
+  }
+
+  .card-hover {
+    @apply hover:shadow-md transition-shadow;
+  }
+
+  /* Risk badges */
   .risk-badge {
-    @apply px-2 py-1 rounded-full text-xs font-medium;
+    @apply px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
   .risk-badge-low {
-    @apply bg-green-100 text-green-800;
+    @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
   }
 
   .risk-badge-medium {
-    @apply bg-yellow-100 text-yellow-800;
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400;
   }
 
   .risk-badge-high {
-    @apply bg-orange-100 text-orange-800;
+    @apply bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400;
   }
 
   .risk-badge-critical {
-    @apply bg-red-100 text-red-800;
+    @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+  }
+
+  /* Status badges */
+  .status-badge {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* Form improvements */
+  .form-section {
+    @apply space-y-4;
+  }
+
+  .form-group {
+    @apply space-y-2;
+  }
+
+  /* Table improvements */
+  .table-container {
+    @apply overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0;
+  }
+
+  /* Page layouts */
+  .page-header {
+    @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold tracking-tight md:text-3xl;
+  }
+
+  .page-description {
+    @apply text-muted-foreground;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 text-center;
+  }
+
+  .empty-state-icon {
+    @apply h-12 w-12 text-muted-foreground/50 mb-4;
+  }
+
+  .empty-state-title {
+    @apply text-lg font-semibold mb-2;
+  }
+
+  .empty-state-description {
+    @apply text-muted-foreground max-w-sm mb-4;
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-in {
+    animation: animate-in 0.2s ease-out;
+  }
+
+  @keyframes animate-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Focus utilities */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
   }
 }

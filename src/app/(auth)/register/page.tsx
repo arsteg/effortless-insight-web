@@ -12,7 +12,7 @@ import { authApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Card,
   CardContent,
@@ -276,19 +276,18 @@ export default function RegisterPage() {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-2 space-y-0">
                   <FormControl>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       id="acceptTerms"
-                      className="h-4 w-4 mt-1 rounded border-gray-300 text-primary focus:ring-primary"
                       checked={field.value}
-                      onChange={field.onChange}
+                      onCheckedChange={field.onChange}
                       disabled={isLoading}
+                      className="mt-0.5"
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <Label
+                    <label
                       htmlFor="acceptTerms"
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-normal cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
                       I agree to the{' '}
                       <Link
@@ -306,7 +305,7 @@ export default function RegisterPage() {
                       >
                         Privacy Policy
                       </Link>
-                    </Label>
+                    </label>
                     <FormMessage />
                   </div>
                 </FormItem>

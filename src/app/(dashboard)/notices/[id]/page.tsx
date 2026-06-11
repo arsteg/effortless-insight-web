@@ -142,14 +142,16 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
       {/* Tab Navigation */}
       <Tabs defaultValue="overview">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
-          <TabsTrigger value="collaboration">Tasks</TabsTrigger>
-          <TabsTrigger value="response">Response</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-6">
+            <TabsTrigger value="overview" className="flex-1 md:flex-none">Overview</TabsTrigger>
+            <TabsTrigger value="analysis" className="flex-1 md:flex-none whitespace-nowrap">AI Analysis</TabsTrigger>
+            <TabsTrigger value="collaboration" className="flex-1 md:flex-none">Tasks</TabsTrigger>
+            <TabsTrigger value="response" className="flex-1 md:flex-none">Response</TabsTrigger>
+            <TabsTrigger value="documents" className="flex-1 md:flex-none">Documents</TabsTrigger>
+            <TabsTrigger value="activity" className="flex-1 md:flex-none">Activity</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="overview" className="mt-6">
           <NoticeOverview notice={notice} isLoading={isLoadingNotice} />

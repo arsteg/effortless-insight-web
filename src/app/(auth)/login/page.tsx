@@ -12,7 +12,7 @@ import { useAuthStore } from '@/stores'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Card,
@@ -193,21 +193,19 @@ function LoginForm() {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center space-x-2 space-y-0">
                   <FormControl>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       id="rememberMe"
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                       checked={field.value}
-                      onChange={field.onChange}
+                      onCheckedChange={field.onChange}
                       disabled={isLoading}
                     />
                   </FormControl>
-                  <Label
+                  <label
                     htmlFor="rememberMe"
-                    className="text-sm font-normal cursor-pointer"
+                    className="text-sm font-normal cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     Remember me for 30 days
-                  </Label>
+                  </label>
                 </FormItem>
               )}
             />
