@@ -1,47 +1,102 @@
 'use client'
 
-import { MessageSquare } from 'lucide-react'
+import { useState } from 'react'
+import { MessageSquare, RefreshCw } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
 import { CommentItem } from './comment-item'
 import { CommentForm } from './comment-form'
 import {
   useComments,
   useCreateComment,
+  useUpdateComment,
   useDeleteComment,
   useReplyToComment,
-} from '@/hooks/use-comments'
+  useAddReaction,
+  useRemoveReaction,
+} from '@/hooks/use-collaboration'
 import { useAuthStore } from '@/stores/auth-store'
+import type { Comment, CommentVisibility } from '@/types/collaboration'
+
+interface MentionUser {
+  id: string
+  name: string
+  username?: string
+  email?: string
+  avatarUrl?: string
+}
 
 interface CommentListProps {
   noticeId: string
+  availableUsers?: MentionUser[]
   showHeader?: boolean
+  className?: string
 }
 
-export function CommentList({ noticeId, showHeader = true }: CommentListProps) {
+export function CommentList({
+  noticeId,
+  availableUsers = [],
+  showHeader = true,
+  className,
+}: CommentListProps) {
   const { user } = useAuthStore()
-  const { data: comments = [], isLoading } = useComments(noticeId)
+  const { data, isLoading, refetch } = useComments(noticeId, {
+    includeReplies: true,
+    sortOrder: 'desc',
+  })
   const createMutation = useCreateComment(noticeId)
+  const updateMutation = useUpdateComment(noticeId)
   const deleteMutation = useDeleteComment(noticeId)
   const replyMutation = useReplyToComment(noticeId)
+  const addReactionMutation = useAddReaction(noticeId)
+  const removeReactionMutation = useRemoveReaction(noticeId)
 
-  const handleCreate = (content: string, isInternal?: boolean) => {
-    createMutation.mutate({ content, isInternal })
+  const comments = data?.comments ?? []
+
+  const handleCreate = (content: string, visibility?: CommentVisibility) => {
+    createMutation.mutate({
+      content,
+      visibility,
+    })
   }
 
-  const handleReply = (parentId: string, content: string, isInternal?: boolean) => {
-    replyMutation.mutate({ parentId, content, isInternal })
+  const handleReply = (
+    parentId: string,
+    content: string,
+    visibility?: CommentVisibility
+  ) => {
+    replyMutation.mutate({
+      commentId: parentId,
+      data: { content, visibility },
+    })
+  }
+
+  const handleEdit = (commentId: string, content: string) => {
+    updateMutation.mutate({
+      commentId,
+      data: { content },
+    })
   }
 
   const handleDelete = (commentId: string) => {
     deleteMutation.mutate(commentId)
   }
 
+  const handleAddReaction = (commentId: string, emoji: string) => {
+    addReactionMutation.mutate({ commentId, emoji })
+  }
+
+  const handleRemoveReaction = (commentId: string, emoji: string) => {
+    removeReactionMutation.mutate({ commentId, emoji })
+  }
+
   // Count total comments including replies
-  const countComments = (items: typeof comments): number => {
+  const countComments = (items: Comment[]): number => {
     return items.reduce((count, comment) => {
+      if (comment.isDeleted) return count
       return count + 1 + (comment.replies ? countComments(comment.replies) : 0)
     }, 0)
   }
@@ -49,13 +104,13 @@ export function CommentList({ noticeId, showHeader = true }: CommentListProps) {
   const totalComments = countComments(comments)
 
   if (isLoading) {
-    return <CommentListSkeleton showHeader={showHeader} />
+    return <CommentListSkeleton showHeader={showHeader} className={className} />
   }
 
   return (
-    <Card>
+    <Card className={className}>
       {showHeader && (
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg">
             Comments
             {totalComments > 0 && (
@@ -64,14 +119,18 @@ export function CommentList({ noticeId, showHeader = true }: CommentListProps) {
               </span>
             )}
           </CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
         </CardHeader>
       )}
       <CardContent className={showHeader ? '' : 'pt-6'}>
         {/* Comment form */}
         <CommentForm
           onSubmit={handleCreate}
+          availableUsers={availableUsers}
           isLoading={createMutation.isPending}
-          showInternalToggle
+          showVisibilityToggle
         />
 
         {comments.length > 0 && (
@@ -85,13 +144,27 @@ export function CommentList({ noticeId, showHeader = true }: CommentListProps) {
                   key={comment.id}
                   comment={comment}
                   currentUserId={user?.id}
+                  availableUsers={availableUsers}
                   onReply={handleReply}
+                  onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onAddReaction={handleAddReaction}
+                  onRemoveReaction={handleRemoveReaction}
                   isReplying={replyMutation.isPending}
+                  isEditing={updateMutation.isPending}
                   isDeleting={deleteMutation.isPending}
                 />
               ))}
             </div>
+
+            {/* Pagination info */}
+            {data?.pagination && data.pagination.totalPages > 1 && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Showing {comments.length} of {data.pagination.totalItems} comments
+                </p>
+              </div>
+            )}
           </>
         )}
 
@@ -108,9 +181,15 @@ export function CommentList({ noticeId, showHeader = true }: CommentListProps) {
   )
 }
 
-function CommentListSkeleton({ showHeader = true }: { showHeader?: boolean }) {
+function CommentListSkeleton({
+  showHeader = true,
+  className,
+}: {
+  showHeader?: boolean
+  className?: string
+}) {
   return (
-    <Card>
+    <Card className={className}>
       {showHeader && (
         <CardHeader>
           <Skeleton className="h-5 w-24" />
@@ -120,13 +199,20 @@ function CommentListSkeleton({ showHeader = true }: { showHeader?: boolean }) {
         <Skeleton className="h-20 w-full" />
         <Separator className="my-6" />
         <div className="space-y-6">
-          {Array.from({ length: 2 }).map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex gap-3">
               <Skeleton className="h-8 w-8 rounded-full shrink-0" />
               <div className="flex-1">
-                <Skeleton className="h-4 w-32" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
                 <Skeleton className="h-4 w-full mt-2" />
                 <Skeleton className="h-4 w-3/4 mt-1" />
+                <div className="flex gap-1 mt-2">
+                  <Skeleton className="h-6 w-12 rounded-full" />
+                  <Skeleton className="h-6 w-12 rounded-full" />
+                </div>
               </div>
             </div>
           ))}
@@ -135,3 +221,7 @@ function CommentListSkeleton({ showHeader = true }: { showHeader?: boolean }) {
     </Card>
   )
 }
+
+export { CommentForm } from './comment-form'
+export { CommentItem } from './comment-item'
+export { MentionAutocomplete, useMentionAutocomplete } from './mention-autocomplete'

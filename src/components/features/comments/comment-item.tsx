@@ -1,7 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, Reply, Trash2, Lock } from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
+import {
+  MoreHorizontal,
+  Reply,
+  Trash2,
+  Lock,
+  Edit,
+  Smile,
+  Check,
+  X,
+} from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -10,40 +20,170 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { formatRelativeTime, getInitials } from '@/lib/utils'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import { CommentForm } from './comment-form'
-import type { Comment } from '@/types'
+import { renderTextWithMentions } from './mention-autocomplete'
+import { ALLOWED_REACTIONS } from '@/types/collaboration'
+import type { Comment, ReactionSummary, CommentVisibility } from '@/types/collaboration'
+
+interface MentionUser {
+  id: string
+  name: string
+  username?: string
+  email?: string
+  avatarUrl?: string
+}
 
 interface CommentItemProps {
   comment: Comment
   currentUserId?: string
-  onReply: (parentId: string, content: string, isInternal?: boolean) => void
+  availableUsers?: MentionUser[]
+  onReply: (parentId: string, content: string, visibility?: CommentVisibility) => void
+  onEdit: (commentId: string, content: string) => void
   onDelete: (commentId: string) => void
+  onAddReaction: (commentId: string, emoji: string) => void
+  onRemoveReaction: (commentId: string, emoji: string) => void
   isReplying?: boolean
+  isEditing?: boolean
   isDeleting?: boolean
   depth?: number
 }
 
 const MAX_DEPTH = 3
 
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+function ReactionButton({
+  reaction,
+  hasReacted,
+  onClick,
+}: {
+  reaction: ReactionSummary
+  hasReacted: boolean
+  onClick: () => void
+}) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={onClick}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs',
+              'border transition-colors',
+              hasReacted
+                ? 'bg-primary/10 border-primary/30 text-primary'
+                : 'bg-muted/50 border-transparent hover:border-border'
+            )}
+          >
+            <span>{reaction.emoji}</span>
+            <span className="font-medium">{reaction.count}</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{reaction.users.slice(0, 5).join(', ')}</p>
+          {reaction.users.length > 5 && (
+            <p className="text-muted-foreground">and {reaction.users.length - 5} more</p>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
 export function CommentItem({
   comment,
   currentUserId,
+  availableUsers = [],
   onReply,
+  onEdit,
   onDelete,
+  onAddReaction,
+  onRemoveReaction,
   isReplying = false,
+  isEditing = false,
   isDeleting = false,
   depth = 0,
 }: CommentItemProps) {
   const [showReplyForm, setShowReplyForm] = useState(false)
-  const isOwnComment = comment.userId === currentUserId
-  const canReply = depth < MAX_DEPTH
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editContent, setEditContent] = useState(comment.content)
+  const [showReactionPicker, setShowReactionPicker] = useState(false)
 
-  const handleReply = (content: string, isInternal?: boolean) => {
-    onReply(comment.id, content, isInternal)
+  const isOwnComment = comment.author.id === currentUserId
+  const canReply = depth < MAX_DEPTH && !comment.isDeleted
+  const canEdit = isOwnComment && !comment.isDeleted
+  const canDelete = isOwnComment && !comment.isDeleted
+
+  const handleReply = (content: string, visibility?: CommentVisibility) => {
+    onReply(comment.id, content, visibility)
     setShowReplyForm(false)
+  }
+
+  const handleEdit = (content: string) => {
+    onEdit(comment.id, content)
+    setIsEditMode(false)
+  }
+
+  const handleReactionClick = (emoji: string) => {
+    const existingReaction = comment.reactions.find((r) => r.emoji === emoji)
+    if (existingReaction?.hasReacted) {
+      onRemoveReaction(comment.id, emoji)
+    } else {
+      onAddReaction(comment.id, emoji)
+    }
+    setShowReactionPicker(false)
+  }
+
+  // Render content with mentions highlighted
+  const renderContent = () => {
+    if (comment.isDeleted) {
+      return <p className="text-sm text-muted-foreground italic">This comment has been deleted.</p>
+    }
+
+    // Use HTML content if available (already sanitized by backend)
+    if (comment.contentHtml) {
+      return (
+        <div
+          className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2"
+          dangerouslySetInnerHTML={{ __html: comment.contentHtml }}
+        />
+      )
+    }
+
+    // Fallback to rendering mentions manually
+    const htmlContent = renderTextWithMentions(comment.content)
+    return (
+      <p
+        className="text-sm whitespace-pre-wrap"
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
+      />
+    )
+  }
+
+  if (comment.isDeleted && (!comment.replies || comment.replies.length === 0)) {
+    return null // Don't render deleted comments without replies
   }
 
   return (
@@ -51,19 +191,21 @@ export function CommentItem({
       <div className="flex gap-3">
         {/* Avatar */}
         <Avatar className="h-8 w-8 shrink-0">
-          <AvatarFallback className="text-xs">
-            {getInitials(comment.userName)}
-          </AvatarFallback>
+          <AvatarImage src={comment.author.avatarUrl} alt={comment.author.name} />
+          <AvatarFallback className="text-xs">{getInitials(comment.author.name)}</AvatarFallback>
         </Avatar>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">{comment.userName}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-sm">{comment.author.name}</span>
             <span className="text-xs text-muted-foreground">
-              {formatRelativeTime(comment.createdAt)}
+              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
             </span>
-            {comment.isInternal && (
+            {comment.isEdited && (
+              <span className="text-xs text-muted-foreground">(edited)</span>
+            )}
+            {comment.visibility === 'internal' && (
               <Badge variant="secondary" className="text-xs gap-1">
                 <Lock className="h-3 w-3" />
                 Internal
@@ -71,45 +213,121 @@ export function CommentItem({
             )}
           </div>
 
-          <p className="text-sm mt-1 whitespace-pre-wrap">{comment.content}</p>
+          {/* Content or Edit Form */}
+          {isEditMode ? (
+            <div className="mt-2">
+              <CommentForm
+                onSubmit={handleEdit}
+                onCancel={() => {
+                  setIsEditMode(false)
+                  setEditContent(comment.content)
+                }}
+                initialContent={comment.content}
+                availableUsers={availableUsers}
+                isLoading={isEditing}
+                placeholder="Edit your comment..."
+                submitLabel="Save"
+                showVisibilityToggle={false}
+                isEditing
+              />
+            </div>
+          ) : (
+            <div className="mt-1">{renderContent()}</div>
+          )}
+
+          {/* Reactions */}
+          {!comment.isDeleted && comment.reactions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1 mt-2">
+              {comment.reactions.map((reaction) => (
+                <ReactionButton
+                  key={reaction.emoji}
+                  reaction={reaction}
+                  hasReacted={reaction.hasReacted}
+                  onClick={() => handleReactionClick(reaction.emoji)}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Actions */}
-          <div className="flex items-center gap-2 mt-2">
-            {canReply && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => setShowReplyForm(!showReplyForm)}
-              >
-                <Reply className="mr-1 h-3 w-3" />
-                Reply
-              </Button>
-            )}
-            {isOwnComment && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+          {!comment.isDeleted && !isEditMode && (
+            <div className="flex items-center gap-1 mt-2">
+              {/* Reaction Picker */}
+              <Popover open={showReactionPicker} onOpenChange={setShowReactionPicker}>
+                <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100"
+                    className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <MoreHorizontal className="h-4 w-4" />
+                    <Smile className="h-3 w-3" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem
-                    onClick={() => onDelete(comment.id)}
-                    className="text-destructive focus:text-destructive"
-                    disabled={isDeleting}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2" align="start">
+                  <div className="flex gap-1">
+                    {ALLOWED_REACTIONS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        onClick={() => handleReactionClick(emoji)}
+                        className="p-1.5 rounded hover:bg-muted text-lg transition-colors"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Reply */}
+              {canReply && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setShowReplyForm(!showReplyForm)}
+                >
+                  <Reply className="mr-1 h-3 w-3" />
+                  Reply
+                </Button>
+              )}
+
+              {/* More Actions */}
+              {(canEdit || canDelete) && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {canEdit && (
+                      <DropdownMenuItem onClick={() => setIsEditMode(true)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                    )}
+                    {canDelete && (
+                      <>
+                        {canEdit && <DropdownMenuSeparator />}
+                        <DropdownMenuItem
+                          onClick={() => onDelete(comment.id)}
+                          className="text-destructive focus:text-destructive"
+                          disabled={isDeleting}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          )}
 
           {/* Reply form */}
           {showReplyForm && (
@@ -117,10 +335,11 @@ export function CommentItem({
               <CommentForm
                 onSubmit={handleReply}
                 onCancel={() => setShowReplyForm(false)}
+                availableUsers={availableUsers}
                 isLoading={isReplying}
                 placeholder="Write a reply..."
                 submitLabel="Reply"
-                showInternalToggle
+                showVisibilityToggle
               />
             </div>
           )}
@@ -133,9 +352,14 @@ export function CommentItem({
                   key={reply.id}
                   comment={reply}
                   currentUserId={currentUserId}
+                  availableUsers={availableUsers}
                   onReply={onReply}
+                  onEdit={onEdit}
                   onDelete={onDelete}
+                  onAddReaction={onAddReaction}
+                  onRemoveReaction={onRemoveReaction}
                   isReplying={isReplying}
+                  isEditing={isEditing}
                   isDeleting={isDeleting}
                   depth={depth + 1}
                 />
