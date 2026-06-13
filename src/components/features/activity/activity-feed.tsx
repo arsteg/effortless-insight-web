@@ -150,26 +150,26 @@ function ActivityItem({ activity }: { activity: Activity }) {
           )}
           <span className="text-sm text-muted-foreground">{activity.message}</span>
         </div>
-        {activity.data.preview && (
+        {Boolean(activity.data.preview) && (
           <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
             {String(activity.data.preview)}
           </p>
         )}
-        {activity.data.taskTitle && (
+        {Boolean(activity.data.taskTitle) && (
           <p className="mt-1 text-sm text-muted-foreground">
             &quot;{String(activity.data.taskTitle)}&quot;
           </p>
         )}
-        {activity.data.duration && (
+        {Boolean(activity.data.duration) && (
           <p className="mt-1 text-xs text-muted-foreground">
             Completed in {String(activity.data.duration)}
           </p>
         )}
-        {activity.data.filename && (
+        {Boolean(activity.data.filename) && (
           <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
             <FilePlus className="h-3 w-3" />
             <span>{String(activity.data.filename)}</span>
-            {activity.data.size && (
+            {Boolean(activity.data.size) && (
               <span className="text-xs">
                 ({(Number(activity.data.size) / 1024 / 1024).toFixed(2)} MB)
               </span>

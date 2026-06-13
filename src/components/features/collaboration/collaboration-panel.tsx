@@ -104,7 +104,7 @@ export function CollaborationPanel({
 
   return (
     <div className={cn('', className)}>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
         <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 h-auto">
           {tabs.map((tab) => (
             <TabsTrigger

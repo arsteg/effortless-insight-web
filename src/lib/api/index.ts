@@ -7,6 +7,8 @@ export { commentsApi } from './comments'
 export { dashboardApi } from './dashboard'
 export { usersApi } from './users'
 export { reportsApi } from './reports'
+export { notificationsApi } from './notifications'
+export { billingApi, formatAmount, getStatusBadgeVariant, getInvoiceStatusBadgeVariant, loadRazorpayScript } from './billing'
 
 // Unified API object for convenience
 export const api = {
@@ -18,4 +20,6 @@ export const api = {
   dashboard: () => import('./dashboard').then((m) => m.dashboardApi),
   users: () => import('./users').then((m) => m.usersApi),
   reports: () => import('./reports').then((m) => m.reportsApi),
+  notifications: () => import('./notifications').then((m) => m.notificationsApi),
+  billing: () => import('./billing').then((m) => m.billingApi),
 }

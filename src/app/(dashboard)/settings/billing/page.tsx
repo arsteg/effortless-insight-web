@@ -1,40 +1,130 @@
 'use client'
 
-import { ArrowLeft, CreditCard, Calendar, CheckCircle2 } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useOrganization } from '@/hooks/use-settings'
-
-function formatDate(dateString?: string): string {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
-function getStatusVariant(status?: string) {
-  switch (status) {
-    case 'active':
-      return 'default'
-    case 'trial':
-      return 'secondary'
-    case 'suspended':
-    case 'cancelled':
-      return 'destructive'
-    default:
-      return 'outline'
-  }
-}
+import {
+  CurrentPlanCard,
+  UsageWidget,
+  BillingHistory,
+  PaymentMethods,
+  ChangePlanModal,
+  CancelSubscriptionModal,
+  AddSeatsModal,
+} from '@/components/features/billing'
+import {
+  useCurrentSubscription,
+  useUsage,
+  useInvoices,
+  usePlans,
+  useChangePlan,
+  useCancelSubscription,
+  useReactivateSubscription,
+  useAddSeats,
+  useDownloadInvoice,
+  usePaymentMethods,
+  useSetDefaultPaymentMethod,
+  useDeletePaymentMethod,
+} from '@/hooks/use-billing'
+import type { BillingCycle } from '@/types/billing'
 
 export default function BillingSettingsPage() {
-  const { data: organization, isLoading } = useOrganization()
-  const subscription = organization?.subscription
+  const router = useRouter()
+  const [showChangePlanModal, setShowChangePlanModal] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showAddSeatsModal, setShowAddSeatsModal] = useState(false)
+  const [invoicePage, setInvoicePage] = useState(1)
+
+  // Queries
+  const { data: subscription, isLoading: isLoadingSubscription } = useCurrentSubscription()
+  const { data: usage, isLoading: isLoadingUsage } = useUsage()
+  const { data: invoicesData, isLoading: isLoadingInvoices } = useInvoices(invoicePage, 10)
+  const { data: plans, isLoading: isLoadingPlans } = usePlans()
+  const { data: paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
+
+  // Mutations
+  const changePlan = useChangePlan()
+  const cancelSubscription = useCancelSubscription()
+  const reactivateSubscription = useReactivateSubscription()
+  const addSeats = useAddSeats()
+  const downloadInvoice = useDownloadInvoice()
+  const setDefaultPaymentMethod = useSetDefaultPaymentMethod()
+  const deletePaymentMethod = useDeletePaymentMethod()
+
+  const isLoading = isLoadingSubscription || isLoadingPlans
+
+  const handleUpgrade = () => {
+    if (subscription) {
+      setShowChangePlanModal(true)
+    } else {
+      router.push('/checkout')
+    }
+  }
+
+  const handleManageBilling = () => {
+    setShowAddSeatsModal(true)
+  }
+
+  const handleCancel = () => {
+    setShowCancelModal(true)
+  }
+
+  const handleReactivate = () => {
+    reactivateSubscription.mutate()
+  }
+
+  const handleChangePlanConfirm = (
+    planCode: string,
+    billingCycle: BillingCycle,
+    immediate: boolean
+  ) => {
+    changePlan.mutate(
+      {
+        newPlanCode: planCode,
+        billingCycle,
+        effectiveDate: immediate ? 'immediate' : 'period_end',
+      },
+      {
+        onSuccess: () => {
+          setShowChangePlanModal(false)
+        },
+      }
+    )
+  }
+
+  const handleCancelConfirm = (
+    reason: string,
+    feedback?: string,
+    immediate?: boolean
+  ) => {
+    cancelSubscription.mutate(
+      { reason, feedback, cancelImmediately: immediate ?? false },
+      {
+        onSuccess: () => {
+          setShowCancelModal(false)
+        },
+      }
+    )
+  }
+
+  const handleAddSeatsConfirm = (quantity: number) => {
+    addSeats.mutate(
+      { additionalSeats: quantity },
+      {
+        onSuccess: () => {
+          setShowAddSeatsModal(false)
+        },
+      }
+    )
+  }
+
+  const handleDownloadInvoice = (invoiceId: string) => {
+    downloadInvoice.mutate(invoiceId)
+  }
 
   if (isLoading) {
     return (
@@ -43,14 +133,8 @@ export default function BillingSettingsPage() {
           <Skeleton className="h-10 w-10" />
           <Skeleton className="h-8 w-48" />
         </div>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-32" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-32 w-full" />
-          </CardContent>
-        </Card>
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-48 w-full" />
       </div>
     )
   }
@@ -73,117 +157,73 @@ export default function BillingSettingsPage() {
       </div>
 
       {/* Current Plan */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Current Plan
-          </CardTitle>
-          <CardDescription>
-            Your current subscription details.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border p-6">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-2xl font-bold">
-                    {subscription?.planName || 'Free Plan'}
-                  </h3>
-                  <Badge variant={getStatusVariant(subscription?.status)}>
-                    {subscription?.status || 'No subscription'}
-                  </Badge>
-                </div>
+      <CurrentPlanCard
+        subscription={subscription}
+        isLoading={isLoadingSubscription}
+        onUpgrade={handleUpgrade}
+        onManage={handleManageBilling}
+        onCancel={handleCancel}
+        onReactivate={handleReactivate}
+      />
 
-                {subscription?.status === 'trial' && subscription.trialEndsAt && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    Trial ends: {formatDate(subscription.trialEndsAt)}
-                  </div>
-                )}
-
-                {subscription?.status === 'active' && subscription.currentPeriodEnd && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    Next billing: {formatDate(subscription.currentPeriodEnd)}
-                  </div>
-                )}
-              </div>
-
-              <Button variant="outline">Change Plan</Button>
-            </div>
-
-            {/* Plan Features */}
-            <div className="mt-6 border-t pt-6">
-              <h4 className="font-medium mb-4">Plan Features</h4>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {[
-                  'Unlimited notices',
-                  'AI-powered analysis',
-                  'Team collaboration',
-                  'Document management',
-                  'Email notifications',
-                  'Priority support',
-                ].map((feature) => (
-                  <div key={feature} className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    {feature}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Usage */}
+      <UsageWidget usage={usage} isLoading={isLoadingUsage} />
 
       {/* Payment Methods */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Payment Methods</CardTitle>
-              <CardDescription>
-                Manage your payment methods for subscription billing.
-              </CardDescription>
-            </div>
-            <Button variant="outline" size="sm">
-              Add Payment Method
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <CreditCard className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground">
-              No payment methods added yet.
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Payment method management will be available in a future update.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <PaymentMethods
+        paymentMethods={paymentMethods}
+        isLoading={isLoadingPaymentMethods}
+        onSetDefault={(id) => setDefaultPaymentMethod.mutate(id)}
+        onDelete={(id) => deletePaymentMethod.mutate(id)}
+        isSettingDefault={setDefaultPaymentMethod.isPending}
+        isDeleting={deletePaymentMethod.isPending}
+      />
 
       {/* Billing History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Billing History</CardTitle>
-          <CardDescription>
-            View and download your past invoices.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <p className="text-muted-foreground">
-              No billing history available.
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Invoices will appear here once you start a paid subscription.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <BillingHistory
+        invoices={invoicesData?.invoices}
+        isLoading={isLoadingInvoices}
+        page={invoicePage}
+        totalPages={invoicesData?.pagination.totalPages}
+        onPageChange={setInvoicePage}
+        onDownload={handleDownloadInvoice}
+        isDownloading={downloadInvoice.isPending}
+      />
+
+      {/* Change Plan Modal */}
+      {subscription && plans && (
+        <ChangePlanModal
+          open={showChangePlanModal}
+          onOpenChange={setShowChangePlanModal}
+          plans={plans}
+          currentSubscription={subscription}
+          onConfirm={handleChangePlanConfirm}
+          isLoading={changePlan.isPending}
+        />
+      )}
+
+      {/* Cancel Subscription Modal */}
+      {subscription && (
+        <CancelSubscriptionModal
+          open={showCancelModal}
+          onOpenChange={setShowCancelModal}
+          subscription={subscription}
+          onConfirm={handleCancelConfirm}
+          isLoading={cancelSubscription.isPending}
+        />
+      )}
+
+      {/* Add Seats Modal */}
+      {subscription && (
+        <AddSeatsModal
+          open={showAddSeatsModal}
+          onOpenChange={setShowAddSeatsModal}
+          subscription={subscription}
+          pricePerSeat={1000}
+          onConfirm={handleAddSeatsConfirm}
+          isLoading={addSeats.isPending}
+        />
+      )}
     </div>
   )
 }

@@ -4,7 +4,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
-  Bell,
   ChevronDown,
   LogOut,
   Menu,
@@ -17,6 +16,7 @@ import { cn, getInitials } from '@/lib/utils'
 import { useAuthStore, useOrganizationStore, useAppStore } from '@/stores'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { NotificationCenter } from '@/components/features/notifications'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function Header() {
@@ -37,7 +36,7 @@ export function Header() {
     switchOrganization,
     isLoading: orgLoading,
   } = useOrganizationStore()
-  const { toggleSidebar, notificationCount } = useAppStore()
+  const { toggleSidebar } = useAppStore()
 
   const handleLogout = async () => {
     await logout()
@@ -118,18 +117,7 @@ export function Header() {
       <div className="flex-1" />
 
       {/* Notifications */}
-      <Button variant="ghost" size="icon" className="relative">
-        <Bell className="h-5 w-5" />
-        {notificationCount > 0 && (
-          <Badge
-            variant="destructive"
-            className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs"
-          >
-            {notificationCount > 9 ? '9+' : notificationCount}
-          </Badge>
-        )}
-        <span className="sr-only">Notifications</span>
-      </Button>
+      <NotificationCenter />
 
       {/* User Menu */}
       <DropdownMenu>
