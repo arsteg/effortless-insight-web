@@ -22,12 +22,16 @@ export function setTokens(accessToken: string, refreshToken: string): void {
   if (typeof window === 'undefined') return
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
   localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+  // Also set cookie for middleware (server-side) auth checks
+  document.cookie = `${ACCESS_TOKEN_KEY}=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
 }
 
 export function clearTokens(): void {
   if (typeof window === 'undefined') return
   localStorage.removeItem(ACCESS_TOKEN_KEY)
   localStorage.removeItem(REFRESH_TOKEN_KEY)
+  // Also clear the cookie
+  document.cookie = `${ACCESS_TOKEN_KEY}=; path=/; max-age=0`
 }
 
 // Create axios instance
