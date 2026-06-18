@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
 import { useAuthStore } from '@/stores'
 import { Toaster } from '@/components/ui/toaster'
@@ -14,7 +14,8 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   const router = useRouter()
-  const { isAuthenticated, isInitialized, initialize } = useAuthStore()
+  const pathname = usePathname()
+  const { user, isAuthenticated, isInitialized, initialize } = useAuthStore()
 
   // Initialize auth on mount
   useEffect(() => {
@@ -23,16 +24,39 @@ export function AuthLayout({ children }: AuthLayoutProps) {
     }
   }, [isInitialized, initialize])
 
-  // Redirect to dashboard if already authenticated
+  // Redirect authenticated users appropriately
   useEffect(() => {
-    if (isInitialized && isAuthenticated) {
-      router.push('/dashboard')
-    }
-  }, [isInitialized, isAuthenticated, router])
+    if (isInitialized && isAuthenticated && user) {
+      const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
 
-  // Don't render auth pages if authenticated
-  if (isInitialized && isAuthenticated) {
-    return null
+      // If on onboarding page and has organization, redirect to dashboard
+      if (pathname === '/onboarding' && hasOrganization) {
+        router.push('/dashboard')
+        return
+      }
+
+      // If on other auth pages (login, register, etc.) and authenticated
+      if (pathname !== '/onboarding') {
+        // Redirect to onboarding if no organization, otherwise to dashboard
+        if (!hasOrganization) {
+          router.push('/onboarding')
+        } else {
+          router.push('/dashboard')
+        }
+      }
+    }
+  }, [isInitialized, isAuthenticated, user, pathname, router])
+
+  // Don't render auth pages (except onboarding) if authenticated with organization
+  if (isInitialized && isAuthenticated && user) {
+    const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
+    if (pathname !== '/onboarding' && hasOrganization) {
+      return null
+    }
+    // Allow onboarding page for authenticated users without organization
+    if (pathname === '/onboarding' && !hasOrganization) {
+      // Continue rendering
+    }
   }
 
   return (

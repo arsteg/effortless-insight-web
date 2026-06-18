@@ -95,6 +95,11 @@ export interface CreateOrganizationRequest {
   annualTurnoverRange?: string
 }
 
+export interface CreateOrganizationResponse extends Organization {
+  accessToken?: string
+  expiresIn?: number
+}
+
 // Update organization
 export interface UpdateOrganizationRequest {
   name?: string

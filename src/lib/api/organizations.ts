@@ -1,9 +1,10 @@
-import { apiClient } from './client'
+import { apiClient, updateAccessToken } from './client'
 import type {
   ApiResponse,
   Organization,
   OrganizationListResponse,
   CreateOrganizationRequest,
+  CreateOrganizationResponse,
   UpdateOrganizationRequest,
   Gstin,
   AddGstinRequest,
@@ -29,9 +30,16 @@ export const organizationsApi = {
     return response.data.data
   },
 
-  async create(data: CreateOrganizationRequest): Promise<Organization> {
-    const response = await apiClient.post<ApiResponse<Organization>>('/organizations', data)
-    return response.data.data
+  async create(data: CreateOrganizationRequest): Promise<CreateOrganizationResponse> {
+    const response = await apiClient.post<ApiResponse<CreateOrganizationResponse>>('/organizations', data)
+    const result = response.data.data
+
+    // Update the access token if a new one is returned (includes org_id claim)
+    if (result.accessToken) {
+      updateAccessToken(result.accessToken)
+    }
+
+    return result
   },
 
   async update(orgId: string, data: UpdateOrganizationRequest): Promise<Organization> {

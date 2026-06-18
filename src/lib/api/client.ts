@@ -26,6 +26,13 @@ export function setTokens(accessToken: string, refreshToken: string): void {
   document.cookie = `${ACCESS_TOKEN_KEY}=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
 }
 
+export function updateAccessToken(accessToken: string): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+  // Also update cookie for middleware (server-side) auth checks
+  document.cookie = `${ACCESS_TOKEN_KEY}=${accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+}
+
 export function clearTokens(): void {
   if (typeof window === 'undefined') return
   localStorage.removeItem(ACCESS_TOKEN_KEY)

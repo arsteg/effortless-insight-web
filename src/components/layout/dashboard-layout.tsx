@@ -32,12 +32,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [isAuthenticated, organizations.length, fetchOrganizations])
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated, or to onboarding if no organization
   useEffect(() => {
-    if (isInitialized && !isAuthenticated) {
-      router.push('/login')
+    if (isInitialized) {
+      if (!isAuthenticated) {
+        router.push('/login')
+      } else if (user) {
+        const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
+        if (!hasOrganization) {
+          router.push('/onboarding')
+        }
+      }
     }
-  }, [isInitialized, isAuthenticated, router])
+  }, [isInitialized, isAuthenticated, user, router])
 
   // Show loading state while initializing
   if (!isInitialized) {
@@ -53,6 +60,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Don't render dashboard if not authenticated
   if (!isAuthenticated) {
+    return null
+  }
+
+  // Don't render dashboard if no organization (redirect to onboarding)
+  const hasOrganization = user?.organization || (user?.organizations && user.organizations.length > 0)
+  if (!hasOrganization) {
     return null
   }
 
