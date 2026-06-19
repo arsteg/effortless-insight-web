@@ -63,14 +63,24 @@ export const noticesApi = {
   },
 
   // Upload
-  async upload(formData: FormData): Promise<NoticeUploadResponse> {
+  async upload(
+    formData: FormData,
+    onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
+  ): Promise<NoticeUploadResponse> {
     const response = await apiClient.post<ApiResponse<NoticeUploadResponse>>(
       '/notices/upload',
       formData,
       {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        // Content-Type is handled by the request interceptor for FormData
+        timeout: 300000, // 5 minutes for large file uploads
+        onUploadProgress: onUploadProgress
+          ? (progressEvent) => {
+              onUploadProgress({
+                loaded: progressEvent.loaded,
+                total: progressEvent.total,
+              })
+            }
+          : undefined,
       }
     )
     return response.data.data
@@ -113,14 +123,25 @@ export const noticesApi = {
     return response.data.data
   },
 
-  async addAttachment(noticeId: string, formData: FormData): Promise<Attachment> {
+  async addAttachment(
+    noticeId: string,
+    formData: FormData,
+    onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
+  ): Promise<Attachment> {
     const response = await apiClient.post<ApiResponse<Attachment>>(
       `/notices/${noticeId}/attachments`,
       formData,
       {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        // Content-Type is handled by the request interceptor for FormData
+        timeout: 300000, // 5 minutes for large file uploads
+        onUploadProgress: onUploadProgress
+          ? (progressEvent) => {
+              onUploadProgress({
+                loaded: progressEvent.loaded,
+                total: progressEvent.total,
+              })
+            }
+          : undefined,
       }
     )
     return response.data.data

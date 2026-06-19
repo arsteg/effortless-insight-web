@@ -20,30 +20,30 @@ export function useUploadNotice(options?: UseUploadNoticeOptions) {
   const mutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData()
-      formData.append('file', file)
+      // Field name must match the backend property name (case-insensitive but matching is safer)
+      formData.append('File', file)
 
-      // Simulate progress updates during upload
-      // In a real implementation, you'd use axios onUploadProgress
+      // Reset progress at start
       setUploadProgress(0)
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval)
-            return prev
-          }
-          return prev + 10
-        })
-      }, 200)
 
-      try {
-        const response = await noticesApi.upload(formData)
-        clearInterval(progressInterval)
-        setUploadProgress(100)
-        return response
-      } catch (error) {
-        clearInterval(progressInterval)
-        throw error
-      }
+      // Use real upload progress tracking via axios onUploadProgress
+      const response = await noticesApi.upload(formData, (progressEvent) => {
+        if (progressEvent.total) {
+          // Calculate percentage (cap at 95% until server responds)
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 95) / progressEvent.total
+          )
+          setUploadProgress(percentCompleted)
+        } else {
+          // If total is unknown, show indeterminate progress
+          // Increment slowly to show activity
+          setUploadProgress((prev) => Math.min(prev + 1, 90))
+        }
+      })
+
+      // Set to 100% when upload completes and server responds
+      setUploadProgress(100)
+      return response
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: noticeKeys.lists() })
