@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
@@ -39,13 +39,13 @@ import { useToast } from '@/hooks/use-toast'
 import type { NoticeActivity } from '@/components/features/notices/activity-timeline'
 
 interface NoticeDetailPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const noticeId = params.id
+  const { id: noticeId } = use(params)
 
   // State
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
