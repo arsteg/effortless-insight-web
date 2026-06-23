@@ -1,14 +1,23 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Building2, Loader2, MapPin, Plus } from 'lucide-react'
+import { ArrowLeft, Building2, Loader2, MapPin, Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Form,
   FormControl,
@@ -27,7 +36,8 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useOrganization, useUpdateOrganization } from '@/hooks/use-settings'
+import { Checkbox } from '@/components/ui/checkbox'
+import { useOrganization, useUpdateOrganization, useAddGstin, useRemoveGstin, useValidateGstin } from '@/hooks/use-settings'
 
 const organizationFormSchema = z.object({
   name: z.string().min(2, 'Organization name must be at least 2 characters'),
@@ -41,6 +51,15 @@ const organizationFormSchema = z.object({
 })
 
 type OrganizationFormValues = z.infer<typeof organizationFormSchema>
+
+const gstinFormSchema = z.object({
+  gstin: z.string()
+    .length(15, 'GSTIN must be exactly 15 characters')
+    .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, 'Invalid GSTIN format'),
+  isPrimary: z.boolean().optional(),
+})
+
+type GstinFormValues = z.infer<typeof gstinFormSchema>
 
 const industryOptions = [
   'Manufacturing',
@@ -59,6 +78,11 @@ const industryOptions = [
 export default function OrganizationSettingsPage() {
   const { data: organization, isLoading } = useOrganization()
   const updateMutation = useUpdateOrganization()
+  const addGstinMutation = useAddGstin()
+  const removeGstinMutation = useRemoveGstin()
+  const validateGstinMutation = useValidateGstin()
+
+  const [showAddGstinDialog, setShowAddGstinDialog] = useState(false)
 
   const form = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationFormSchema),
@@ -88,6 +112,29 @@ export default function OrganizationSettingsPage() {
 
   const onSubmit = (data: OrganizationFormValues) => {
     updateMutation.mutate(data)
+  }
+
+  const gstinForm = useForm<GstinFormValues>({
+    resolver: zodResolver(gstinFormSchema),
+    defaultValues: {
+      gstin: '',
+      isPrimary: false,
+    },
+  })
+
+  const onGstinSubmit = async (data: GstinFormValues) => {
+    addGstinMutation.mutate(data, {
+      onSuccess: () => {
+        setShowAddGstinDialog(false)
+        gstinForm.reset()
+      },
+    })
+  }
+
+  const handleRemoveGstin = (gstinId: string) => {
+    if (confirm('Are you sure you want to remove this GSTIN?')) {
+      removeGstinMutation.mutate(gstinId)
+    }
   }
 
   if (isLoading) {
@@ -296,7 +343,7 @@ export default function OrganizationSettingsPage() {
                 GST identification numbers linked to this organization.
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setShowAddGstinDialog(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add GSTIN
             </Button>
@@ -326,11 +373,24 @@ export default function OrganizationSettingsPage() {
                       {gstin.tradeName && <span>• {gstin.tradeName}</span>}
                     </div>
                   </div>
-                  <Badge
-                    variant={gstin.status === 'active' ? 'default' : 'secondary'}
-                  >
-                    {gstin.status}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={gstin.status === 'active' ? 'default' : 'secondary'}
+                    >
+                      {gstin.status}
+                    </Badge>
+                    {!gstin.isPrimary && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleRemoveGstin(gstin.id)}
+                        disabled={removeGstinMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -341,6 +401,76 @@ export default function OrganizationSettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add GSTIN Dialog */}
+      <Dialog open={showAddGstinDialog} onOpenChange={setShowAddGstinDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add GSTIN</DialogTitle>
+            <DialogDescription>
+              Enter your GST Identification Number to link it to your organization.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...gstinForm}>
+            <form onSubmit={gstinForm.handleSubmit(onGstinSubmit)} className="space-y-4">
+              <FormField
+                control={gstinForm.control}
+                name="gstin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>GSTIN</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="22AAAAA0000A1Z5"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        maxLength={15}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={gstinForm.control}
+                name="isPrimary"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Set as primary GSTIN</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAddGstinDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={addGstinMutation.isPending}>
+                  {addGstinMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    'Add GSTIN'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

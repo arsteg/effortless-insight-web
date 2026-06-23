@@ -6,7 +6,52 @@ import type {
   UpdateTaskRequest,
 } from '@/types'
 
+export interface MyTasksParams {
+  status?: string
+  priority?: string
+  dueWithin?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface MyTasksResponse {
+  items: MyTask[]
+  totalCount: number
+  page: number
+  pageSize: number
+  totalPages: number
+  summary: {
+    pending: number
+    inProgress: number
+    completed: number
+    overdue: number
+  }
+}
+
+export interface MyTask {
+  id: string
+  title: string
+  description: string | null
+  status: string
+  priority: string
+  dueDate: string | null
+  completedAt: string | null
+  createdAt: string
+  noticeId: string
+  noticeTitle: string
+  noticeNumber: string
+  noticeType: string
+}
+
 export const tasksApi = {
+  // Get my tasks across all notices
+  async getMyTasks(params?: MyTasksParams): Promise<MyTasksResponse> {
+    const response = await apiClient.get<ApiResponse<MyTasksResponse>>(
+      '/tasks/my',
+      { params }
+    )
+    return response.data.data
+  },
   // Get tasks for a notice
   async getByNotice(noticeId: string): Promise<Task[]> {
     const response = await apiClient.get<ApiResponse<Task[]>>(

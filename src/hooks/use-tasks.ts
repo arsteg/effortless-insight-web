@@ -1,15 +1,24 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { tasksApi } from '@/lib/api'
+import { tasksApi, type MyTasksParams, type MyTasksResponse } from '@/lib/api/tasks'
 import { useToast } from '@/hooks/use-toast'
 import type { Task, CreateTaskRequest, UpdateTaskRequest } from '@/types'
 
 // Query keys
 export const taskKeys = {
   all: ['tasks'] as const,
+  myTasks: (params?: MyTasksParams) => [...taskKeys.all, 'my', params] as const,
   lists: () => [...taskKeys.all, 'list'] as const,
   list: (noticeId: string) => [...taskKeys.lists(), noticeId] as const,
+}
+
+// Get my tasks across all notices
+export function useMyTasks(params?: MyTasksParams) {
+  return useQuery<MyTasksResponse>({
+    queryKey: taskKeys.myTasks(params),
+    queryFn: () => tasksApi.getMyTasks(params),
+  })
 }
 
 // Get tasks for a notice

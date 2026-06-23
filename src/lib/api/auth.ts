@@ -18,6 +18,15 @@ import type {
   TwoFactorRequiredResponse,
 } from '@/types'
 
+export interface TwoFactorSetupResponse {
+  secret: string
+  qrCodeUri: string
+}
+
+export interface TwoFactorVerifySetupResponse {
+  recoveryCodes: string[]
+}
+
 export const authApi = {
   // Registration & verification
   async register(data: RegisterRequest): Promise<RegisterResponse> {
@@ -99,5 +108,23 @@ export const authApi = {
 
   async revokeSession(sessionId: string): Promise<void> {
     await apiClient.delete(`/auth/sessions/${sessionId}`)
+  },
+
+  // Two-factor authentication
+  async setup2fa(): Promise<TwoFactorSetupResponse> {
+    const response = await apiClient.post<ApiResponse<TwoFactorSetupResponse>>('/auth/2fa/setup')
+    return response.data.data
+  },
+
+  async verifySetup2fa(code: string): Promise<TwoFactorVerifySetupResponse> {
+    const response = await apiClient.post<ApiResponse<TwoFactorVerifySetupResponse>>(
+      '/auth/2fa/verify-setup',
+      { code }
+    )
+    return response.data.data
+  },
+
+  async disable2fa(password: string): Promise<void> {
+    await apiClient.delete('/auth/2fa', { data: { password } })
   },
 }

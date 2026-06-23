@@ -224,3 +224,128 @@ export function useChangePassword() {
     },
   })
 }
+
+// GSTIN hooks
+export function useAddGstin(orgId?: string) {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+  const { currentOrganization } = useOrganizationStore()
+  const organizationId = orgId || currentOrganization?.id
+
+  return useMutation({
+    mutationFn: (data: { gstin: string; isPrimary?: boolean }) =>
+      organizationsApi.addGstin(organizationId!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.organization(organizationId!) })
+      toast({
+        title: 'GSTIN added',
+        description: 'The GSTIN has been added to your organization.',
+        variant: 'success',
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to add GSTIN',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useRemoveGstin(orgId?: string) {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+  const { currentOrganization } = useOrganizationStore()
+  const organizationId = orgId || currentOrganization?.id
+
+  return useMutation({
+    mutationFn: (gstinId: string) => organizationsApi.removeGstin(organizationId!, gstinId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.organization(organizationId!) })
+      toast({
+        title: 'GSTIN removed',
+        description: 'The GSTIN has been removed from your organization.',
+        variant: 'success',
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to remove GSTIN',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useValidateGstin() {
+  return useMutation({
+    mutationFn: (gstin: string) => organizationsApi.validateGstin(gstin),
+  })
+}
+
+// 2FA hooks
+export function useSetup2fa() {
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: () => authApi.setup2fa(),
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to setup 2FA',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useVerifySetup2fa() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+  const { setUser } = useAuthStore()
+
+  return useMutation({
+    mutationFn: (code: string) => authApi.verifySetup2fa(code),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.profile() })
+      toast({
+        title: '2FA Enabled',
+        description: 'Two-factor authentication has been enabled for your account.',
+        variant: 'success',
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to verify code',
+        description: error.message || 'Invalid code. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useDisable2fa() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (password: string) => authApi.disable2fa(password),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.profile() })
+      toast({
+        title: '2FA Disabled',
+        description: 'Two-factor authentication has been disabled for your account.',
+        variant: 'success',
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to disable 2FA',
+        description: error.message || 'Invalid password. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}
