@@ -183,3 +183,45 @@ export function useBulkDeleteNotices() {
     },
   })
 }
+
+// Export notices mutation
+export function useExportNotices() {
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async ({
+      filters,
+      format,
+    }: {
+      filters?: NoticeFilters
+      format: 'csv' | 'xlsx' | 'pdf'
+    }) => {
+      const blob = await noticesApi.export({ ...filters, format })
+      return { blob, format }
+    },
+    onSuccess: ({ blob, format }) => {
+      // Create download link
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `notices-export-${new Date().toISOString().split('T')[0]}.${format}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast({
+        title: 'Export successful',
+        description: `Notices have been exported to ${format.toUpperCase()}.`,
+        variant: 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Export failed',
+        description: 'Failed to export notices. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}

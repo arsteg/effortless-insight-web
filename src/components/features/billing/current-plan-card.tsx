@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, Clock, CreditCard, AlertCircle } from 'lucide-react'
+import { Calendar, Clock, CreditCard, AlertCircle, PauseCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +16,8 @@ interface CurrentPlanCardProps {
   onManage?: () => void
   onCancel?: () => void
   onReactivate?: () => void
+  onPause?: () => void
+  onResume?: () => void
 }
 
 export function CurrentPlanCard({
@@ -25,6 +27,8 @@ export function CurrentPlanCard({
   onManage,
   onCancel,
   onReactivate,
+  onPause,
+  onResume,
 }: CurrentPlanCardProps) {
   if (isLoading) {
     return (
@@ -60,6 +64,7 @@ export function CurrentPlanCard({
   const isTrialing = subscription.status === 'trialing'
   const isCancelled = subscription.status === 'cancelled' || subscription.cancelAtPeriodEnd
   const isPastDue = subscription.status === 'past_due'
+  const isPaused = subscription.status === 'paused'
 
   return (
     <Card>
@@ -133,6 +138,17 @@ export function CurrentPlanCard({
           </Alert>
         )}
 
+        {/* Paused Notice */}
+        {isPaused && (
+          <Alert>
+            <PauseCircle className="h-4 w-4" />
+            <AlertTitle>Subscription Paused</AlertTitle>
+            <AlertDescription>
+              Your subscription is currently paused. Resume anytime to regain access to premium features.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Billing Info */}
         <div className="grid grid-cols-2 gap-4 pt-2">
           <div className="space-y-1">
@@ -183,8 +199,15 @@ export function CurrentPlanCard({
         )}
       </CardContent>
 
-      <CardFooter className="flex gap-2">
-        {isCancelled && !subscription.cancelAtPeriodEnd ? (
+      <CardFooter className="flex gap-2 flex-wrap">
+        {isPaused ? (
+          <>
+            <Button onClick={onResume}>Resume Subscription</Button>
+            <Button onClick={onCancel} variant="ghost" className="text-destructive">
+              Cancel Instead
+            </Button>
+          </>
+        ) : isCancelled && !subscription.cancelAtPeriodEnd ? (
           <Button onClick={onReactivate}>Reactivate Subscription</Button>
         ) : subscription.cancelAtPeriodEnd ? (
           <>
@@ -200,6 +223,9 @@ export function CurrentPlanCard({
             </Button>
             <Button onClick={onManage} variant="outline">
               Manage Billing
+            </Button>
+            <Button onClick={onPause} variant="outline">
+              Pause
             </Button>
             <Button onClick={onCancel} variant="ghost" className="text-destructive">
               Cancel
@@ -217,6 +243,8 @@ function formatStatus(status: string): string {
       return 'Trial'
     case 'active':
       return 'Active'
+    case 'paused':
+      return 'Paused'
     case 'past_due':
       return 'Past Due'
     case 'cancelled':

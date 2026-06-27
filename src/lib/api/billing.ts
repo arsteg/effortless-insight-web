@@ -11,6 +11,9 @@ import type {
   ChangePlanResponse,
   CancelSubscriptionRequest,
   CancelSubscriptionResponse,
+  PauseSubscriptionRequest,
+  PauseSubscriptionResponse,
+  ResumeSubscriptionResponse,
   AddSeatsRequest,
   AddSeatsResponse,
   Subscription,
@@ -127,6 +130,29 @@ export const billingApi = {
   async reactivateSubscription(): Promise<Subscription> {
     const response = await apiClient.post<{ data: Subscription }>(
       '/subscriptions/current/reactivate'
+    )
+    return response.data.data
+  },
+
+  /**
+   * Pause subscription
+   */
+  async pauseSubscription(
+    data: PauseSubscriptionRequest
+  ): Promise<PauseSubscriptionResponse> {
+    const response = await apiClient.post<{ data: PauseSubscriptionResponse }>(
+      '/subscriptions/current/pause',
+      data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Resume a paused subscription
+   */
+  async resumeSubscription(): Promise<ResumeSubscriptionResponse> {
+    const response = await apiClient.post<{ data: ResumeSubscriptionResponse }>(
+      '/subscriptions/current/resume'
     )
     return response.data.data
   },
@@ -276,6 +302,8 @@ export function getStatusBadgeVariant(
       return 'default'
     case 'trialing':
       return 'secondary'
+    case 'paused':
+      return 'outline'
     case 'past_due':
     case 'cancelled':
     case 'expired':

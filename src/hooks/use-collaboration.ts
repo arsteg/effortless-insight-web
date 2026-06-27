@@ -7,6 +7,7 @@ import {
   documentRequestTemplateApi,
   activityApi,
   fileApi,
+  timeTrackingApi,
 } from '@/services/collaboration'
 import type {
   CreateTaskRequest,
@@ -19,6 +20,8 @@ import type {
   DocumentReviewRequest,
   CreateDocumentRequestTemplateRequest,
   CreateFolderRequest,
+  CreateTimeEntryRequest,
+  UpdateTimeEntryRequest,
   TaskStatus,
   TaskPriority,
 } from '@/types/collaboration'
@@ -477,6 +480,88 @@ export function useDeleteFile(noticeId: string) {
     mutationFn: (fileId: string) => fileApi.deleteFile(fileId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files', noticeId] })
+    },
+  })
+}
+
+// =============================================================================
+// TIME TRACKING HOOKS
+// =============================================================================
+
+export function useTimeEntries(taskId: string) {
+  return useQuery({
+    queryKey: ['timeEntries', taskId],
+    queryFn: () => timeTrackingApi.getTimeEntries(taskId),
+    enabled: !!taskId,
+  })
+}
+
+export function useActiveTimer(taskId: string) {
+  return useQuery({
+    queryKey: ['activeTimer', taskId],
+    queryFn: () => timeTrackingApi.getActiveTimer(taskId),
+    enabled: !!taskId,
+    refetchInterval: 1000, // Refetch every second to update timer display
+  })
+}
+
+export function useLogTime(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: CreateTimeEntryRequest) => timeTrackingApi.logTime(taskId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeEntries', taskId] })
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] })
+    },
+  })
+}
+
+export function useStartTimer(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => timeTrackingApi.startTimer(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeEntries', taskId] })
+      queryClient.invalidateQueries({ queryKey: ['activeTimer', taskId] })
+    },
+  })
+}
+
+export function useStopTimer(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (entryId: string) => timeTrackingApi.stopTimer(taskId, entryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeEntries', taskId] })
+      queryClient.invalidateQueries({ queryKey: ['activeTimer', taskId] })
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] })
+    },
+  })
+}
+
+export function useUpdateTimeEntry(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ entryId, data }: { entryId: string; data: UpdateTimeEntryRequest }) =>
+      timeTrackingApi.updateTimeEntry(taskId, entryId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeEntries', taskId] })
+    },
+  })
+}
+
+export function useDeleteTimeEntry(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (entryId: string) => timeTrackingApi.deleteTimeEntry(taskId, entryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['timeEntries', taskId] })
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] })
     },
   })
 }

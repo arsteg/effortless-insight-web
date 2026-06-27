@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Upload, Trash2, Archive, UserPlus } from 'lucide-react'
+import { Upload, Trash2, Archive, UserPlus, Download, FileText, FileSpreadsheet, File } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -16,11 +16,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   NoticeFilters,
   NoticeTable,
   AssignNoticeDialog,
 } from '@/components/features/notices'
-import { useNotices, useDeleteNotice, useBulkDeleteNotices, useArchiveNotice } from '@/hooks/use-notices'
+import { useNotices, useDeleteNotice, useBulkDeleteNotices, useArchiveNotice, useExportNotices } from '@/hooks/use-notices'
 import type { NoticeFilters as NoticeFiltersType, Notice } from '@/types'
 
 const DEFAULT_PAGE_SIZE = 10
@@ -50,6 +56,7 @@ export default function NoticesPage() {
   const deleteMutation = useDeleteNotice()
   const bulkDeleteMutation = useBulkDeleteNotices()
   const archiveMutation = useArchiveNotice()
+  const exportMutation = useExportNotices()
 
   // Handlers
   const handleFiltersChange = useCallback((newFilters: NoticeFiltersType) => {
@@ -91,6 +98,13 @@ export default function NoticesPage() {
     setAssignNotice(notice)
   }, [])
 
+  const handleExport = useCallback(
+    (format: 'csv' | 'xlsx' | 'pdf') => {
+      exportMutation.mutate({ filters, format })
+    },
+    [filters, exportMutation]
+  )
+
   const notices = data?.notices ?? []
   const totalCount = data?.totalCount ?? 0
   const totalPages = data?.totalPages ?? 1
@@ -127,6 +141,28 @@ export default function NoticesPage() {
               </Button>
             </>
           )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" disabled={exportMutation.isPending}>
+                <Download className="mr-2 h-4 w-4" />
+                {exportMutation.isPending ? 'Exporting...' : 'Export'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <FileText className="mr-2 h-4 w-4" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('xlsx')}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Export as Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <File className="mr-2 h-4 w-4" />
+                Export as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button asChild>
             <Link href="/notices/upload">
               <Upload className="mr-2 h-4 w-4" />

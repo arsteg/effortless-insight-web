@@ -8,6 +8,7 @@ import type {
   VerifyPaymentRequest,
   ChangePlanRequest,
   CancelSubscriptionRequest,
+  PauseSubscriptionRequest,
   AddSeatsRequest,
   ValidateCouponRequest,
   RazorpayPaymentResponse,
@@ -196,6 +197,57 @@ export function useReactivateSubscription() {
     onError: (error: Error) => {
       toast({
         title: 'Failed to reactivate subscription',
+        description: error.message,
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function usePauseSubscription() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (data: PauseSubscriptionRequest) =>
+      billingApi.pauseSubscription(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: billingKeys.subscription() })
+      toast({
+        title: 'Subscription paused',
+        description: data.scheduledResumeAt
+          ? `Your subscription will automatically resume on ${new Date(data.scheduledResumeAt).toLocaleDateString()}.`
+          : 'Your subscription has been paused. You can resume it anytime.',
+        variant: 'default',
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to pause subscription',
+        description: error.message,
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useResumeSubscription() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: () => billingApi.resumeSubscription(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: billingKeys.subscription() })
+      toast({
+        title: 'Subscription resumed',
+        description: 'Your subscription is now active again.',
+        variant: 'default',
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to resume subscription',
         description: error.message,
         variant: 'destructive',
       })

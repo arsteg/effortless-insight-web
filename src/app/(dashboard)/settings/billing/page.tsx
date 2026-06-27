@@ -14,6 +14,7 @@ import {
   PaymentMethods,
   ChangePlanModal,
   CancelSubscriptionModal,
+  PauseSubscriptionModal,
   AddSeatsModal,
 } from '@/components/features/billing'
 import {
@@ -23,6 +24,8 @@ import {
   usePlans,
   useChangePlan,
   useCancelSubscription,
+  usePauseSubscription,
+  useResumeSubscription,
   useReactivateSubscription,
   useAddSeats,
   useDownloadInvoice,
@@ -36,6 +39,7 @@ export default function BillingSettingsPage() {
   const router = useRouter()
   const [showChangePlanModal, setShowChangePlanModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showPauseModal, setShowPauseModal] = useState(false)
   const [showAddSeatsModal, setShowAddSeatsModal] = useState(false)
   const [invoicePage, setInvoicePage] = useState(1)
 
@@ -49,6 +53,8 @@ export default function BillingSettingsPage() {
   // Mutations
   const changePlan = useChangePlan()
   const cancelSubscription = useCancelSubscription()
+  const pauseSubscription = usePauseSubscription()
+  const resumeSubscription = useResumeSubscription()
   const reactivateSubscription = useReactivateSubscription()
   const addSeats = useAddSeats()
   const downloadInvoice = useDownloadInvoice()
@@ -71,6 +77,14 @@ export default function BillingSettingsPage() {
 
   const handleCancel = () => {
     setShowCancelModal(true)
+  }
+
+  const handlePause = () => {
+    setShowPauseModal(true)
+  }
+
+  const handleResume = () => {
+    resumeSubscription.mutate()
   }
 
   const handleReactivate = () => {
@@ -106,6 +120,17 @@ export default function BillingSettingsPage() {
       {
         onSuccess: () => {
           setShowCancelModal(false)
+        },
+      }
+    )
+  }
+
+  const handlePauseConfirm = (reason: string, resumeAt?: string) => {
+    pauseSubscription.mutate(
+      { reason, resumeAt },
+      {
+        onSuccess: () => {
+          setShowPauseModal(false)
         },
       }
     )
@@ -163,6 +188,8 @@ export default function BillingSettingsPage() {
         onUpgrade={handleUpgrade}
         onManage={handleManageBilling}
         onCancel={handleCancel}
+        onPause={handlePause}
+        onResume={handleResume}
         onReactivate={handleReactivate}
       />
 
@@ -210,6 +237,17 @@ export default function BillingSettingsPage() {
           subscription={subscription}
           onConfirm={handleCancelConfirm}
           isLoading={cancelSubscription.isPending}
+        />
+      )}
+
+      {/* Pause Subscription Modal */}
+      {subscription && (
+        <PauseSubscriptionModal
+          open={showPauseModal}
+          onOpenChange={setShowPauseModal}
+          subscription={subscription}
+          onConfirm={handlePauseConfirm}
+          isLoading={pauseSubscription.isPending}
         />
       )}
 

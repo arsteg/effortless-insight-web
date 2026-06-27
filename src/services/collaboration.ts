@@ -381,3 +381,65 @@ export const fileApi = {
     return response.data.url
   },
 }
+
+// =============================================================================
+// TIME TRACKING API
+// =============================================================================
+
+import type {
+  TimeEntriesResponse,
+  TimeEntry,
+  CreateTimeEntryRequest,
+  UpdateTimeEntryRequest,
+} from '@/types/collaboration'
+
+export const timeTrackingApi = {
+  // Get time entries for a task
+  getTimeEntries: async (taskId: string): Promise<TimeEntriesResponse> => {
+    const response = await apiClient.get(`/tasks/${taskId}/time-entries`)
+    return response.data
+  },
+
+  // Log time manually
+  logTime: async (taskId: string, data: CreateTimeEntryRequest): Promise<TimeEntry> => {
+    const response = await apiClient.post(`/tasks/${taskId}/time-entries`, data)
+    return response.data
+  },
+
+  // Start timer
+  startTimer: async (taskId: string): Promise<TimeEntry> => {
+    const response = await apiClient.post(`/tasks/${taskId}/timer/start`)
+    return response.data
+  },
+
+  // Stop timer
+  stopTimer: async (taskId: string, entryId: string): Promise<TimeEntry> => {
+    const response = await apiClient.post(`/tasks/${taskId}/timer/${entryId}/stop`)
+    return response.data
+  },
+
+  // Update time entry
+  updateTimeEntry: async (
+    taskId: string,
+    entryId: string,
+    data: UpdateTimeEntryRequest
+  ): Promise<TimeEntry> => {
+    const response = await apiClient.patch(`/tasks/${taskId}/time-entries/${entryId}`, data)
+    return response.data
+  },
+
+  // Delete time entry
+  deleteTimeEntry: async (taskId: string, entryId: string): Promise<void> => {
+    await apiClient.delete(`/tasks/${taskId}/time-entries/${entryId}`)
+  },
+
+  // Get active timer
+  getActiveTimer: async (taskId: string): Promise<TimeEntry | null> => {
+    try {
+      const response = await apiClient.get(`/tasks/${taskId}/timer/active`)
+      return response.data
+    } catch {
+      return null
+    }
+  },
+}

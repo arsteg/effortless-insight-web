@@ -30,6 +30,11 @@ export interface WorkflowStage {
   color: string;
   icon: string;
   allowedTransitions: string[];
+  // Parallel execution fields
+  parallelBranchId: string | null;
+  isSynchronizationPoint: boolean;
+  joinType: 'all' | 'any' | null;
+  minBranchesToComplete: number | null;
 }
 
 export interface WorkflowTemplateSummary {
@@ -43,7 +48,7 @@ export interface WorkflowTemplateSummary {
   activeInstanceCount: number;
 }
 
-export type WorkflowStageType = 'start' | 'intermediate' | 'end' | 'pause';
+export type WorkflowStageType = 'start' | 'intermediate' | 'end' | 'pause' | 'fork' | 'join';
 
 // ============================================================================
 // Workflow Instance Types
@@ -70,6 +75,9 @@ export interface WorkflowInstance {
   slaBreachCount: number;
   transitionCount: number;
   availableTransitions: string[];
+  hasParallelStages: boolean;
+  activeBranchCount: number;
+  activeStageInstances: StageInstance[] | null;
   createdAt: string;
 }
 
@@ -297,3 +305,159 @@ export const DEFAULT_STAGE_KEYS = {
 } as const;
 
 export type DefaultStageKey = typeof DEFAULT_STAGE_KEYS[keyof typeof DEFAULT_STAGE_KEYS];
+
+// ============================================================================
+// Parallel Execution Types
+// ============================================================================
+
+export interface StageInstance {
+  id: string;
+  workflowInstanceId: string;
+  stageId: string;
+  stageKey: string;
+  stageName: string;
+  branchId: string | null;
+  status: StageInstanceStatus;
+  enteredAt: string;
+  completedAt: string | null;
+  slaDeadline: string | null;
+  slaStatus: SlaStatus;
+  slaPercentConsumed: number;
+  assignedToId: string | null;
+  assignedToName: string | null;
+  assignedRole: string | null;
+  outcome: string | null;
+  timeSpentMinutes: number;
+  allowedTransitions: string[];
+}
+
+export type StageInstanceStatus = 'active' | 'paused' | 'completed' | 'skipped' | 'cancelled' | 'waiting_at_join';
+
+export interface CompleteStageInstanceRequest {
+  outcome?: string;
+  targetStageKey?: string;
+  reason?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ForkWorkflowRequest {
+  targetStageKeys: string[];
+  reason?: string;
+  branchAssignments?: Record<string, ForkBranchAssignment>;
+}
+
+export interface ForkBranchAssignment {
+  assignToUserId?: string;
+  assignToRole?: string;
+}
+
+export interface ParallelBranchStatus {
+  workflowInstanceId: string;
+  noticeId: string;
+  hasParallelStages: boolean;
+  activeBranchCount: number;
+  completedBranchCount: number;
+  totalBranchCount: number;
+  branches: BranchStatus[];
+  nextSyncPoint: SynchronizationPoint | null;
+}
+
+export interface BranchStatus {
+  branchId: string;
+  currentStageKey: string;
+  currentStageName: string;
+  status: string;
+  assignedToId: string | null;
+  assignedToName: string | null;
+  slaDeadline: string | null;
+  slaStatus: SlaStatus;
+}
+
+export interface SynchronizationPoint {
+  stageKey: string;
+  stageName: string;
+  joinType: 'all' | 'any';
+  minBranchesToComplete: number | null;
+  completedBranches: number;
+  requiredBranches: number;
+  isReady: boolean;
+}
+
+// Stage instance status colors
+export const STAGE_INSTANCE_STATUS_COLORS: Record<StageInstanceStatus, string> = {
+  active: 'bg-blue-100 text-blue-800',
+  paused: 'bg-yellow-100 text-yellow-800',
+  completed: 'bg-green-100 text-green-800',
+  skipped: 'bg-gray-100 text-gray-800',
+  cancelled: 'bg-red-100 text-red-800',
+  waiting_at_join: 'bg-purple-100 text-purple-800',
+};
+
+export const STAGE_INSTANCE_STATUS_LABELS: Record<StageInstanceStatus, string> = {
+  active: 'Active',
+  paused: 'Paused',
+  completed: 'Completed',
+  skipped: 'Skipped',
+  cancelled: 'Cancelled',
+  waiting_at_join: 'Waiting',
+};
+
+// ============================================================================
+// Conditional Routing Types
+// ============================================================================
+
+export interface WorkflowCondition {
+  field: string;
+  operator: ConditionOperator;
+  value: unknown;
+}
+
+export interface AutoTransitionRule {
+  condition: WorkflowCondition;
+  targetStage: string;
+  delayMinutes: number;
+}
+
+export type ConditionOperator =
+  | 'eq' | 'neq'
+  | 'gt' | 'gte' | 'lt' | 'lte'
+  | 'in' | 'notin'
+  | 'contains' | 'notcontains'
+  | 'startswith' | 'endswith'
+  | 'isnull' | 'isnotnull'
+  | 'matches';
+
+// Human-readable operator labels
+export const CONDITION_OPERATOR_LABELS: Record<ConditionOperator, string> = {
+  eq: 'equals',
+  neq: 'not equals',
+  gt: 'greater than',
+  gte: 'greater than or equal',
+  lt: 'less than',
+  lte: 'less than or equal',
+  in: 'is in',
+  notin: 'is not in',
+  contains: 'contains',
+  notcontains: 'does not contain',
+  startswith: 'starts with',
+  endswith: 'ends with',
+  isnull: 'is empty',
+  isnotnull: 'is not empty',
+  matches: 'matches pattern',
+};
+
+// Available fields for conditions
+export const CONDITION_FIELDS = [
+  { value: 'noticeType', label: 'Notice Type', type: 'string' },
+  { value: 'noticeCategory', label: 'Category', type: 'string' },
+  { value: 'noticeSubCategory', label: 'Sub-Category', type: 'string' },
+  { value: 'priority', label: 'Priority', type: 'string' },
+  { value: 'status', label: 'Status', type: 'string' },
+  { value: 'taxAmount', label: 'Tax Amount', type: 'number' },
+  { value: 'penaltyAmount', label: 'Penalty Amount', type: 'number' },
+  { value: 'interestAmount', label: 'Interest Amount', type: 'number' },
+  { value: 'totalAmount', label: 'Total Amount', type: 'number' },
+  { value: 'daysUntilDeadline', label: 'Days Until Deadline', type: 'number' },
+  { value: 'isOverdue', label: 'Is Overdue', type: 'boolean' },
+  { value: 'hasAssignee', label: 'Has Assignee', type: 'boolean' },
+] as const;

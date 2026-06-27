@@ -226,4 +226,15 @@ export const noticesApi = {
   async deleteReminder(noticeId: string, reminderId: string): Promise<void> {
     await apiClient.delete(`/notices/${noticeId}/reminders/${reminderId}`)
   },
+
+  // Export
+  async export(
+    filters?: NoticeFilters & { format: 'csv' | 'xlsx' | 'pdf' }
+  ): Promise<Blob> {
+    const response = await apiClient.get('/notices/export', {
+      params: filters,
+      responseType: 'blob',
+    })
+    return response.data
+  },
 }

@@ -20,6 +20,10 @@ import type {
   TransitionResult,
   BulkTransitionResult,
   ValidationResult,
+  StageInstance,
+  CompleteStageInstanceRequest,
+  ForkWorkflowRequest,
+  ParallelBranchStatus,
 } from '@/types/workflow';
 
 // Helper to check if error is a 404 response
@@ -244,6 +248,66 @@ export async function getSlaStatus(noticeId: string): Promise<SlaStatusDto | nul
 }
 
 // ============================================================================
+// Parallel Execution Operations
+// ============================================================================
+
+/**
+ * Gets active stage instances for a workflow (supports parallel execution).
+ */
+export async function getActiveStageInstances(noticeId: string): Promise<StageInstance[]> {
+  const response = await api.get<StageInstance[]>(
+    `${BASE_URL}/notices/${noticeId}/stage-instances`
+  );
+  return response.data;
+}
+
+/**
+ * Completes a specific stage instance in a parallel workflow.
+ */
+export async function completeStageInstance(
+  noticeId: string,
+  stageInstanceId: string,
+  request: CompleteStageInstanceRequest
+): Promise<TransitionResult> {
+  const response = await api.post<TransitionResult>(
+    `${BASE_URL}/notices/${noticeId}/stage-instances/${stageInstanceId}/complete`,
+    request
+  );
+  return response.data;
+}
+
+/**
+ * Forks the workflow into parallel branches.
+ */
+export async function forkWorkflow(
+  noticeId: string,
+  request: ForkWorkflowRequest
+): Promise<TransitionResult> {
+  const response = await api.post<TransitionResult>(
+    `${BASE_URL}/notices/${noticeId}/fork`,
+    request
+  );
+  return response.data;
+}
+
+/**
+ * Gets parallel branch status for a workflow.
+ */
+export async function getParallelBranchStatus(noticeId: string): Promise<ParallelBranchStatus | null> {
+  try {
+    const response = await api.get<ParallelBranchStatus>(
+      `${BASE_URL}/notices/${noticeId}/parallel-status`
+    );
+    return response.data;
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+// ============================================================================
 // Template Operations
 // ============================================================================
 
@@ -316,6 +380,12 @@ const workflowService = {
 
   // SLA
   getSlaStatus,
+
+  // Parallel execution
+  getActiveStageInstances,
+  completeStageInstance,
+  forkWorkflow,
+  getParallelBranchStatus,
 
   // Templates
   getAvailableTemplates,

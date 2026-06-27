@@ -79,7 +79,7 @@ export interface Subscription {
   scheduledChange?: ScheduledChange
 }
 
-export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired'
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'
 export type BillingCycle = 'monthly' | 'annually'
 
 export interface Seats {
@@ -280,6 +280,28 @@ export interface SubscriptionCancelled {
   status: string
   cancelAtPeriodEnd: boolean
   cancellationDate?: string
+}
+
+// ============================================================================
+// Pause/Resume Subscription Types
+// ============================================================================
+
+export interface PauseSubscriptionRequest {
+  reason: string
+  resumeAt?: string
+}
+
+export interface PauseSubscriptionResponse {
+  subscriptionId: string
+  status: string
+  pausedAt?: string
+  scheduledResumeAt?: string
+}
+
+export interface ResumeSubscriptionResponse {
+  subscriptionId: string
+  status: string
+  currentPeriodEnd: string
 }
 
 // ============================================================================

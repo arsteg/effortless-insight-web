@@ -492,3 +492,42 @@ export const ACTIVITY_TYPE_ICONS: Record<ActivityType, { icon: string; color: st
 
 export const ALLOWED_REACTIONS = ['👍', '❤️', '😊', '🎉'] as const
 export type AllowedReaction = typeof ALLOWED_REACTIONS[number]
+
+// =============================================================================
+// TIME TRACKING TYPES
+// =============================================================================
+
+export interface TimeEntry {
+  id: string
+  taskId: string
+  userId: string
+  userName?: string
+  date: string
+  hours: number
+  description?: string
+  isBillable: boolean
+  startTime?: string
+  endTime?: string
+  isTimerRunning: boolean
+  createdAt: string
+}
+
+export interface TimeEntriesResponse {
+  entries: TimeEntry[]
+  totalHours: number
+  activeTimerId?: string
+}
+
+export interface CreateTimeEntryRequest {
+  hours: number
+  date: string
+  description?: string
+  isBillable?: boolean
+}
+
+export interface UpdateTimeEntryRequest {
+  hours?: number
+  date?: string
+  description?: string
+  isBillable?: boolean
+}
