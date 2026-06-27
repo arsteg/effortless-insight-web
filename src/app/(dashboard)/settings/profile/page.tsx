@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Camera, Loader2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Camera, Loader2, Trash2, Sun, Moon, Monitor } from 'lucide-react'
 import Link from 'next/link'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useProfile, useUpdateProfile, useUploadAvatar, useDeleteAvatar } from '@/hooks/use-settings'
+import { useTheme } from '@/components/theme-provider'
 
 const profileFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -45,6 +46,7 @@ export default function ProfileSettingsPage() {
   const updateProfileMutation = useUpdateProfile()
   const uploadAvatarMutation = useUploadAvatar()
   const deleteAvatarMutation = useDeleteAvatar()
+  const { theme, setTheme } = useTheme()
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -238,6 +240,55 @@ export default function ProfileSettingsPage() {
               </Button>
             </form>
           </Form>
+        </CardContent>
+      </Card>
+
+      {/* Appearance Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+          <CardDescription>
+            Customize how the application looks.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Theme</label>
+              <div className="flex gap-2">
+                <Button
+                  variant={theme === 'light' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('light')}
+                  className="flex items-center gap-2"
+                >
+                  <Sun className="h-4 w-4" />
+                  Light
+                </Button>
+                <Button
+                  variant={theme === 'dark' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('dark')}
+                  className="flex items-center gap-2"
+                >
+                  <Moon className="h-4 w-4" />
+                  Dark
+                </Button>
+                <Button
+                  variant={theme === 'system' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('system')}
+                  className="flex items-center gap-2"
+                >
+                  <Monitor className="h-4 w-4" />
+                  System
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Select your preferred theme or use system settings.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

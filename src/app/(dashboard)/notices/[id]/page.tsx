@@ -25,6 +25,7 @@ import {
   CollaborationPanel,
   ResponseEditor,
 } from '@/components/features/notices'
+import { DocumentRequestPanel } from '@/components/features/document-requests/document-request-panel'
 import { WorkflowPanel } from '@/components/features/workflow'
 import { useNotice, useDeleteNotice } from '@/hooks/use-notices'
 import {
@@ -169,12 +170,13 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           {/* Tab Navigation */}
           <Tabs defaultValue="overview">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-6">
+          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-7">
             <TabsTrigger value="overview" className="flex-1 md:flex-none">Overview</TabsTrigger>
             <TabsTrigger value="analysis" className="flex-1 md:flex-none whitespace-nowrap">AI Analysis</TabsTrigger>
             <TabsTrigger value="collaboration" className="flex-1 md:flex-none">Tasks</TabsTrigger>
             <TabsTrigger value="response" className="flex-1 md:flex-none">Response</TabsTrigger>
             <TabsTrigger value="documents" className="flex-1 md:flex-none">Documents</TabsTrigger>
+            <TabsTrigger value="requests" className="flex-1 md:flex-none">Requests</TabsTrigger>
             <TabsTrigger value="activity" className="flex-1 md:flex-none">Activity</TabsTrigger>
           </TabsList>
         </div>
@@ -211,6 +213,14 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
             onDownload={(attachment) => downloadAttachmentMutation.mutate(attachment.id)}
             onDelete={(attachment) => deleteAttachmentMutation.mutate(attachment.id)}
             isDeleting={deleteAttachmentMutation.isPending}
+          />
+        </TabsContent>
+
+        <TabsContent value="requests" className="mt-6">
+          <DocumentRequestPanel
+            noticeId={noticeId}
+            noticeType={notice?.noticeType}
+            availableMembers={teamMembers}
           />
         </TabsContent>
 
