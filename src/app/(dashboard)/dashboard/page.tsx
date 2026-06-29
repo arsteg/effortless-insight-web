@@ -28,6 +28,23 @@ export default function DashboardPage() {
 
   const firstName = user?.name?.split(' ')[0] || 'there'
 
+  // Calculate compliance score as percentage of closed notices
+  const complianceScore = data?.notices
+    ? data.notices.total > 0
+      ? Math.round((data.notices.closed / data.notices.total) * 100)
+      : 100
+    : undefined
+
+  // Build status chart data from individual counts
+  const noticesByStatus: Record<string, number> | undefined = data?.notices
+    ? {
+        open: data.notices.open,
+        closed: data.notices.closed,
+        processing: data.notices.processing,
+        in_progress: data.notices.inProgress,
+      }
+    : undefined
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -52,20 +69,16 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Active Notices"
-          value={data?.metrics?.activeNotices ?? '—'}
-          trend={data?.metrics?.activeNoticesTrend}
-          trendLabel="from last month"
+          value={data?.notices?.open ?? '—'}
           icon={FileText}
           isLoading={isLoading}
         />
         <MetricCard
           title="Due This Week"
-          value={data?.metrics?.dueThisWeek ?? '—'}
-          trend={data?.metrics?.dueThisWeekTrend}
-          trendLabel="from last week"
+          value={data?.deadlines?.dueThisWeek ?? '—'}
           icon={Clock}
           variant={
-            data?.metrics?.dueThisWeek && data.metrics.dueThisWeek > 5
+            data?.deadlines?.dueThisWeek && data.deadlines.dueThisWeek > 5
               ? 'warning'
               : 'default'
           }
@@ -73,26 +86,18 @@ export default function DashboardPage() {
         />
         <MetricCard
           title="Pending Tasks"
-          value={data?.metrics?.pendingTasks ?? '—'}
-          trend={data?.metrics?.pendingTasksTrend}
-          trendLabel="from last week"
+          value={data?.tasks?.pending ?? '—'}
           icon={CheckSquare}
           isLoading={isLoading}
         />
         <MetricCard
           title="Compliance Score"
-          value={
-            data?.metrics?.complianceScore !== undefined
-              ? `${data.metrics.complianceScore}%`
-              : '—'
-          }
-          trend={data?.metrics?.complianceScoreTrend}
-          trendLabel="from last month"
+          value={complianceScore !== undefined ? `${complianceScore}%` : '—'}
           icon={TrendingUp}
           variant={
-            data?.metrics?.complianceScore && data.metrics.complianceScore >= 80
+            complianceScore !== undefined && complianceScore >= 80
               ? 'success'
-              : data?.metrics?.complianceScore && data.metrics.complianceScore < 60
+              : complianceScore !== undefined && complianceScore < 60
                 ? 'danger'
                 : 'default'
           }
@@ -101,7 +106,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Additional Stats Row */}
-      {data?.metrics && (
+      {data?.notices && (
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardContent className="pt-6">
@@ -109,13 +114,13 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Overdue Notices</p>
                   <p className="text-2xl font-bold text-red-600">
-                    {data.metrics.overdueNotices}
+                    {data.notices.overdue}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Demand Amount</p>
                   <p className="text-2xl font-bold">
-                    {formatCurrency(data.metrics.totalDemandAmount)}
+                    {formatCurrency(data.notices.totalDemandAmount)}
                   </p>
                 </div>
               </div>
@@ -139,7 +144,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <DeadlineList
-              deadlines={data?.upcomingDeadlines ?? []}
+              deadlines={data?.deadlines?.next7Days ?? []}
               isLoading={isLoading}
               emptyMessage="No upcoming deadlines. Upload a notice to get started."
             />
@@ -153,7 +158,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <ActivityFeed
-              activities={data?.recentActivity ?? []}
+              activities={data?.activity?.items ?? []}
               isLoading={isLoading}
               emptyMessage="No recent activity"
               maxHeight="350px"
@@ -165,11 +170,11 @@ export default function DashboardPage() {
       {/* Charts Row */}
       <div className="grid gap-6 md:grid-cols-2">
         <NoticesByStatusChart
-          data={data?.noticesByStatus ?? {}}
+          data={noticesByStatus}
           isLoading={isLoading}
         />
         <NoticesByPriorityChart
-          data={data?.noticesByPriority ?? {}}
+          data={data?.notices?.byPriority ?? {}}
           isLoading={isLoading}
         />
       </div>

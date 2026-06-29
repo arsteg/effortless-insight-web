@@ -28,15 +28,28 @@ export const useOrganizationStore = create<OrganizationState>()(
           const response = await organizationsApi.list()
           const organizations = response.organizations
 
-          set({
-            organizations,
-            isLoading: false,
-          })
+          set({ organizations })
 
-          // If no current org is set, use the first one
+          // Determine which organization to use
           const current = get().currentOrganization
-          if (!current && organizations.length > 0) {
-            set({ currentOrganization: organizations[0] })
+          let targetOrg = current
+
+          // If current org is set, verify it still exists in the list
+          if (current) {
+            const stillExists = organizations.find(o => o.id === current.id)
+            if (!stillExists && organizations.length > 0) {
+              targetOrg = organizations[0]
+            }
+          } else if (organizations.length > 0) {
+            targetOrg = organizations[0]
+          }
+
+          // Always call switchOrganization to ensure JWT has org_id claim
+          if (targetOrg) {
+            await authApi.switchOrganization({ organizationId: targetOrg.id })
+            set({ currentOrganization: targetOrg, isLoading: false })
+          } else {
+            set({ isLoading: false })
           }
         } catch (error) {
           set({ isLoading: false })

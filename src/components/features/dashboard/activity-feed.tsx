@@ -66,34 +66,34 @@ interface ActivityFeedItemProps {
 
 function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
   const getIcon = () => {
-    switch (activity.type) {
-      case 'notice_uploaded':
-        return <Upload className="h-4 w-4 text-blue-500" />
-      case 'notice_assigned':
-        return <UserPlus className="h-4 w-4 text-purple-500" />
-      case 'notice_status_changed':
-        return <RefreshCw className="h-4 w-4 text-orange-500" />
-      case 'task_completed':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />
-      case 'comment_added':
-        return <MessageSquare className="h-4 w-4 text-cyan-500" />
-      case 'response_submitted':
-        return <Send className="h-4 w-4 text-indigo-500" />
-      case 'deadline_approaching':
-        return <Bell className="h-4 w-4 text-yellow-500" />
-      default:
-        return <Activity className="h-4 w-4 text-muted-foreground" />
+    const type = activity.type.toLowerCase()
+    if (type.includes('upload')) {
+      return <Upload className="h-4 w-4 text-blue-500" />
     }
+    if (type.includes('assign')) {
+      return <UserPlus className="h-4 w-4 text-purple-500" />
+    }
+    if (type.includes('status') || type.includes('update')) {
+      return <RefreshCw className="h-4 w-4 text-orange-500" />
+    }
+    if (type.includes('complete') || type.includes('done')) {
+      return <CheckCircle2 className="h-4 w-4 text-green-500" />
+    }
+    if (type.includes('comment')) {
+      return <MessageSquare className="h-4 w-4 text-cyan-500" />
+    }
+    if (type.includes('response') || type.includes('submit')) {
+      return <Send className="h-4 w-4 text-indigo-500" />
+    }
+    if (type.includes('deadline') || type.includes('reminder')) {
+      return <Bell className="h-4 w-4 text-yellow-500" />
+    }
+    return <Activity className="h-4 w-4 text-muted-foreground" />
   }
 
-  const getLink = () => {
-    if (activity.entityType === 'notice' && activity.entityId) {
-      return `/notices/${activity.entityId}`
-    }
-    return null
-  }
-
-  const link = getLink()
+  const link = activity.noticeId ? `/notices/${activity.noticeId}` : null
+  const actorName = activity.actor?.name ?? 'System'
+  const actorAvatar = activity.actor?.avatarUrl
 
   const content = (
     <div className="flex gap-3">
@@ -104,17 +104,17 @@ function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm">
-          <span className="font-medium">{activity.userName}</span>{' '}
-          <span className="text-muted-foreground">{activity.description}</span>
+          <span className="font-medium">{actorName}</span>{' '}
+          <span className="text-muted-foreground">{activity.message}</span>
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {formatRelativeTime(activity.createdAt)}
+          {formatRelativeTime(activity.timestamp)}
         </p>
       </div>
       <Avatar className="h-6 w-6 flex-shrink-0">
-        <AvatarImage src={activity.userAvatar} alt={activity.userName} />
+        <AvatarImage src={actorAvatar} alt={actorName} />
         <AvatarFallback className="text-xs">
-          {getInitials(activity.userName)}
+          {getInitials(actorName)}
         </AvatarFallback>
       </Avatar>
     </div>

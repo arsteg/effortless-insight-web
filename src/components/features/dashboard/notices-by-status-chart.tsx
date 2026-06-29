@@ -17,6 +17,7 @@ interface NoticesByStatusChartProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
+  open: '#3b82f6',        // blue
   uploaded: '#3b82f6',    // blue
   processing: '#8b5cf6',  // purple
   analyzed: '#06b6d4',    // cyan
@@ -28,6 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const STATUS_LABELS: Record<string, string> = {
+  open: 'Open',
   uploaded: 'Uploaded',
   processing: 'Processing',
   analyzed: 'Analyzed',

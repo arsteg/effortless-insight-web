@@ -73,19 +73,19 @@ export default function CalendarPage() {
 
   // Transform dashboard deadlines into calendar events
   const deadlines: Deadline[] = useMemo(() => {
-    if (!data?.upcomingDeadlines) return []
+    if (!data?.deadlines?.next7Days) return []
 
-    return data.upcomingDeadlines.map((d: any) => ({
+    return data.deadlines.next7Days.map((d) => ({
       id: d.id,
-      noticeId: d.noticeId,
-      noticeNumber: d.noticeNumber || `#${d.noticeId?.slice(0, 8)}`,
-      title: d.title || d.description || 'Notice Deadline',
-      dueDate: d.dueDate || d.deadline,
-      priority: d.priority || 'medium',
-      status: d.status || 'pending',
-      noticeType: d.noticeType || 'GST Notice',
+      noticeId: d.noticeId || d.id,
+      noticeNumber: d.noticeNumber || `#${(d.noticeId || d.id)?.slice(0, 8)}`,
+      title: d.title || 'Deadline',
+      dueDate: d.dueDate,
+      priority: (d.priority as Deadline['priority']) || 'medium',
+      status: d.isOverdue ? 'overdue' : 'pending',
+      noticeType: d.type === 'task' ? 'Task' : 'GST Notice',
     }))
-  }, [data?.upcomingDeadlines])
+  }, [data?.deadlines?.next7Days])
 
   // Get deadlines for a specific date
   const getDeadlinesForDate = (date: Date) => {
