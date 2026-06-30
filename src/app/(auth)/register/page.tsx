@@ -30,6 +30,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { OAuthButtons } from '@/components/auth'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -324,6 +325,8 @@ export default function RegisterPage() {
             </Button>
           </form>
         </Form>
+
+        <OAuthButtons mode="register" disabled={isLoading} />
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
         <div className="text-sm text-center text-muted-foreground">

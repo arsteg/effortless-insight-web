@@ -30,6 +30,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { OAuthButtons } from '@/components/auth'
 
 function LoginLoading() {
   return (
@@ -222,6 +223,8 @@ function LoginForm() {
             </Button>
           </form>
         </Form>
+
+        <OAuthButtons mode="login" disabled={isLoading} />
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
         <div className="text-sm text-center text-muted-foreground">

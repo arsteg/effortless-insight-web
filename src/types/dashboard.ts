@@ -87,6 +87,8 @@ export interface DashboardMetrics {
   deadlines: UpcomingDeadlines
   activity: RecentActivity
   generatedAt: string
+  periodStart?: string // YYYY-MM-DD format, present when date filtering is applied
+  periodEnd?: string // YYYY-MM-DD format, present when date filtering is applied
 }
 
 // Alias for backward compatibility with hook return type
