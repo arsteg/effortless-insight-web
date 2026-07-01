@@ -2,6 +2,7 @@
 export { Hero } from './hero'
 export { ProductOverview } from './product-overview'
 export { ProblemsSolved } from './problems-solved'
+export { GstnIntegration } from './gstn-integration'
 export { CoreCapabilities } from './core-capabilities'
 export { HowItWorks } from './how-it-works'
 export { AICapabilities } from './ai-capabilities'

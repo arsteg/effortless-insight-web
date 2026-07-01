@@ -9,6 +9,7 @@ export { usersApi } from './users'
 export { reportsApi } from './reports'
 export { notificationsApi } from './notifications'
 export { billingApi, formatAmount, getStatusBadgeVariant, getInvoiceStatusBadgeVariant, loadRazorpayScript } from './billing'
+export * as gstnApi from './gstn'
 
 // Unified API object for convenience
 export const api = {
@@ -22,4 +23,5 @@ export const api = {
   reports: () => import('./reports').then((m) => m.reportsApi),
   notifications: () => import('./notifications').then((m) => m.notificationsApi),
   billing: () => import('./billing').then((m) => m.billingApi),
+  gstn: () => import('./gstn'),
 }

@@ -3,6 +3,7 @@ import {
   Hero,
   ProductOverview,
   ProblemsSolved,
+  GstnIntegration,
   CoreCapabilities,
   HowItWorks,
   AICapabilities,
@@ -29,6 +30,11 @@ export default function Home() {
 
       {/* Problems Solved - Pain points and solutions */}
       <ProblemsSolved />
+
+      {/* GST Portal Integration - NEW Featured Section */}
+      <div id="gstn-integration" className="scroll-mt-header">
+        <GstnIntegration />
+      </div>
 
       {/* How It Works - Step-by-step workflow */}
       <div id="how-it-works" className="scroll-mt-header">

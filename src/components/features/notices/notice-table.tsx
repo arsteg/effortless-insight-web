@@ -35,6 +35,7 @@ import {
 import { StatusBadge } from './status-badge'
 import { PriorityBadge } from './priority-badge'
 import { RiskBadge } from './risk-badge'
+import { SourceBadge } from './source-badge'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import type { Notice, NoticeFilters } from '@/types'
 
@@ -217,12 +218,15 @@ export function NoticeTable({
                 </TableCell>
               )}
               <TableCell>
-                <Link
-                  href={`/notices/${notice.id}`}
-                  className="font-medium hover:underline"
-                >
-                  {notice.noticeNumber || `#${notice.id.slice(0, 8)}`}
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/notices/${notice.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {notice.noticeNumber || `#${notice.id.slice(0, 8)}`}
+                  </Link>
+                  <SourceBadge source={notice.source} />
+                </div>
                 {notice.gstin && (
                   <div className="text-xs text-muted-foreground">
                     {notice.gstin}

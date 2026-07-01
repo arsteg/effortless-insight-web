@@ -13,10 +13,19 @@ import {
   BarChart3,
   History,
   Globe,
+  Link2,
 } from 'lucide-react'
 import { FeatureCard } from './feature-card'
 
 const capabilities = [
+  {
+    icon: Link2,
+    title: 'GST Portal Integration',
+    description:
+      'Connect directly to the GST Portal and auto-fetch notices. Never miss a notice again.',
+    benefits: ['One-time OTP setup', 'Auto-sync every 6 hours', 'Zero manual effort'],
+    isNew: true,
+  },
   {
     icon: Upload,
     title: 'Multi-Channel Upload',
@@ -130,7 +139,8 @@ export function CoreCapabilities() {
               title={capability.title}
               description={capability.description}
               benefits={capability.benefits}
-              variant={index % 3 === 0 ? 'gradient' : 'default'}
+              variant={'isNew' in capability && capability.isNew ? 'gradient' : (index % 3 === 0 ? 'gradient' : 'default')}
+              isNew={'isNew' in capability ? capability.isNew : false}
             />
           ))}
         </div>

@@ -1,8 +1,14 @@
 'use client'
 
-import { FileText, Brain, Users, Bell, BarChart3, Smartphone } from 'lucide-react'
+import { FileText, Brain, Users, Bell, BarChart3, Smartphone, Link2 } from 'lucide-react'
 
 const capabilities = [
+  {
+    icon: Link2,
+    title: 'GST Portal Auto-Sync',
+    description: 'Connect to GST Portal with one-time OTP verification. Notices fetched automatically every 6 hours.',
+    isNew: true,
+  },
   {
     icon: FileText,
     title: 'Notice Management',
@@ -57,12 +63,25 @@ export function ProductOverview() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {capabilities.map((capability, index) => {
             const Icon = capability.icon
+            const isNew = 'isNew' in capability && capability.isNew
             return (
               <div
                 key={index}
-                className="group relative p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                className={`group relative p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-white border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
+                  isNew ? 'border-green-200 ring-2 ring-green-400 ring-offset-2' : 'border-gray-100'
+                }`}
               >
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center mb-6 shadow-lg shadow-primary-200 group-hover:scale-110 transition-transform">
+                {/* New Badge */}
+                {isNew && (
+                  <div className="absolute -top-3 -right-3 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                    NEW
+                  </div>
+                )}
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform ${
+                  isNew
+                    ? 'bg-gradient-to-br from-green-500 to-green-600 shadow-green-200'
+                    : 'bg-gradient-to-br from-primary-500 to-primary-600 shadow-primary-200'
+                }`}>
                   <Icon className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">

@@ -1,15 +1,15 @@
 'use client'
 
-import { Upload, Cpu, FileCheck, Send } from 'lucide-react'
+import { Upload, Cpu, FileCheck, Send, Link2 } from 'lucide-react'
 import { WorkflowDiagram } from './workflow-diagram'
 
 const steps = [
   {
-    icon: Upload,
-    title: 'Upload Notice',
+    icon: Link2,
+    title: 'Auto-Fetch or Upload',
     description:
-      'Upload your GST notice via PDF, image, or mobile camera scan. Our system accepts all common formats.',
-    duration: '~5 seconds',
+      'Connect to GST Portal for automatic notice fetching, or upload manually via PDF, image, or mobile scan.',
+    duration: 'Automatic',
   },
   {
     icon: Cpu,

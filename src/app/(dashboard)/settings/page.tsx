@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { User, Building2, Users, CreditCard, Bell, Shield } from 'lucide-react'
+import { User, Building2, Users, CreditCard, Bell, Shield, Link2 } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -21,6 +21,12 @@ const settingsLinks = [
     description: 'Manage team members and invitations',
     href: '/team',
     icon: Users,
+  },
+  {
+    title: 'Integrations',
+    description: 'Connect to GST Portal for automatic notice fetching',
+    href: '/settings/integrations',
+    icon: Link2,
   },
   {
     title: 'Billing',

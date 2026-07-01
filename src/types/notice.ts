@@ -22,6 +22,8 @@ export type ProcessingStatus =
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'
 
+export type NoticeSource = 'upload' | 'manual' | 'gstn_portal'
+
 // Notice list item
 export interface Notice {
   id: string
@@ -41,6 +43,8 @@ export interface Notice {
   summaryEn?: string
   assignedToId?: string
   assignedToName?: string
+  source?: NoticeSource
+  gstnNoticeId?: string
   createdAt: string
 }
 

@@ -21,9 +21,9 @@ export function Hero() {
           {/* Left: Content */}
           <div className="text-center lg:text-left">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-primary-100 text-primary-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <span className="w-2 h-2 bg-primary-500 rounded-full animate-pulse" />
-              India&apos;s First AI-Powered GST Compliance Platform
+            <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              NEW: Auto-fetch Notices from GST Portal
             </div>
 
             {/* Headline */}
@@ -37,9 +37,9 @@ export function Hero() {
 
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              AI-powered analysis that transforms complex GST notices into actionable insights
-              in under 60 seconds. Never miss a deadline, understand every notice,
-              respond with confidence.
+              Connect to the GST Portal and auto-fetch notices. Our AI transforms complex
+              notices into actionable insights in under 60 seconds. Never miss a deadline,
+              understand every notice, respond with confidence.
             </p>
 
             {/* CTA Buttons */}
@@ -75,11 +75,11 @@ export function Hero() {
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-primary-500" />
-                <span>No credit card required</span>
+                <span>GST Portal connected</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-primary-500" />
-                <span>Setup in 2 minutes</span>
+                <span>Auto-sync every 6h</span>
               </div>
             </div>
           </div>
@@ -162,8 +162,8 @@ export function Hero() {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-gray-900">Hindi Summary</div>
-                  <div className="text-xs text-gray-500">Auto-generated</div>
+                  <div className="text-sm font-semibold text-gray-900">GST Portal Synced</div>
+                  <div className="text-xs text-gray-500">3 new notices fetched</div>
                 </div>
               </div>
             </div>
