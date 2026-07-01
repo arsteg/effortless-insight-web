@@ -4,6 +4,7 @@ import {
   ProductOverview,
   ProblemsSolved,
   GstnIntegration,
+  WhatsAppBot,
   CoreCapabilities,
   HowItWorks,
   AICapabilities,
@@ -31,9 +32,14 @@ export default function Home() {
       {/* Problems Solved - Pain points and solutions */}
       <ProblemsSolved />
 
-      {/* GST Portal Integration - NEW Featured Section */}
+      {/* GST Portal Integration - Featured Section */}
       <div id="gstn-integration" className="scroll-mt-header">
         <GstnIntegration />
+      </div>
+
+      {/* WhatsApp Bot - NEW Featured Section */}
+      <div id="whatsapp-bot" className="scroll-mt-header">
+        <WhatsAppBot />
       </div>
 
       {/* How It Works - Step-by-step workflow */}

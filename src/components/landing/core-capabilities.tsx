@@ -86,8 +86,9 @@ const capabilities = [
     icon: Bell,
     title: 'Smart Notifications',
     description:
-      'Multi-channel alerts via email, SMS, WhatsApp, and push notifications.',
-    benefits: ['Deadline reminders', 'SLA alerts', 'Task updates'],
+      'Multi-channel alerts via email, SMS, WhatsApp Bot, and push notifications.',
+    benefits: ['WhatsApp Bot commands', 'Deadline reminders', 'High-risk alerts'],
+    isNew: true,
   },
   {
     icon: BarChart3,

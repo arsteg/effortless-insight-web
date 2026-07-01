@@ -43,8 +43,8 @@ export function CTASection() {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
+            Auto-fetch notices from GST Portal. Get WhatsApp alerts for deadlines.
             Join businesses across India who have eliminated the chaos of GST notices.
-            Get instant clarity, never miss deadlines, and respond with confidence.
           </p>
 
           {/* CTA Buttons */}
@@ -71,7 +71,7 @@ export function CTASection() {
           </div>
 
           {/* Trust Points */}
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-primary-200">
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm text-primary-200">
             <div className="flex items-center gap-2">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -82,19 +82,19 @@ export function CTASection() {
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <span>No credit card required</span>
+              <span>No credit card</span>
             </div>
             <div className="flex items-center gap-2">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <span>Cancel anytime</span>
+              <span>GST Portal sync</span>
             </div>
             <div className="flex items-center gap-2">
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <span>7-day money back</span>
+              <span>WhatsApp alerts</span>
             </div>
           </div>
         </div>

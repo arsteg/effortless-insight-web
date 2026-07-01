@@ -74,6 +74,8 @@ export interface LoginResponse {
   tokenType: string
   expiresIn: number
   user: User
+  /** Mobile OAuth redirect URI - present when login initiated from mobile app */
+  mobileRedirectUri?: string
 }
 
 export interface TwoFactorRequiredResponse {

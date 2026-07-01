@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button'
 
 const navLinks = [
   { href: '#features', label: 'Features' },
+  { href: '#gstn-integration', label: 'GST Portal' },
+  { href: '#whatsapp-bot', label: 'WhatsApp Bot', isNew: true },
   { href: '#how-it-works', label: 'How It Works' },
-  { href: '#ai', label: 'AI Engine' },
   { href: '#mobile', label: 'Mobile App' },
   { href: '/pricing', label: 'Pricing' },
 ]
@@ -56,9 +57,14 @@ export function LandingHeader() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
+                className="relative text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
               >
                 {link.label}
+                {'isNew' in link && link.isNew && (
+                  <span className="absolute -top-2 -right-3 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    NEW
+                  </span>
+                )}
               </Link>
             ))}
           </div>

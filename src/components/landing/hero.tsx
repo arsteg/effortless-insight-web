@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Play, Shield, Zap, Clock } from 'lucide-react'
+import { ArrowRight, Play, Shield, Zap, Clock, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AnimatedCounter } from './animated-counter'
 
@@ -20,10 +20,16 @@ export function Hero() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Content */}
           <div className="text-center lg:text-left">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              NEW: Auto-fetch Notices from GST Portal
+            {/* Badges */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-6">
+              <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                GST Portal Auto-Sync
+              </div>
+              <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                WhatsApp Bot
+              </div>
             </div>
 
             {/* Headline */}
@@ -37,9 +43,9 @@ export function Hero() {
 
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Connect to the GST Portal and auto-fetch notices. Our AI transforms complex
-              notices into actionable insights in under 60 seconds. Never miss a deadline,
-              understand every notice, respond with confidence.
+              Auto-fetch notices from the GST Portal. Get instant WhatsApp alerts for deadlines.
+              Our AI transforms complex notices into actionable insights in under 60 seconds.
+              Never miss a deadline, understand every notice, respond with confidence.
             </p>
 
             {/* CTA Buttons */}
@@ -68,18 +74,22 @@ export function Hero() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-gray-500">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-green-500" />
                 <span>14-day free trial</span>
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-primary-500" />
-                <span>GST Portal connected</span>
+                <span>GST Portal sync</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-emerald-500" />
+                <span>WhatsApp alerts</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-primary-500" />
-                <span>Auto-sync every 6h</span>
+                <span>24/7 availability</span>
               </div>
             </div>
           </div>
@@ -164,6 +174,19 @@ export function Hero() {
                 <div>
                   <div className="text-sm font-semibold text-gray-900">GST Portal Synced</div>
                   <div className="text-xs text-gray-500">3 new notices fetched</div>
+                </div>
+              </div>
+            </div>
+
+            {/* WhatsApp Notification Float */}
+            <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-4 border border-gray-100 animate-bounce hidden lg:block" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <MessageCircle className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">WhatsApp Alert</div>
+                  <div className="text-xs text-gray-500">Deadline in 3 days</div>
                 </div>
               </div>
             </div>

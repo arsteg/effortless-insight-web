@@ -1,12 +1,18 @@
 'use client'
 
-import { FileText, Brain, Users, Bell, BarChart3, Smartphone, Link2 } from 'lucide-react'
+import { FileText, Brain, Users, Bell, BarChart3, Smartphone, Link2, MessageCircle } from 'lucide-react'
 
 const capabilities = [
   {
     icon: Link2,
     title: 'GST Portal Auto-Sync',
     description: 'Connect to GST Portal with one-time OTP verification. Notices fetched automatically every 6 hours.',
+    isNew: true,
+  },
+  {
+    icon: MessageCircle,
+    title: 'WhatsApp Bot',
+    description: 'Get deadline reminders, check notice status, and receive high-risk alerts - all through WhatsApp.',
     isNew: true,
   },
   {
@@ -27,7 +33,7 @@ const capabilities = [
   {
     icon: Bell,
     title: 'Smart Notifications',
-    description: 'Never miss deadlines with multi-channel alerts via email, SMS, WhatsApp, and push notifications.',
+    description: 'Never miss deadlines with multi-channel alerts via email, SMS, WhatsApp Bot, and push notifications.',
   },
   {
     icon: BarChart3,

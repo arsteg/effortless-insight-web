@@ -68,7 +68,7 @@ export default function OAuthCallbackPage() {
         // Login successful - check if this is a mobile OAuth request
         if ('accessToken' in result) {
           // If there's a mobile redirect URI, redirect to the mobile app with tokens
-          if ('mobileRedirectUri' in result && result.mobileRedirectUri) {
+          if (result.mobileRedirectUri && typeof result.mobileRedirectUri === 'string') {
             const mobileUrl = new URL(result.mobileRedirectUri)
             mobileUrl.searchParams.set('accessToken', result.accessToken)
             mobileUrl.searchParams.set('refreshToken', result.refreshToken)
