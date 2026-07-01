@@ -65,8 +65,20 @@ export default function OAuthCallbackPage() {
           return
         }
 
-        // Login successful - fetch user profile
+        // Login successful - check if this is a mobile OAuth request
         if ('accessToken' in result) {
+          // If there's a mobile redirect URI, redirect to the mobile app with tokens
+          if ('mobileRedirectUri' in result && result.mobileRedirectUri) {
+            const mobileUrl = new URL(result.mobileRedirectUri)
+            mobileUrl.searchParams.set('accessToken', result.accessToken)
+            mobileUrl.searchParams.set('refreshToken', result.refreshToken)
+            mobileUrl.searchParams.set('expiresIn', String(result.expiresIn))
+            // Redirect to mobile app
+            window.location.href = mobileUrl.toString()
+            return
+          }
+
+          // Web flow - fetch user profile and redirect to dashboard
           const user = await authApi.getMe()
           setUser(user)
 
