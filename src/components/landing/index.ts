@@ -2,6 +2,7 @@
 export { Hero } from './hero'
 export { ProductOverview } from './product-overview'
 export { ProblemsSolved } from './problems-solved'
+export { AIAssistantFeatures } from './ai-assistant-features'
 export { GstnIntegration } from './gstn-integration'
 export { WhatsAppBot } from './whatsapp-bot'
 export { CoreCapabilities } from './core-capabilities'

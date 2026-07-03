@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button'
 
 const navLinks = [
   { href: '#features', label: 'Features' },
+  { href: '#ai-assistant', label: 'AI Assistant', isNew: true },
   { href: '#gstn-integration', label: 'GST Portal' },
-  { href: '#whatsapp-bot', label: 'WhatsApp Bot', isNew: true },
+  { href: '#whatsapp-bot', label: 'WhatsApp Bot' },
   { href: '#how-it-works', label: 'How It Works' },
-  { href: '#mobile', label: 'Mobile App' },
   { href: '/pricing', label: 'Pricing' },
 ]
 

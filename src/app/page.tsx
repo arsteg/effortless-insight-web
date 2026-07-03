@@ -3,6 +3,7 @@ import {
   Hero,
   ProductOverview,
   ProblemsSolved,
+  AIAssistantFeatures,
   GstnIntegration,
   WhatsAppBot,
   CoreCapabilities,
@@ -31,6 +32,11 @@ export default function Home() {
 
       {/* Problems Solved - Pain points and solutions */}
       <ProblemsSolved />
+
+      {/* AI Assistant Features - NEW: Chat & Auto-Draft */}
+      <div id="ai-assistant" className="scroll-mt-header">
+        <AIAssistantFeatures />
+      </div>
 
       {/* GST Portal Integration - Featured Section */}
       <div id="gstn-integration" className="scroll-mt-header">
