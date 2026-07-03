@@ -14,6 +14,7 @@ import type {
   Attachment,
   DownloadUrlResponse,
   NoticeResponse,
+  AutoDraftResponse,
   Reminder,
   CreateReminderRequest,
 } from '@/types'
@@ -203,6 +204,23 @@ export const noticesApi = {
     const response = await apiClient.post<ApiResponse<NoticeResponse>>(
       `/notices/${noticeId}/responses/${responseId}/mark-submitted`,
       data
+    )
+    return response.data.data
+  },
+
+  // Auto-draft response using AI
+  async generateAutoDraft(
+    noticeId: string,
+    options?: {
+      tone?: 'formal' | 'conciliatory' | 'defensive'
+      language?: 'en' | 'hi'
+      pointsToAddress?: string[]
+      additionalInstructions?: string
+    }
+  ): Promise<AutoDraftResponse> {
+    const response = await apiClient.post<ApiResponse<AutoDraftResponse>>(
+      `/notices/${noticeId}/responses/auto-draft`,
+      options || {}
     )
     return response.data.data
   },

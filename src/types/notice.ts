@@ -226,6 +226,21 @@ export interface NoticeResponse {
   updatedAt?: string
 }
 
+// Auto-draft AI response
+export interface AutoDraftResponse {
+  draftContent: string
+  metadata: AutoDraftMetadata
+}
+
+export interface AutoDraftMetadata {
+  model: string
+  processingTimeMs: number
+  noticeType?: string
+  inputTokens: number
+  outputTokens: number
+  estimatedCost: number
+}
+
 // Reminders
 export interface Reminder {
   id: string

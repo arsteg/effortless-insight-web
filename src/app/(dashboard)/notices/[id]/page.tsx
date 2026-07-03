@@ -25,6 +25,7 @@ import {
   CollaborationPanel,
   ResponseEditor,
 } from '@/components/features/notices'
+import { AIChatPanel } from '@/components/features/ai-chat'
 import { DocumentRequestPanel } from '@/components/features/document-requests/document-request-panel'
 import { WorkflowPanel } from '@/components/features/workflow'
 import { useNotice, useDeleteNotice } from '@/hooks/use-notices'
@@ -170,9 +171,10 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           {/* Tab Navigation */}
           <Tabs defaultValue="overview">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-7">
+          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-8">
             <TabsTrigger value="overview" className="flex-1 md:flex-none">Overview</TabsTrigger>
             <TabsTrigger value="analysis" className="flex-1 md:flex-none whitespace-nowrap">AI Analysis</TabsTrigger>
+            <TabsTrigger value="chat" className="flex-1 md:flex-none whitespace-nowrap">AI Chat</TabsTrigger>
             <TabsTrigger value="collaboration" className="flex-1 md:flex-none">Tasks</TabsTrigger>
             <TabsTrigger value="response" className="flex-1 md:flex-none">Response</TabsTrigger>
             <TabsTrigger value="documents" className="flex-1 md:flex-none">Documents</TabsTrigger>
@@ -193,6 +195,12 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
             onRetry={handleRetryAnalysis}
             isRetrying={isRetrying}
           />
+        </TabsContent>
+
+        <TabsContent value="chat" className="mt-6">
+          <Card className="h-[600px]">
+            <AIChatPanel noticeId={noticeId} className="h-full" />
+          </Card>
         </TabsContent>
 
         <TabsContent value="collaboration" className="mt-6">

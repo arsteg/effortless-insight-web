@@ -10,6 +10,7 @@ export { reportsApi } from './reports'
 export { notificationsApi } from './notifications'
 export { billingApi, formatAmount, getStatusBadgeVariant, getInvoiceStatusBadgeVariant, loadRazorpayScript } from './billing'
 export * as gstnApi from './gstn'
+export { aiChatApi } from './ai-chat'
 
 // Unified API object for convenience
 export const api = {
@@ -24,4 +25,5 @@ export const api = {
   notifications: () => import('./notifications').then((m) => m.notificationsApi),
   billing: () => import('./billing').then((m) => m.billingApi),
   gstn: () => import('./gstn'),
+  aiChat: () => import('./ai-chat').then((m) => m.aiChatApi),
 }

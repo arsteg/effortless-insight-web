@@ -69,7 +69,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             alt="EffortlessInsight"
             width={140}
             height={32}
-            style={{ width: 'auto', height: '32px' }}
+            style={{ width: 'auto', height: 'auto' }}
             priority
           />
         </Link>
