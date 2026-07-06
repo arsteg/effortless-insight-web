@@ -56,7 +56,6 @@ export function initializeFirebaseApp(): FirebaseApp | null {
   try {
     if (getApps().length === 0) {
       firebaseApp = initializeApp(firebaseConfig);
-      console.log('Firebase app initialized');
     } else {
       firebaseApp = getApps()[0];
     }
@@ -124,7 +123,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       });
     }
 
-    console.log('Service worker registered successfully');
     return registration;
   } catch (error) {
     console.error('Error registering service worker:', error);
@@ -193,7 +191,6 @@ export async function getFCMToken(): Promise<string | null> {
     });
 
     if (token) {
-      console.log('FCM token obtained successfully');
       return token;
     } else {
       console.warn('No FCM token available');
@@ -215,7 +212,6 @@ export function onForegroundMessage(callback: (payload: MessagePayload) => void)
   }
 
   const unsubscribe = onMessage(messaging, (payload) => {
-    console.log('Foreground message received:', payload);
     callback(payload);
   });
 

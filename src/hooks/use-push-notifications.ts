@@ -173,7 +173,6 @@ export function usePushNotifications(
       // Check if this is the same token we already registered
       const existingToken = localStorage.getItem(PUSH_TOKEN_KEY)
       if (existingToken === token) {
-        console.log('Push token already registered')
         setStatus('registered')
         return true
       }
@@ -192,8 +191,6 @@ export function usePushNotifications(
       localStorage.setItem(PUSH_TOKEN_REGISTERED_KEY, 'true')
 
       setStatus('registered')
-      console.log('Push notification token registered successfully')
-
       return true
     } catch (err) {
       console.error('Error registering push token:', err)

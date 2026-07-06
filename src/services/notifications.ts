@@ -86,23 +86,19 @@ class NotificationService {
       })
 
       // Connection state change handlers
-      this.connection.onreconnecting((error) => {
-        console.log('SignalR reconnecting...', error?.message)
+      this.connection.onreconnecting(() => {
         this.reconnectAttempts++
       })
 
-      this.connection.onreconnected((connectionId) => {
-        console.log('SignalR reconnected:', connectionId)
+      this.connection.onreconnected(() => {
         this.reconnectAttempts = 0
       })
 
-      this.connection.onclose((error) => {
-        console.log('SignalR connection closed', error?.message)
+      this.connection.onclose(() => {
         this.isConnecting = false
       })
 
       await this.connection.start()
-      console.log('SignalR connected')
       this.reconnectAttempts = 0
       this.isConnecting = false
     } catch (error) {
@@ -119,7 +115,6 @@ class NotificationService {
     if (this.connection) {
       try {
         await this.connection.stop()
-        console.log('SignalR disconnected')
       } catch (error) {
         console.error('Error disconnecting from SignalR:', error)
       }
