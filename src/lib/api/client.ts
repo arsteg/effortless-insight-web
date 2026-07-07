@@ -94,8 +94,18 @@ apiClient.interceptors.response.use(
       _retry?: boolean
     }
 
-    // Handle 401 - attempt token refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Check if this is an auth endpoint that shouldn't trigger token refresh
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/login') ||
+                           originalRequest.url?.includes('/auth/register') ||
+                           originalRequest.url?.includes('/auth/forgot-password') ||
+                           originalRequest.url?.includes('/auth/reset-password') ||
+                           originalRequest.url?.includes('/auth/verify-email') ||
+                           originalRequest.url?.includes('/auth/otp') ||
+                           originalRequest.url?.includes('/auth/2fa/login') ||
+                           originalRequest.url?.includes('/auth/oauth/')
+
+    // Handle 401 - attempt token refresh (but not for auth endpoints)
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight, Sparkles, Shield, Lock, Fingerprint, Server } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function CTASection() {
@@ -43,8 +43,9 @@ export function CTASection() {
 
           {/* Subheadline */}
           <p className="text-lg md:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Auto-fetch notices from GST Portal. Get WhatsApp alerts for deadlines.
-            Join businesses across India who have eliminated the chaos of GST notices.
+            Securely sync notices from the GST Portal via licensed GSP infrastructure.
+            Get WhatsApp alerts for deadlines.
+            Join enterprises across India who trust EffortlessInsight for GST notice management.
           </p>
 
           {/* CTA Buttons */}
@@ -70,32 +71,29 @@ export function CTASection() {
             </Button>
           </div>
 
-          {/* Trust Points */}
+          {/* Trust Points - Improved */}
           <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm text-primary-200">
             <div className="flex items-center gap-2">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>14-day free trial</span>
+              <Shield className="h-4 w-4" />
+              <span>GSP Licensed Integration</span>
             </div>
             <div className="flex items-center gap-2">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>No credit card</span>
+              <Lock className="h-4 w-4" />
+              <span>No Password Storage</span>
             </div>
             <div className="flex items-center gap-2">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>GST Portal sync</span>
+              <Fingerprint className="h-4 w-4" />
+              <span>OTP Verified Access</span>
             </div>
             <div className="flex items-center gap-2">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>WhatsApp alerts</span>
+              <Server className="h-4 w-4" />
+              <span>India Data Residency</span>
             </div>
+          </div>
+
+          {/* Additional micro-trust signal */}
+          <div className="mt-8 text-xs text-primary-300">
+            No credit card required • Cancel anytime • Enterprise-grade security
           </div>
         </div>
       </div>

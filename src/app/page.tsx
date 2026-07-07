@@ -5,6 +5,7 @@ import {
   ProblemsSolved,
   AIAssistantFeatures,
   GstnIntegration,
+  GstPortalTrust,
   WhatsAppBot,
   CoreCapabilities,
   HowItWorks,
@@ -12,6 +13,7 @@ import {
   AnalyticsDashboards,
   MobileApp,
   SecurityScalability,
+  TrustFAQ,
   WhyChooseUs,
   PricingPreview,
   CTASection,
@@ -41,6 +43,11 @@ export default function Home() {
       {/* GST Portal Integration - Featured Section */}
       <div id="gstn-integration" className="scroll-mt-header">
         <GstnIntegration />
+      </div>
+
+      {/* Official GST Portal Trust Section - How we securely connect */}
+      <div id="gst-trust" className="scroll-mt-header">
+        <GstPortalTrust />
       </div>
 
       {/* WhatsApp Bot - NEW Featured Section */}
@@ -73,6 +80,11 @@ export default function Home() {
 
       {/* Security & Scalability - Technical strengths */}
       <SecurityScalability />
+
+      {/* Trust FAQ - Security and integration questions */}
+      <div id="faq" className="scroll-mt-header">
+        <TrustFAQ />
+      </div>
 
       {/* Why Choose Us - Competitive advantages */}
       <WhyChooseUs />

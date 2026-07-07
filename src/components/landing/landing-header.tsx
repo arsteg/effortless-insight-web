@@ -13,6 +13,7 @@ const navLinks = [
   { href: '#gstn-integration', label: 'GST Portal' },
   { href: '#whatsapp-bot', label: 'WhatsApp Bot' },
   { href: '#how-it-works', label: 'How It Works' },
+  { href: '#faq', label: 'FAQ' },
   { href: '/pricing', label: 'Pricing' },
 ]
 

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Play, Shield, Zap, Clock, MessageCircle } from 'lucide-react'
+import { ArrowRight, Play, Shield, Zap, Clock, MessageCircle, Lock, Fingerprint } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AnimatedCounter } from './animated-counter'
 
@@ -24,11 +24,11 @@ export function Hero() {
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-6">
               <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                GST Portal Auto-Sync
+                Secure GST Portal Sync
               </div>
               <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium">
                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                WhatsApp Bot
+                WhatsApp Alerts
               </div>
             </div>
 
@@ -43,9 +43,9 @@ export function Hero() {
 
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Auto-fetch notices from the GST Portal. Get instant WhatsApp alerts for deadlines.
+              Securely sync notices from the GST Portal via licensed GSP infrastructure.
+              Get instant WhatsApp alerts for deadlines.
               Our AI transforms complex notices into actionable insights in under 60 seconds.
-              Never miss a deadline, understand every notice, respond with confidence.
             </p>
 
             {/* CTA Buttons */}
@@ -77,19 +77,19 @@ export function Hero() {
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-green-500" />
-                <span>14-day free trial</span>
+                <span>GSP Licensed</span>
               </div>
               <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary-500" />
-                <span>GST Portal sync</span>
+                <Fingerprint className="h-5 w-5 text-primary-500" />
+                <span>OTP Verified</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-green-500" />
+                <span>No Password Storage</span>
               </div>
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-emerald-500" />
-                <span>WhatsApp alerts</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary-500" />
-                <span>24/7 availability</span>
+                <span>WhatsApp Alerts</span>
               </div>
             </div>
           </div>
@@ -149,7 +149,7 @@ export function Hero() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-600">Tax Amount</span>
-                    <span className="font-semibold text-gray-900">Rs. 2,45,000</span>
+                    <span className="font-semibold text-gray-900">₹2,45,000</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-600">Response Deadline</span>
@@ -160,6 +160,19 @@ export function Hero() {
                     <span className="font-semibold text-green-600">94%</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Trust micro-signals */}
+              <div className="mt-4 flex items-center justify-center gap-4 text-xs text-gray-400">
+                <span className="flex items-center gap-1">
+                  <Lock className="h-3 w-3" /> Encrypted
+                </span>
+                <span className="flex items-center gap-1">
+                  <Shield className="h-3 w-3" /> India Hosted
+                </span>
+                <span className="flex items-center gap-1">
+                  <Zap className="h-3 w-3" /> Audit Trail
+                </span>
               </div>
             </div>
 
@@ -172,8 +185,8 @@ export function Hero() {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-gray-900">GST Portal Synced</div>
-                  <div className="text-xs text-gray-500">3 new notices fetched</div>
+                  <div className="text-sm font-semibold text-gray-900">Secure Sync Complete</div>
+                  <div className="text-xs text-gray-500">3 notices retrieved via GSP</div>
                 </div>
               </div>
             </div>
