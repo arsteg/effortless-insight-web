@@ -12,6 +12,7 @@ import {
   Settings,
   ChevronLeft,
   Upload,
+  RefreshCw,
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -48,6 +49,11 @@ const mainNavItems: NavItem[] = [
     title: 'Upload',
     href: '/notices/upload',
     icon: Upload,
+  },
+  {
+    title: 'GST Sync',
+    href: '/gst-sync',
+    icon: RefreshCw,
   },
   {
     title: 'Tasks',

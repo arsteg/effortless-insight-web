@@ -18,6 +18,7 @@ import {
   Loader2,
   Info,
   Check,
+  RefreshCw,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -126,6 +127,21 @@ const NOTIFICATION_TYPES = {
     types: [
       { key: 'login_alert', label: 'Login from new device' },
       { key: 'subscription_expiring', label: 'Subscription expiring' },
+    ],
+  },
+  gstSync: {
+    label: 'GST Sync',
+    icon: RefreshCw,
+    description: 'Notifications from GST Notice Guard auto-capture',
+    types: [
+      { key: 'gst_sync.notices_synced', label: 'Notices synced' },
+      { key: 'gst_sync.sync_failed', label: 'Sync failed' },
+      { key: 'gst_sync.due_date_reminder', label: 'Due date reminder' },
+      { key: 'gst_sync.due_date_overdue', label: 'Notice overdue' },
+      { key: 'gst_sync.daily_digest', label: 'Daily digest' },
+      { key: 'gst_sync.extension_disconnected', label: 'Extension disconnected' },
+      { key: 'gst_sync.sync_paused', label: 'Sync paused' },
+      { key: 'gst_sync.import_completed', label: 'Import completed' },
     ],
   },
 }
