@@ -7,6 +7,9 @@ import {
   GstnIntegration,
   GstPortalTrust,
   WhatsAppBot,
+  BusinessOwnerSection,
+  TaxProfessionalSection,
+  FinanceTeamSection,
   CoreCapabilities,
   HowItWorks,
   AICapabilities,
@@ -53,6 +56,19 @@ export default function Home() {
       {/* WhatsApp Bot - NEW Featured Section */}
       <div id="whatsapp-bot" className="scroll-mt-header">
         <WhatsAppBot />
+      </div>
+
+      {/* Audience-Specific Sections */}
+      <div id="for-business-owners" className="scroll-mt-header">
+        <BusinessOwnerSection />
+      </div>
+
+      <div id="for-tax-professionals" className="scroll-mt-header">
+        <TaxProfessionalSection />
+      </div>
+
+      <div id="for-finance-teams" className="scroll-mt-header">
+        <FinanceTeamSection />
       </div>
 
       {/* How It Works - Step-by-step workflow */}

@@ -15,22 +15,20 @@ const footerLinks = {
       { label: 'Pricing', href: '/pricing' },
     ],
   },
+  solutions: {
+    title: 'Solutions',
+    links: [
+      { label: 'For Business Owners', href: '#for-business-owners' },
+      { label: 'For CAs & Tax Pros', href: '#for-tax-professionals' },
+      { label: 'For Finance Teams', href: '#for-finance-teams' },
+    ],
+  },
   company: {
     title: 'Company',
     links: [
       { label: 'About Us', href: '/about' },
       { label: 'Blog', href: '/blog' },
-      { label: 'Careers', href: '/careers' },
       { label: 'Contact', href: '/contact' },
-    ],
-  },
-  resources: {
-    title: 'Resources',
-    links: [
-      { label: 'Help Center', href: '/help' },
-      { label: 'Documentation', href: '/docs' },
-      { label: 'GST Guide', href: '/gst-guide' },
-      { label: 'API Reference', href: '/api-docs' },
     ],
   },
   legal: {
@@ -38,7 +36,6 @@ const footerLinks = {
     links: [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms of Service', href: '/terms' },
-      { label: 'Cookie Policy', href: '/cookies' },
       { label: 'Refund Policy', href: '/refund' },
     ],
   },

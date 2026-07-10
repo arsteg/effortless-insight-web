@@ -22,3 +22,8 @@ export { WorkflowDiagram } from './workflow-diagram'
 export { FeatureCard } from './feature-card'
 export { StatCard } from './stat-card'
 export { AnimatedCounter } from './animated-counter'
+
+// Audience-specific sections
+export { BusinessOwnerSection } from './business-owner-section'
+export { TaxProfessionalSection } from './tax-professional-section'
+export { FinanceTeamSection } from './finance-team-section'

@@ -165,7 +165,7 @@ export function ImportNoticesDialog({
                     <SelectItem value="">Leave unassigned</SelectItem>
                     {teamMembers.map((member) => (
                       <SelectItem key={member.id} value={member.id}>
-                        {member.name} ({member.email})
+                        {member.user.name} ({member.user.email})
                       </SelectItem>
                     ))}
                   </SelectContent>
