@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { Check, X, Minus } from 'lucide-react'
 import {
   Table,
@@ -160,9 +161,9 @@ export function PlanComparison({ plans, highlightPlan }: PlanComparisonProps) {
         </TableHeader>
         <TableBody>
           {categories.map((category) => (
-            <>
+            <React.Fragment key={category}>
               {/* Category Header */}
-              <TableRow key={category} className="bg-muted/50">
+              <TableRow className="bg-muted/50">
                 <TableCell
                   colSpan={sortedPlans.length + 1}
                   className="font-semibold text-sm"
@@ -191,7 +192,7 @@ export function PlanComparison({ plans, highlightPlan }: PlanComparisonProps) {
                   })}
                 </TableRow>
               ))}
-            </>
+            </React.Fragment>
           ))}
         </TableBody>
       </Table>
