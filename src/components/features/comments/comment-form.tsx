@@ -75,11 +75,8 @@ export function CommentForm({
     const mentions = parseMentions(content)
 
     onSubmit(content.trim(), showVisibilityToggle ? visibility : undefined)
-
-    if (!isEditing) {
-      setContent('')
-      setVisibility(defaultVisibility)
-    }
+    // Note: Form content is cleared by parent component on success via key prop
+    // This preserves content if the submission fails
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -90,10 +87,7 @@ export function CommentForm({
       e.preventDefault()
       if (content.trim()) {
         onSubmit(content.trim(), showVisibilityToggle ? visibility : undefined)
-        if (!isEditing) {
-          setContent('')
-          setVisibility(defaultVisibility)
-        }
+        // Note: Form content is cleared by parent component on success via key prop
       }
     }
   }

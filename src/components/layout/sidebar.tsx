@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   Upload,
   RefreshCw,
+  Calendar,
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -64,6 +65,11 @@ const mainNavItems: NavItem[] = [
     title: 'Reports',
     href: '/reports',
     icon: BarChart3,
+  },
+  {
+    title: 'Calendar',
+    href: '/calendar',
+    icon: Calendar,
   },
 ]
 

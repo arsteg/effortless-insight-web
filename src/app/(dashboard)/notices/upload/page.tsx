@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, HelpCircle } from 'lucide-react'
+import { ArrowLeft, HelpCircle, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 
 import {
   Card,
@@ -11,82 +11,61 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Progress } from '@/components/ui/progress'
 import {
-  FileDropzone,
-  UploadProgress,
+  MultiFileDropzone,
   DuplicateWarning,
 } from '@/components/features/upload'
-import { useUploadNotice, useProcessingStatus } from '@/hooks/use-upload'
+import { useUploadMultipleNotices } from '@/hooks/use-upload'
 import type { DuplicateWarning as DuplicateWarningType } from '@/types'
 
-type UploadStep = 'select' | 'confirm-duplicate' | 'uploading' | 'processing' | 'complete' | 'error'
+type UploadStep = 'select' | 'confirm-duplicate' | 'uploading' | 'complete' | 'error'
 
 export default function UploadNoticePage() {
   const [step, setStep] = useState<UploadStep>('select')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [duplicateWarning, setDuplicateWarning] = useState<DuplicateWarningType | null>(null)
 
   const {
     upload,
     isUploading,
-    uploadProgress,
-    uploadResponse,
+    progress,
+    uploadResponses,
     error,
     reset,
-  } = useUploadNotice({
-    onSuccess: (response) => {
-      if (response.duplicateWarning?.isPotentialDuplicate) {
-        setDuplicateWarning(response.duplicateWarning)
-        setStep('confirm-duplicate')
-      } else {
-        setStep('processing')
-      }
+  } = useUploadMultipleNotices({
+    onSuccess: (responses) => {
+      setStep('complete')
     },
     onError: () => {
       setStep('error')
     },
   })
 
-  const { status: processingStatus, startPolling } = useProcessingStatus(
-    uploadResponse?.noticeId,
-    {
-      enabled: step === 'processing',
-      onComplete: () => setStep('complete'),
-      onFailed: () => setStep('error'),
-    }
-  )
-
-  // Start polling when we enter the processing step
-  useEffect(() => {
-    if (step === 'processing' && uploadResponse?.noticeId) {
-      startPolling()
-    }
-  }, [step, uploadResponse?.noticeId, startPolling])
-
-  const handleFileSelect = useCallback((file: File) => {
-    setSelectedFile(file)
+  const handleFilesChange = useCallback((files: File[]) => {
+    setSelectedFiles(files)
   }, [])
 
   const handleUpload = useCallback(() => {
-    if (!selectedFile) return
+    if (selectedFiles.length === 0) return
     setStep('uploading')
-    upload(selectedFile)
-  }, [selectedFile, upload])
+    upload(selectedFiles)
+  }, [selectedFiles, upload])
 
   const handleContinueDespiteDuplicate = useCallback(() => {
     setDuplicateWarning(null)
-    setStep('processing')
+    setStep('complete')
   }, [])
 
   const handleCancelDuplicate = useCallback(() => {
     setDuplicateWarning(null)
-    setSelectedFile(null)
+    setSelectedFiles([])
     reset()
     setStep('select')
   }, [reset])
@@ -94,17 +73,17 @@ export default function UploadNoticePage() {
   const handleRetry = useCallback(() => {
     reset()
     setStep('select')
-    setSelectedFile(null)
+    setSelectedFiles([])
   }, [reset])
 
   const handleUploadAnother = useCallback(() => {
     reset()
     setStep('select')
-    setSelectedFile(null)
+    setSelectedFiles([])
   }, [reset])
 
-  // Show progress/status view for uploading, processing, complete, or error states
-  if (step === 'uploading' || step === 'processing' || step === 'complete' || step === 'error') {
+  // Show progress/status view for uploading, complete, or error states
+  if (step === 'uploading' || step === 'complete' || step === 'error') {
     return (
       <div className="space-y-6">
         {/* Page Header */}
@@ -116,19 +95,111 @@ export default function UploadNoticePage() {
             <ArrowLeft className="mr-1 h-4 w-4" />
             Back to Notices
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Upload Notice</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Upload Notices</h1>
         </div>
 
-        {/* Upload Progress */}
-        <UploadProgress
-          uploadResponse={uploadResponse}
-          isUploading={isUploading}
-          uploadProgress={uploadProgress}
-          processingStatus={processingStatus}
-          error={error?.message}
-          onRetry={handleRetry}
-          onUploadAnother={handleUploadAnother}
-        />
+        {/* Multi-file Upload Progress */}
+        <Card className="max-w-2xl">
+          <CardHeader>
+            <CardTitle>
+              {isUploading ? 'Uploading...' : step === 'complete' ? 'Upload Complete' : 'Upload Failed'}
+            </CardTitle>
+            <CardDescription>
+              {isUploading
+                ? `Uploading file ${progress.current} of ${progress.total}`
+                : step === 'complete'
+                  ? progress.failedFiles.length > 0
+                    ? `${progress.completedFiles.length} file(s) uploaded, ${progress.failedFiles.length} failed`
+                    : `${progress.completedFiles.length} file(s) uploaded successfully`
+                  : progress.failedFiles.length > 0
+                    ? `${progress.failedFiles.length} file(s) could not be uploaded`
+                    : 'An error occurred during upload'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isUploading && (
+              <>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="truncate max-w-[200px]">{progress.fileName}</span>
+                    <span>{progress.fileProgress}%</span>
+                  </div>
+                  <Progress value={progress.fileProgress} className="h-2" />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Overall progress: {progress.current} / {progress.total} files
+                </div>
+              </>
+            )}
+
+            {step === 'complete' && (
+              <div className="space-y-3">
+                {progress.completedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-green-600">Successfully uploaded:</p>
+                    {progress.completedFiles.map((name, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <span className="truncate">{name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {progress.failedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-destructive">Failed to upload:</p>
+                    {progress.failedFiles.map((file, i) => (
+                      <div key={i} className="rounded-md border border-destructive/50 bg-destructive/10 p-3">
+                        <div className="flex items-start gap-2">
+                          <XCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{file.name}</p>
+                            <p className="text-sm text-destructive">{file.error}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {step === 'error' && progress.failedFiles.length === 0 && (
+              <div className="flex items-center gap-2 text-destructive">
+                <XCircle className="h-5 w-5" />
+                <span>{error?.message || 'Upload failed'}</span>
+              </div>
+            )}
+
+            {step === 'error' && progress.failedFiles.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-destructive">Failed to upload:</p>
+                {progress.failedFiles.map((file, i) => (
+                  <div key={i} className="rounded-md border border-destructive/50 bg-destructive/10 p-3">
+                    <div className="flex items-start gap-2">
+                      <XCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{file.name}</p>
+                        <p className="text-sm text-destructive">{file.error}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {(step === 'complete' || step === 'error') && (
+              <div className="flex gap-2 pt-4">
+                <Button variant="outline" onClick={handleUploadAnother}>
+                  Upload More
+                </Button>
+                <Link href="/notices" className={buttonVariants({ variant: 'default' })}>
+                  View Notices
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -172,9 +243,9 @@ export default function UploadNoticePage() {
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back to Notices
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight">Upload Notice</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Upload Notices</h1>
         <p className="text-muted-foreground">
-          Upload a GST notice document for AI-powered analysis.
+          Upload one or more GST notice documents for AI-powered analysis.
         </p>
       </div>
 
@@ -183,9 +254,9 @@ export default function UploadNoticePage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Upload Document</CardTitle>
+              <CardTitle>Upload Documents</CardTitle>
               <CardDescription>
-                Supported formats: PDF, JPG, PNG. Maximum file size: 10MB.
+                Supported formats: PDF, JPG, PNG. Maximum 10MB per file. Up to 10 files at once.
               </CardDescription>
             </div>
             <Tooltip>
@@ -196,28 +267,35 @@ export default function UploadNoticePage() {
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
                 <p className="text-sm">
-                  Upload your GST notice document. Our AI will automatically extract
-                  key information, assess risk, and provide actionable insights.
+                  Upload your GST notice documents. Our AI will automatically extract
+                  key information, assess risk, and provide actionable insights for each notice.
                 </p>
               </TooltipContent>
             </Tooltip>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* File Dropzone */}
-          <FileDropzone onFileSelect={handleFileSelect} />
+          {/* Multi-File Dropzone */}
+          <MultiFileDropzone onFilesChange={handleFilesChange} />
 
           {/* Upload Button */}
-          {selectedFile && (
+          {selectedFiles.length > 0 && (
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
-                onClick={() => setSelectedFile(null)}
+                onClick={() => setSelectedFiles([])}
               >
                 Cancel
               </Button>
               <Button onClick={handleUpload} disabled={isUploading}>
-                Upload Notice
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  `Upload ${selectedFiles.length} Notice${selectedFiles.length > 1 ? 's' : ''}`
+                )}
               </Button>
             </div>
           )}

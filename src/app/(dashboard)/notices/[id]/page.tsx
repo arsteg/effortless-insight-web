@@ -24,8 +24,11 @@ import {
   ActivityTimeline,
   CollaborationPanel,
   ResponseEditor,
+  EditNoticeDialog,
+  SimilarNotices,
 } from '@/components/features/notices'
 import { AIChatPanel } from '@/components/features/ai-chat'
+import { CommentList } from '@/components/features/comments'
 import { DocumentRequestPanel } from '@/components/features/document-requests/document-request-panel'
 import { WorkflowPanel } from '@/components/features/workflow'
 import { useNotice, useDeleteNotice } from '@/hooks/use-notices'
@@ -51,6 +54,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
 
   // State
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
   const [isRetrying, setIsRetrying] = useState(false)
 
   // Data fetching
@@ -148,6 +152,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
       <NoticeHeader
         notice={notice}
         isLoading={isLoadingNotice}
+        onEdit={notice ? () => setShowEditDialog(true) : undefined}
         onDownload={notice?.fileUrl ? handleDownloadNotice : undefined}
         onDelete={() => setShowDeleteDialog(true)}
       />
@@ -171,11 +176,13 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           {/* Tab Navigation */}
           <Tabs defaultValue="overview">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-8">
+          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-10">
             <TabsTrigger value="overview" className="flex-1 md:flex-none">Overview</TabsTrigger>
             <TabsTrigger value="analysis" className="flex-1 md:flex-none whitespace-nowrap">AI Analysis</TabsTrigger>
+            <TabsTrigger value="similar" className="flex-1 md:flex-none">Similar</TabsTrigger>
             <TabsTrigger value="chat" className="flex-1 md:flex-none whitespace-nowrap">AI Chat</TabsTrigger>
             <TabsTrigger value="collaboration" className="flex-1 md:flex-none">Tasks</TabsTrigger>
+            <TabsTrigger value="comments" className="flex-1 md:flex-none">Comments</TabsTrigger>
             <TabsTrigger value="response" className="flex-1 md:flex-none">Response</TabsTrigger>
             <TabsTrigger value="documents" className="flex-1 md:flex-none">Documents</TabsTrigger>
             <TabsTrigger value="requests" className="flex-1 md:flex-none">Requests</TabsTrigger>
@@ -197,6 +204,10 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           />
         </TabsContent>
 
+        <TabsContent value="similar" className="mt-6">
+          <SimilarNotices noticeId={noticeId} />
+        </TabsContent>
+
         <TabsContent value="chat" className="mt-6">
           <Card className="h-[600px]">
             <AIChatPanel noticeId={noticeId} className="h-full" />
@@ -204,7 +215,18 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="collaboration" className="mt-6">
-          <CollaborationPanel noticeId={noticeId} />
+          <CollaborationPanel noticeId={noticeId} availableMembers={teamMembers} />
+        </TabsContent>
+
+        <TabsContent value="comments" className="mt-6">
+          <CommentList
+            noticeId={noticeId}
+            availableUsers={teamMembers.map(m => ({
+              id: m.id,
+              name: m.name,
+              email: m.email,
+            }))}
+          />
         </TabsContent>
 
         <TabsContent value="response" className="mt-6">
@@ -265,6 +287,15 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Edit Notice Dialog */}
+      {notice && (
+        <EditNoticeDialog
+          notice={notice}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

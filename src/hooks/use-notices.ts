@@ -9,8 +9,10 @@ import type {
   NoticeFilters,
   NoticeListResponse,
   NoticeStatistics,
+  NoticeStatus,
   UpdateNoticeRequest,
   AssignNoticeRequest,
+  SimilarNotice,
 } from '@/types'
 
 // Query keys
@@ -21,6 +23,7 @@ export const noticeKeys = {
   details: () => [...noticeKeys.all, 'detail'] as const,
   detail: (id: string) => [...noticeKeys.details(), id] as const,
   statistics: () => [...noticeKeys.all, 'statistics'] as const,
+  similarNotices: (id: string) => [...noticeKeys.details(), id, 'similar'] as const,
 }
 
 // Get notices list with filters
@@ -130,6 +133,33 @@ export function useDeleteNotice() {
   })
 }
 
+// Update notice status mutation
+export function useUpdateNoticeStatus() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: ({ id, status, reason }: { id: string; status: NoticeStatus; reason?: string }) =>
+      noticesApi.updateStatus(id, { status, reason }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: noticeKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: noticeKeys.detail(data.id) })
+      toast({
+        title: 'Status updated',
+        description: 'The notice status has been updated successfully.',
+        variant: 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Update failed',
+        description: 'Failed to update the notice status. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
 // Archive notice mutation
 export function useArchiveNotice() {
   const queryClient = useQueryClient()
@@ -223,5 +253,14 @@ export function useExportNotices() {
         variant: 'destructive',
       })
     },
+  })
+}
+
+// Get similar notices (AI-detected)
+export function useSimilarNotices(noticeId: string) {
+  return useQuery<SimilarNotice[]>({
+    queryKey: noticeKeys.similarNotices(noticeId),
+    queryFn: () => noticesApi.getSimilarNotices(noticeId),
+    enabled: !!noticeId,
   })
 }

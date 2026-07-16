@@ -9,6 +9,7 @@ import {
   fileApi,
   timeTrackingApi,
 } from '@/services/collaboration'
+import { useToast } from '@/hooks/use-toast'
 import type {
   CreateTaskRequest,
   UpdateTaskRequest,
@@ -182,18 +183,33 @@ export function useComments(
 
 export function useCreateComment(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: (data: CreateCommentRequest) => commentApi.createComment(noticeId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
       queryClient.invalidateQueries({ queryKey: ['activity', noticeId] })
+      toast({
+        title: 'Comment added',
+        description: 'Your comment has been posted successfully.',
+        variant: 'success',
+      })
+    },
+    onError: (error: unknown) => {
+      const message = (error as { message?: string })?.message || 'Please try again.'
+      toast({
+        title: 'Failed to post comment',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
 
 export function useReplyToComment(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: ({ commentId, data }: { commentId: string; data: CreateCommentRequest }) =>
@@ -201,35 +217,77 @@ export function useReplyToComment(noticeId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
       queryClient.invalidateQueries({ queryKey: ['activity', noticeId] })
+      toast({
+        title: 'Reply added',
+        description: 'Your reply has been posted successfully.',
+        variant: 'success',
+      })
+    },
+    onError: (error: unknown) => {
+      const message = (error as { message?: string })?.message || 'Please try again.'
+      toast({
+        title: 'Failed to post reply',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
 
 export function useUpdateComment(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: ({ commentId, data }: { commentId: string; data: UpdateCommentRequest }) =>
       commentApi.updateComment(commentId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
+      toast({
+        title: 'Comment updated',
+        description: 'Your comment has been updated successfully.',
+        variant: 'success',
+      })
+    },
+    onError: (error: unknown) => {
+      const message = (error as { message?: string })?.message || 'Please try again.'
+      toast({
+        title: 'Failed to update comment',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
 
 export function useDeleteComment(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: (commentId: string) => commentApi.deleteComment(commentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
+      toast({
+        title: 'Comment deleted',
+        description: 'Your comment has been deleted.',
+        variant: 'success',
+      })
+    },
+    onError: (error: unknown) => {
+      const message = (error as { message?: string })?.message || 'Please try again.'
+      toast({
+        title: 'Failed to delete comment',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
 
 export function useAddReaction(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: ({ commentId, emoji }: { commentId: string; emoji: string }) =>
@@ -237,17 +295,32 @@ export function useAddReaction(noticeId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
     },
+    onError: () => {
+      toast({
+        title: 'Failed to add reaction',
+        description: 'Please try again.',
+        variant: 'destructive',
+      })
+    },
   })
 }
 
 export function useRemoveReaction(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: ({ commentId, emoji }: { commentId: string; emoji: string }) =>
       commentApi.removeReaction(commentId, emoji),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
+    },
+    onError: () => {
+      toast({
+        title: 'Failed to remove reaction',
+        description: 'Please try again.',
+        variant: 'destructive',
+      })
     },
   })
 }

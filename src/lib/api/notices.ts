@@ -17,6 +17,7 @@ import type {
   AutoDraftResponse,
   Reminder,
   CreateReminderRequest,
+  SimilarNotice,
 } from '@/types'
 
 export const noticesApi = {
@@ -63,7 +64,7 @@ export const noticesApi = {
     })
   },
 
-  // Upload
+  // Upload single file
   async upload(
     formData: FormData,
     onUploadProgress?: (progressEvent: { loaded: number; total?: number }) => void
@@ -85,6 +86,44 @@ export const noticesApi = {
       }
     )
     return response.data.data
+  },
+
+  // Upload multiple files (uploads each file as a separate notice)
+  async uploadMultiple(
+    files: File[],
+    onProgress?: (progress: { current: number; total: number; fileName: string; fileProgress: number }) => void
+  ): Promise<NoticeUploadResponse[]> {
+    const results: NoticeUploadResponse[] = []
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      const formData = new FormData()
+      formData.append('File', file)
+
+      const response = await apiClient.post<ApiResponse<NoticeUploadResponse>>(
+        '/notices/upload',
+        formData,
+        {
+          timeout: 300000,
+          onUploadProgress: onProgress
+            ? (progressEvent) => {
+                const fileProgress = progressEvent.total
+                  ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                  : 0
+                onProgress({
+                  current: i + 1,
+                  total: files.length,
+                  fileName: file.name,
+                  fileProgress,
+                })
+              }
+            : undefined,
+        }
+      )
+      results.push(response.data.data)
+    }
+
+    return results
   },
 
   // Statistics
@@ -254,5 +293,14 @@ export const noticesApi = {
       responseType: 'blob',
     })
     return response.data
+  },
+
+  // Similar notices (AI-detected)
+  async getSimilarNotices(noticeId: string, limit?: number): Promise<SimilarNotice[]> {
+    const response = await apiClient.get<ApiResponse<SimilarNotice[]>>(
+      `/notices/${noticeId}/similar`,
+      { params: limit ? { limit } : undefined }
+    )
+    return response.data.data
   },
 }

@@ -1,13 +1,36 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Loader2, Save, Send, CheckCircle, FileText, Wand2, Sparkles } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import {
+  Loader2,
+  Save,
+  Send,
+  CheckCircle,
+  FileText,
+  Wand2,
+  Sparkles,
+  Upload,
+  Paperclip,
+  Download,
+  Trash2,
+  File,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +42,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -26,8 +57,15 @@ import {
 } from '@/components/ui/tooltip'
 import { useToast } from '@/hooks/use-toast'
 import { noticesApi } from '@/lib/api'
+import {
+  useAttachments,
+  useUploadAttachment,
+  useDeleteAttachment,
+  useDownloadAttachment,
+} from '@/hooks/use-attachments'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { NoticeResponse } from '@/types'
+import { formatFileSize } from '@/lib/utils'
+import type { NoticeResponse, Attachment } from '@/types'
 
 interface ResponseEditorProps {
   noticeId: string
@@ -49,6 +87,23 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
   const [content, setContent] = useState('')
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [showAutoDraftDialog, setShowAutoDraftDialog] = useState(false)
+  const [showUploadDialog, setShowUploadDialog] = useState(false)
+  const [isDocumentsOpen, setIsDocumentsOpen] = useState(true)
+  const [uploadDescription, setUploadDescription] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [deleteAttachmentId, setDeleteAttachmentId] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Fetch attachments (response documents)
+  const { data: attachments = [], isLoading: isLoadingAttachments } = useAttachments(noticeId)
+  const uploadMutation = useUploadAttachment(noticeId)
+  const deleteMutation = useDeleteAttachment(noticeId)
+  const downloadMutation = useDownloadAttachment(noticeId)
+
+  // Filter to show only response documents (documentType = 'response')
+  const responseDocuments = attachments.filter(
+    (a: Attachment) => a.documentType === 'response'
+  )
 
   // Fetch latest response
   const { data: response, isLoading } = useQuery({
@@ -190,6 +245,80 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
   const canEdit = !response || response.status === 'draft'
   const canSubmit = response?.status === 'draft' && content.trim().length > 0
 
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload a PDF or image file (JPG, PNG).',
+          variant: 'destructive',
+        })
+        return
+      }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: 'Maximum file size is 10MB.',
+          variant: 'destructive',
+        })
+        return
+      }
+      setSelectedFile(file)
+      setShowUploadDialog(true)
+    }
+  }
+
+  // Handle upload
+  const handleUpload = () => {
+    if (!selectedFile) return
+
+    const formData = new FormData()
+    formData.append('file', selectedFile)
+    formData.append('documentType', 'response')
+    if (uploadDescription.trim()) {
+      formData.append('description', uploadDescription.trim())
+    }
+
+    uploadMutation.mutate(formData, {
+      onSuccess: () => {
+        setShowUploadDialog(false)
+        setSelectedFile(null)
+        setUploadDescription('')
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      },
+    })
+  }
+
+  // Handle download
+  const handleDownload = (attachmentId: string) => {
+    downloadMutation.mutate(attachmentId)
+  }
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = () => {
+    if (deleteAttachmentId) {
+      deleteMutation.mutate(deleteAttachmentId, {
+        onSuccess: () => {
+          setDeleteAttachmentId(null)
+        },
+      })
+    }
+  }
+
+  // Get file icon based on type
+  const getFileIcon = (fileType?: string) => {
+    if (fileType?.includes('pdf')) return <FileText className="h-4 w-4 text-red-500" />
+    if (fileType?.includes('image')) return <File className="h-4 w-4 text-blue-500" />
+    return <File className="h-4 w-4 text-gray-500" />
+  }
+
   if (isLoading) {
     return (
       <Card>
@@ -246,6 +375,115 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
           disabled={!canEdit || autoDraftMutation.isPending}
           className="font-mono text-sm"
         />
+
+        {/* Response Documents Section */}
+        <Collapsible open={isDocumentsOpen} onOpenChange={setIsDocumentsOpen}>
+          <div className="border rounded-lg">
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Paperclip className="h-4 w-4" />
+                  <span className="font-medium">Response Documents</span>
+                  {responseDocuments.length > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {responseDocuments.length}
+                    </Badge>
+                  )}
+                </div>
+                {isDocumentsOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <Separator />
+              <div className="p-4 space-y-4">
+                {/* Upload Button */}
+                {canEdit && (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadMutation.isPending}
+                      className="w-full border-dashed"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Response Document
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      Supported formats: PDF, JPG, PNG (max 10MB)
+                    </p>
+                  </div>
+                )}
+
+                {/* Documents List */}
+                {isLoadingAttachments ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ) : responseDocuments.length > 0 ? (
+                  <div className="space-y-2">
+                    {responseDocuments.map((doc: Attachment) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          {getFileIcon(doc.fileType)}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{doc.fileName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {doc.fileSize ? formatFileSize(doc.fileSize) : 'Unknown size'}
+                              {doc.description && ` • ${doc.description}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleDownload(doc.id)}
+                            disabled={downloadMutation.isPending}
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          {canEdit && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => setDeleteAttachmentId(doc.id)}
+                              disabled={deleteMutation.isPending}
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No response documents uploaded yet.
+                  </p>
+                )}
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
 
         {canEdit && (
           <div className="flex gap-2 justify-between">
@@ -386,6 +624,95 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
                   <Wand2 className="mr-2 h-4 w-4" />
                   Generate New Draft
                 </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Upload Document Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Response Document</DialogTitle>
+            <DialogDescription>
+              Add a supporting document for your response.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedFile && (
+              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                {getFileIcon(selectedFile.type)}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatFileSize(selectedFile.size)}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (optional)</Label>
+              <Input
+                id="description"
+                placeholder="e.g., Bank statement, Payment proof, Supporting evidence..."
+                value={uploadDescription}
+                onChange={(e) => setUploadDescription(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowUploadDialog(false)
+                setSelectedFile(null)
+                setUploadDescription('')
+              }}
+              disabled={uploadMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleUpload} disabled={uploadMutation.isPending}>
+              {uploadMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteAttachmentId} onOpenChange={() => setDeleteAttachmentId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this document? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -260,3 +260,14 @@ export interface CreateReminderRequest {
   remindAt: string
   daysBefore?: number
 }
+
+// Similar notices (AI-detected)
+export interface SimilarNotice {
+  id: string
+  noticeNumber?: string
+  noticeType?: string
+  status: NoticeStatus
+  similarityScore: number
+  summary?: string
+  responseDeadline?: string
+}

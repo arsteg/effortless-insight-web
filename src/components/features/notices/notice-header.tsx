@@ -12,6 +12,7 @@ import {
   Calendar,
   Building2,
   FileText,
+  Pencil,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from './status-badge'
+import { StatusDropdown } from './status-dropdown'
 import { PriorityBadge } from './priority-badge'
 import { RiskBadge } from './risk-badge'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
@@ -32,7 +34,9 @@ import type { NoticeDetail } from '@/types'
 interface NoticeHeaderProps {
   notice?: NoticeDetail
   isLoading?: boolean
+  canChangeStatus?: boolean
   onDownload?: () => void
+  onEdit?: () => void
   onAssign?: () => void
   onArchive?: () => void
   onDelete?: () => void
@@ -41,7 +45,9 @@ interface NoticeHeaderProps {
 export function NoticeHeader({
   notice,
   isLoading = false,
+  canChangeStatus = true,
   onDownload,
+  onEdit,
   onAssign,
   onArchive,
   onDelete,
@@ -79,6 +85,12 @@ export function NoticeHeader({
           Back to Notices
         </Link>
         <div className="flex items-center gap-2">
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          )}
           {onDownload && (
             <Button variant="outline" size="sm" onClick={onDownload}>
               <Download className="mr-2 h-4 w-4" />
@@ -126,7 +138,14 @@ export function NoticeHeader({
             <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
               {notice.noticeNumber || `Notice #${notice.id.slice(0, 8)}`}
             </h1>
-            <StatusBadge status={notice.status} />
+            {canChangeStatus ? (
+              <StatusDropdown
+                noticeId={notice.id}
+                currentStatus={notice.status}
+              />
+            ) : (
+              <StatusBadge status={notice.status} />
+            )}
             <PriorityBadge priority={notice.priority} />
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
