@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Loader2 } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
 
 import {
   Dialog,
@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -21,18 +21,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { useUpdateNotice } from '@/hooks/use-notices'
-import type { NoticeDetail, UpdateNoticeRequest } from '@/types'
+} from "@/components/ui/select";
+import { useUpdateNotice } from "@/hooks/use-notices";
+import type {
+  NoticeDetail,
+  UpdateNoticeRequest,
+  NoticePriority,
+} from "@/types";
 
 const editNoticeSchema = z.object({
   noticeNumber: z.string().optional(),
@@ -46,113 +50,138 @@ const editNoticeSchema = z.object({
   penaltyAmount: z.coerce.number().min(0).optional(),
   interestAmount: z.coerce.number().min(0).optional(),
   priority: z.string().optional(),
-})
+});
 
-type EditNoticeFormData = z.infer<typeof editNoticeSchema>
+type EditNoticeFormData = z.infer<typeof editNoticeSchema>;
 
 interface EditNoticeDialogProps {
-  notice: NoticeDetail
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  notice: NoticeDetail;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const NOTICE_TYPES = [
-  'DRC-01',
-  'DRC-01A',
-  'DRC-01B',
-  'DRC-02',
-  'DRC-03',
-  'DRC-07',
-  'ASMT-10',
-  'ASMT-12',
-  'GST REG-17',
-  'GST REG-18',
-  'Other',
-]
+  "DRC-01",
+  "DRC-01A",
+  "DRC-01B",
+  "DRC-02",
+  "DRC-03",
+  "DRC-07",
+  "ASMT-10",
+  "ASMT-12",
+  "GST REG-17",
+  "GST REG-18",
+  "Other",
+];
 
 const NOTICE_CATEGORIES = [
-  'Assessment',
-  'Demand & Recovery',
-  'Registration',
-  'Return Filing',
-  'Refund',
-  'Appeals',
-  'Other',
-]
+  "Assessment",
+  "Demand & Recovery",
+  "Registration",
+  "Return Filing",
+  "Refund",
+  "Appeals",
+  "Other",
+];
 
 const PRIORITIES = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-]
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "critical", label: "Critical" },
+];
 
-export function EditNoticeDialog({ notice, open, onOpenChange }: EditNoticeDialogProps) {
-  const updateMutation = useUpdateNotice()
+export function EditNoticeDialog({
+  notice,
+  open,
+  onOpenChange,
+}: EditNoticeDialogProps) {
+  const updateMutation = useUpdateNotice();
 
   const form = useForm<EditNoticeFormData>({
     resolver: zodResolver(editNoticeSchema),
     defaultValues: {
-      noticeNumber: notice.noticeNumber || '',
-      noticeType: notice.noticeType || '',
-      noticeCategory: notice.noticeCategory || '',
-      gstin: notice.gstin || '',
-      issueDate: notice.issueDate ? notice.issueDate.split('T')[0] : '',
-      responseDeadline: notice.responseDeadline ? notice.responseDeadline.split('T')[0] : '',
-      extendedDeadline: notice.extendedDeadline ? notice.extendedDeadline.split('T')[0] : '',
+      noticeNumber: notice.noticeNumber || "",
+      noticeType: notice.noticeType || "",
+      noticeCategory: notice.noticeCategory || "",
+      gstin: notice.gstin || "",
+      issueDate: notice.issueDate ? notice.issueDate.split("T")[0] : "",
+      responseDeadline: notice.responseDeadline
+        ? notice.responseDeadline.split("T")[0]
+        : "",
+      extendedDeadline: notice.extendedDeadline
+        ? notice.extendedDeadline.split("T")[0]
+        : "",
       taxAmount: notice.taxAmount || 0,
       penaltyAmount: notice.penaltyAmount || 0,
       interestAmount: notice.interestAmount || 0,
-      priority: notice.priority || 'medium',
+      priority: notice.priority || "medium",
     },
-  })
+  });
 
   // Reset form when notice changes or dialog opens
   useEffect(() => {
     if (open) {
       form.reset({
-        noticeNumber: notice.noticeNumber || '',
-        noticeType: notice.noticeType || '',
-        noticeCategory: notice.noticeCategory || '',
-        gstin: notice.gstin || '',
-        issueDate: notice.issueDate ? notice.issueDate.split('T')[0] : '',
-        responseDeadline: notice.responseDeadline ? notice.responseDeadline.split('T')[0] : '',
-        extendedDeadline: notice.extendedDeadline ? notice.extendedDeadline.split('T')[0] : '',
+        noticeNumber: notice.noticeNumber || "",
+        noticeType: notice.noticeType || "",
+        noticeCategory: notice.noticeCategory || "",
+        gstin: notice.gstin || "",
+        issueDate: notice.issueDate ? notice.issueDate.split("T")[0] : "",
+        responseDeadline: notice.responseDeadline
+          ? notice.responseDeadline.split("T")[0]
+          : "",
+        extendedDeadline: notice.extendedDeadline
+          ? notice.extendedDeadline.split("T")[0]
+          : "",
         taxAmount: notice.taxAmount || 0,
         penaltyAmount: notice.penaltyAmount || 0,
         interestAmount: notice.interestAmount || 0,
-        priority: notice.priority || 'medium',
-      })
+        priority: notice.priority || "medium",
+      });
     }
-  }, [notice, open, form])
+  }, [notice, open, form]);
 
   const onSubmit = async (data: EditNoticeFormData) => {
     // Only include changed fields
-    const updateData: UpdateNoticeRequest = {}
+    const updateData: UpdateNoticeRequest = {};
 
-    if (data.noticeNumber !== notice.noticeNumber) updateData.noticeNumber = data.noticeNumber
-    if (data.noticeType !== notice.noticeType) updateData.noticeType = data.noticeType
-    if (data.noticeCategory !== notice.noticeCategory) updateData.noticeCategory = data.noticeCategory
-    if (data.gstin !== notice.gstin) updateData.gstin = data.gstin
-    if (data.issueDate && data.issueDate !== notice.issueDate?.split('T')[0]) updateData.issueDate = data.issueDate
-    if (data.responseDeadline && data.responseDeadline !== notice.responseDeadline?.split('T')[0]) updateData.responseDeadline = data.responseDeadline
-    if (data.extendedDeadline !== (notice.extendedDeadline?.split('T')[0] || '')) {
-      updateData.extendedDeadline = data.extendedDeadline || undefined
+    if (data.noticeNumber !== notice.noticeNumber)
+      updateData.noticeNumber = data.noticeNumber;
+    if (data.noticeType !== notice.noticeType)
+      updateData.noticeType = data.noticeType;
+    if (data.noticeCategory !== notice.noticeCategory)
+      updateData.noticeCategory = data.noticeCategory;
+    if (data.gstin !== notice.gstin) updateData.gstin = data.gstin;
+    if (data.issueDate && data.issueDate !== notice.issueDate?.split("T")[0])
+      updateData.issueDate = data.issueDate;
+    if (
+      data.responseDeadline &&
+      data.responseDeadline !== notice.responseDeadline?.split("T")[0]
+    )
+      updateData.responseDeadline = data.responseDeadline;
+    if (
+      data.extendedDeadline !== (notice.extendedDeadline?.split("T")[0] || "")
+    ) {
+      updateData.extendedDeadline = data.extendedDeadline || undefined;
     }
-    if (data.taxAmount !== notice.taxAmount) updateData.taxAmount = data.taxAmount
-    if (data.penaltyAmount !== notice.penaltyAmount) updateData.penaltyAmount = data.penaltyAmount
-    if (data.interestAmount !== notice.interestAmount) updateData.interestAmount = data.interestAmount
-    if (data.priority !== notice.priority) updateData.priority = data.priority as UpdateNoticeRequest['priority']
+    if (data.taxAmount !== notice.taxAmount)
+      updateData.taxAmount = data.taxAmount;
+    if (data.penaltyAmount !== notice.penaltyAmount)
+      updateData.penaltyAmount = data.penaltyAmount;
+    if (data.interestAmount !== notice.interestAmount)
+      updateData.interestAmount = data.interestAmount;
+    if (data.priority !== notice.priority) updateData.priority = data.priority;
 
     // Check if any changes were made
     if (Object.keys(updateData).length === 0) {
-      onOpenChange(false)
-      return
+      onOpenChange(false);
+      return;
     }
 
-    await updateMutation.mutateAsync({ id: notice.id, data: updateData })
-    onOpenChange(false)
-  }
+    await updateMutation.mutateAsync({ id: notice.id, data: updateData });
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -160,7 +189,8 @@ export function EditNoticeDialog({ notice, open, onOpenChange }: EditNoticeDialo
         <DialogHeader>
           <DialogTitle>Edit Notice Details</DialogTitle>
           <DialogDescription>
-            Update the notice information. Changes will be recorded in the audit trail.
+            Update the notice information. Changes will be recorded in the audit
+            trail.
           </DialogDescription>
         </DialogHeader>
 
@@ -260,7 +290,10 @@ export function EditNoticeDialog({ notice, open, onOpenChange }: EditNoticeDialo
                       </FormControl>
                       <SelectContent>
                         {PRIORITIES.map((priority) => (
-                          <SelectItem key={priority.value} value={priority.value}>
+                          <SelectItem
+                            key={priority.value}
+                            value={priority.value}
+                          >
                             {priority.label}
                           </SelectItem>
                         ))}
@@ -378,7 +411,7 @@ export function EditNoticeDialog({ notice, open, onOpenChange }: EditNoticeDialo
                     Saving...
                   </>
                 ) : (
-                  'Save Changes'
+                  "Save Changes"
                 )}
               </Button>
             </DialogFooter>
@@ -386,5 +419,5 @@ export function EditNoticeDialog({ notice, open, onOpenChange }: EditNoticeDialo
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
