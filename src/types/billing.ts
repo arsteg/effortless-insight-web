@@ -71,6 +71,8 @@ export interface Subscription {
   currentPeriodEnd: string
   cancelAtPeriodEnd: boolean
   trialEnd?: string
+  isTrialing: boolean
+  trialDaysRemaining?: number
   seats: Seats
   pricing: SubscriptionPricing
   nextBillingDate: string
@@ -79,7 +81,7 @@ export interface Subscription {
   scheduledChange?: ScheduledChange
 }
 
-export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'
+export type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'
 export type BillingCycle = 'monthly' | 'annually'
 
 export interface Seats {
@@ -159,6 +161,11 @@ export interface CreateSubscriptionRequest {
   billingDetails: BillingDetailsRequest
   couponCode?: string
   autoRenew: boolean
+}
+
+export interface StartTrialRequest {
+  planCode: string
+  billingCycle: BillingCycle
 }
 
 export interface BillingDetailsRequest {
