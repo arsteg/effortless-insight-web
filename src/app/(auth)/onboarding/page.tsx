@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Building2, CheckCircle2, AlertCircle } from 'lucide-react'
@@ -16,6 +16,8 @@ import {
 import { organizationsApi } from '@/lib/api'
 import { useAuthStore } from '@/stores'
 import { useToast } from '@/hooks/use-toast'
+import { useStartTrial } from '@/hooks/use-billing'
+import type { BillingCycle } from '@/types/billing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -45,6 +47,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const { user, refreshUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
@@ -54,6 +57,47 @@ export default function OnboardingPage() {
     stateName?: string
     errorMessage?: string
   } | null>(null)
+
+  // Get plan selection from query params or localStorage
+  const [selectedPlan, setSelectedPlan] = useState<{
+    planCode: string
+    billingCycle: BillingCycle
+  } | null>(null)
+
+  useEffect(() => {
+    // Try query params first
+    const planFromUrl = searchParams.get('plan')
+    const billingFromUrl = searchParams.get('billing') as BillingCycle | null
+
+    if (planFromUrl) {
+      setSelectedPlan({
+        planCode: planFromUrl,
+        billingCycle: billingFromUrl || 'monthly'
+      })
+      return
+    }
+
+    // Fallback to localStorage
+    try {
+      const stored = localStorage.getItem('selected_plan')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        // Only use if less than 24 hours old
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+          setSelectedPlan({
+            planCode: parsed.planCode,
+            billingCycle: parsed.billingCycle
+          })
+        } else {
+          localStorage.removeItem('selected_plan')
+        }
+      }
+    } catch {
+      // Ignore parsing errors
+    }
+  }, [searchParams])
+
+  const startTrialMutation = useStartTrial()
 
   const form = useForm<OnboardingFormData>({
     resolver: zodResolver(onboardingSchema),
@@ -127,11 +171,46 @@ export default function OnboardingPage() {
       // Refresh user to get updated organization info
       await refreshUser()
 
-      toast({
-        title: 'Organization created!',
-        description: 'Welcome to EffortlessInsight. Let\'s get started.',
-        variant: 'success',
-      })
+      // If plan was selected, start trial
+      if (selectedPlan) {
+        try {
+          await startTrialMutation.mutateAsync({
+            planCode: selectedPlan.planCode,
+            billingCycle: selectedPlan.billingCycle,
+          })
+
+          // Clear stored plan selection after successful trial start
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('selected_plan')
+          }
+
+          toast({
+            title: 'Organization created!',
+            description: `Your free trial has started. Welcome to EffortlessInsight!`,
+            variant: 'success',
+          })
+        } catch (trialError: unknown) {
+          // Log trial error but don't block - user can select plan later
+          console.error('Failed to start trial:', trialError)
+          toast({
+            title: 'Organization created!',
+            description: 'Welcome to EffortlessInsight. Please select a plan to continue.',
+            variant: 'default',
+          })
+          // Redirect to pricing page to select plan
+          router.push('/pricing')
+          return
+        }
+      } else {
+        toast({
+          title: 'Organization created!',
+          description: 'Welcome to EffortlessInsight. Please select a plan to continue.',
+          variant: 'default',
+        })
+        // No plan selected - redirect to pricing
+        router.push('/pricing')
+        return
+      }
 
       router.push('/dashboard')
     } catch (error: unknown) {

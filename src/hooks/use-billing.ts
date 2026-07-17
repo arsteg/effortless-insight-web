@@ -5,6 +5,7 @@ import { billingApi, loadRazorpayScript } from '@/lib/api/billing'
 import { useToast } from './use-toast'
 import type {
   CreateSubscriptionRequest,
+  StartTrialRequest,
   VerifyPaymentRequest,
   ChangePlanRequest,
   CancelSubscriptionRequest,
@@ -73,6 +74,30 @@ export function useCreateSubscription() {
     onError: (error: Error) => {
       toast({
         title: 'Failed to create subscription',
+        description: error.message,
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useStartTrial() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (data: StartTrialRequest) => billingApi.startTrial(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: billingKeys.subscription() })
+      toast({
+        title: 'Trial started',
+        description: 'Your free trial has been activated. Welcome aboard!',
+        variant: 'default',
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to start trial',
         description: error.message,
         variant: 'destructive',
       })

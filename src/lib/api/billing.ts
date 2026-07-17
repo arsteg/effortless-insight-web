@@ -5,6 +5,7 @@ import type {
   CurrentSubscriptionResponse,
   CreateSubscriptionRequest,
   CreateSubscriptionResponse,
+  StartTrialRequest,
   VerifyPaymentRequest,
   VerifyPaymentResponse,
   ChangePlanRequest,
@@ -73,6 +74,17 @@ export const billingApi = {
   ): Promise<CreateSubscriptionResponse> {
     const response = await apiClient.post<{ data: CreateSubscriptionResponse }>(
       '/subscriptions',
+      data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Start a free trial for a plan
+   */
+  async startTrial(data: StartTrialRequest): Promise<Subscription> {
+    const response = await apiClient.post<{ data: Subscription }>(
+      '/subscriptions/trial',
       data
     )
     return response.data.data

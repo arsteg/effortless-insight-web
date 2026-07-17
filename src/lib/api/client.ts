@@ -104,6 +104,16 @@ apiClient.interceptors.response.use(
                            originalRequest.url?.includes('/auth/2fa/login') ||
                            originalRequest.url?.includes('/auth/oauth/')
 
+    // Handle 402 - subscription required or trial expired
+    if (error.response?.status === 402) {
+      const errorCode = error.response?.data?.error
+      const subscriptionStatus = error.response?.data?.subscriptionStatus
+
+      // Redirect to subscription-required page with error details
+      window.location.href = `/subscription-required?error=${errorCode}&status=${subscriptionStatus}`
+      return Promise.reject(error)
+    }
+
     // Handle 401 - attempt token refresh (but not for auth endpoints)
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
