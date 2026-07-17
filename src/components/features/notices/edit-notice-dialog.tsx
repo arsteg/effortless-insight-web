@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useUpdateNotice } from '@/hooks/use-notices'
-import type { NoticeDetail, UpdateNoticeRequest } from '@/types'
+import type { NoticeDetail, UpdateNoticeRequest, NoticePriority } from '@/types'
 
 const editNoticeSchema = z.object({
   noticeNumber: z.string().optional(),
@@ -142,7 +142,7 @@ export function EditNoticeDialog({ notice, open, onOpenChange }: EditNoticeDialo
     if (data.taxAmount !== notice.taxAmount) updateData.taxAmount = data.taxAmount
     if (data.penaltyAmount !== notice.penaltyAmount) updateData.penaltyAmount = data.penaltyAmount
     if (data.interestAmount !== notice.interestAmount) updateData.interestAmount = data.interestAmount
-    if (data.priority !== notice.priority) updateData.priority = data.priority
+    if (data.priority !== notice.priority) updateData.priority = data.priority as NoticePriority | undefined
 
     // Check if any changes were made
     if (Object.keys(updateData).length === 0) {
