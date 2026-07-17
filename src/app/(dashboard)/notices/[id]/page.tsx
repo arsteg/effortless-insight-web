@@ -215,7 +215,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="collaboration" className="mt-6">
-          <CollaborationPanel noticeId={noticeId} availableMembers={teamMembers} />
+          <CollaborationPanel noticeId={noticeId} />
         </TabsContent>
 
         <TabsContent value="comments" className="mt-6">
