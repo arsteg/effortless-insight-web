@@ -142,7 +142,7 @@ export function EditNoticeDialog({ notice, open, onOpenChange }: EditNoticeDialo
     if (data.taxAmount !== notice.taxAmount) updateData.taxAmount = data.taxAmount
     if (data.penaltyAmount !== notice.penaltyAmount) updateData.penaltyAmount = data.penaltyAmount
     if (data.interestAmount !== notice.interestAmount) updateData.interestAmount = data.interestAmount
-    if (data.priority !== notice.priority) updateData.priority = data.priority
+    if (data.priority !== notice.priority) updateData.priority = data.priority as UpdateNoticeRequest['priority']
 
     // Check if any changes were made
     if (Object.keys(updateData).length === 0) {
