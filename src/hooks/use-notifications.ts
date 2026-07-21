@@ -180,6 +180,28 @@ export function useMarkAllAsRead() {
 }
 
 /**
+ * Hook for deleting a notification (soft delete). Optimistically removes it from
+ * the cached list and refreshes counts.
+ */
+export function useDeleteNotification() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (notificationId: string) => notificationsApi.delete(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all })
+    },
+    onError: () => {
+      toast({
+        title: 'Failed to delete notification',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+/**
  * Hook for notification preferences
  */
 export function useNotificationPreferences() {

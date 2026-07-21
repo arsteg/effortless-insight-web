@@ -7,16 +7,51 @@
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
-// Initialize Firebase in service worker
-// Note: These values are public and safe to expose in client-side code
-// The actual Firebase config will be injected at runtime via postMessage
+// Initialize Firebase in service worker.
+// These values are public and safe to expose in client-side code.
+//
+// The config is read from THIS worker's own registration URL query params
+// (set by registerServiceWorker in src/lib/firebase.ts). This is what makes
+// background push work: when the browser terminates an idle worker and later
+// respawns it to handle a `push` event, no page exists to postMessage the
+// config — but the worker can always read its own URL. The postMessage path
+// below is kept only as a same-session fallback (audit WB-01).
 let firebaseConfig = null;
 let messaging = null;
 
-// Listen for config from main app
+function readConfigFromUrl() {
+  try {
+    const params = new URL(self.location.href).searchParams;
+    const config = {
+      apiKey: params.get('apiKey'),
+      authDomain: params.get('authDomain'),
+      projectId: params.get('projectId'),
+      storageBucket: params.get('storageBucket'),
+      messagingSenderId: params.get('messagingSenderId'),
+      appId: params.get('appId'),
+    };
+    if (config.apiKey && config.projectId && config.messagingSenderId && config.appId) {
+      return config;
+    }
+  } catch (error) {
+    console.error('[firebase-messaging-sw.js] Failed to read config from URL:', error);
+  }
+  return null;
+}
+
+// Initialize immediately on every worker startup (including push respawn).
+firebaseConfig = readConfigFromUrl();
+if (firebaseConfig) {
+  initializeFirebase();
+}
+
+// Fallback: accept config from the page in the same session (older registrations
+// that lack URL params). Harmless when URL init already succeeded.
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'FIREBASE_CONFIG') {
-    firebaseConfig = event.data.config;
+    if (!firebaseConfig) {
+      firebaseConfig = event.data.config;
+    }
     initializeFirebase();
   }
 });
@@ -99,21 +134,27 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  let url = '/dashboard';
 
-  // Determine URL based on action and data
-  if (event.action === 'view' || !event.action) {
-    if (data.noticeId) {
-      url = `/notices/${data.noticeId}`;
-    } else if (data.taskId) {
-      url = `/tasks/${data.taskId}`;
-    } else if (data.actionUrl) {
-      url = data.actionUrl;
-    }
-  } else if (event.action === 'snooze') {
-    // For snooze action, we could track this and send to backend
-    // For now, just dismiss the notification
+  // Snooze only dismisses.
+  if (event.action === 'snooze') {
     return;
+  }
+
+  // Resolve the destination from the payload for every other action
+  // (view/accept/reply and the default body tap), so advertised action buttons
+  // deep-link correctly instead of falling through to /dashboard (audit WB-08).
+  let url = '/dashboard';
+  if (data.noticeId) {
+    url = `/notices/${data.noticeId}`;
+  } else if (data.taskId) {
+    url = `/tasks/${data.taskId}`;
+  } else if (typeof data.actionUrl === 'string' && data.actionUrl.startsWith('/')) {
+    url = data.actionUrl;
+  }
+
+  // Reply deep-links to the comment thread.
+  if (event.action === 'reply' && data.noticeId) {
+    url = `/notices/${data.noticeId}#comments`;
   }
 
   // Focus existing window or open new one

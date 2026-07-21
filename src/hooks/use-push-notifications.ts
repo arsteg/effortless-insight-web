@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast'
 import { notificationsApi } from '@/lib/api/notifications'
 import {
   isFirebaseConfigured,
+  isMessagingSupported,
   getFCMToken,
   onForegroundMessage,
   requestNotificationPermission,
@@ -249,6 +250,21 @@ export function usePushNotifications(
   useEffect(() => {
     checkStatus()
   }, [checkStatus])
+
+  // Confirm actual FCM support asynchronously (covers iOS Safari outside an
+  // installed PWA, private-mode IndexedDB, etc.). If unsupported, force the
+  // 'unsupported' state so the opt-in prompt is never shown (audit WB-06).
+  useEffect(() => {
+    let cancelled = false
+    isMessagingSupported().then((supported) => {
+      if (!cancelled && !supported) {
+        setStatus('unsupported')
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Auto-register if enabled and permission is granted
   useEffect(() => {

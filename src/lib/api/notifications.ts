@@ -59,6 +59,13 @@ export const notificationsApi = {
   },
 
   /**
+   * Delete (soft-delete) a notification
+   */
+  async delete(notificationId: string): Promise<void> {
+    await apiClient.delete(`/notifications/${notificationId}`)
+  },
+
+  /**
    * Get user's notification preferences
    */
   async getPreferences(): Promise<NotificationPreferences> {

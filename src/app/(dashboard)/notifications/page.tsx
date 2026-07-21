@@ -47,6 +47,7 @@ import {
   useNotifications,
   useMarkAsRead,
   useMarkAllAsRead,
+  useDeleteNotification,
 } from '@/hooks/use-notifications'
 import { useAppStore } from '@/stores/app-store'
 import type { Notification, NotificationFilters } from '@/types/notification'
@@ -158,9 +159,10 @@ interface NotificationItemProps {
   notification: Notification
   onMarkRead: (id: string) => void
   onClick: (notification: Notification) => void
+  onDelete: (id: string) => void
 }
 
-function NotificationItem({ notification, onMarkRead, onClick }: NotificationItemProps) {
+function NotificationItem({ notification, onMarkRead, onClick, onDelete }: NotificationItemProps) {
   const Icon = CATEGORY_ICONS[notification.category] || Bell
   const priorityColor = PRIORITY_COLORS[notification.priority] || PRIORITY_COLORS.low
 
@@ -231,6 +233,18 @@ function NotificationItem({ notification, onMarkRead, onClick }: NotificationIte
                   View details <ChevronRight className="h-3 w-3" />
                 </span>
               )}
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 text-xs text-muted-foreground hover:text-destructive ml-auto"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(notification.id)
+                }}
+              >
+                Delete
+              </Button>
             </div>
           </div>
         </div>
@@ -244,9 +258,10 @@ interface NotificationGroupProps {
   notifications: Notification[]
   onMarkRead: (id: string) => void
   onClick: (notification: Notification) => void
+  onDelete: (id: string) => void
 }
 
-function NotificationGroup({ title, notifications, onMarkRead, onClick }: NotificationGroupProps) {
+function NotificationGroup({ title, notifications, onMarkRead, onClick, onDelete }: NotificationGroupProps) {
   if (notifications.length === 0) return null
 
   return (
@@ -259,6 +274,7 @@ function NotificationGroup({ title, notifications, onMarkRead, onClick }: Notifi
             notification={notification}
             onMarkRead={onMarkRead}
             onClick={onClick}
+            onDelete={onDelete}
           />
         ))}
       </div>
@@ -272,6 +288,7 @@ export default function NotificationsPage() {
   const [categoryFilters, setCategoryFilters] = useState<string[]>([])
   const [priorityFilter, setPriorityFilter] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [pageSize, setPageSize] = useState(50)
 
   const notificationCount = useAppStore((state) => state.notificationCount)
 
@@ -279,12 +296,13 @@ export default function NotificationsPage() {
   const filters: NotificationFilters = {
     status: statusFilter,
     category: categoryFilters.length === 1 ? categoryFilters[0] : undefined,
-    pageSize: 50,
+    pageSize,
   }
 
-  const { data, isLoading, refetch } = useNotifications(filters)
+  const { data, isLoading } = useNotifications(filters)
   const markAsRead = useMarkAsRead()
   const markAllAsRead = useMarkAllAsRead()
+  const deleteNotification = useDeleteNotification()
 
   const notifications = data?.notifications ?? []
 
@@ -337,6 +355,13 @@ export default function NotificationsPage() {
   const handleMarkAllRead = useCallback(() => {
     markAllAsRead.mutate({})
   }, [markAllAsRead])
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteNotification.mutate(id)
+    },
+    [deleteNotification]
+  )
 
   const toggleCategoryFilter = (category: string) => {
     setCategoryFilters((prev) =>
@@ -513,32 +538,37 @@ export default function NotificationsPage() {
             notifications={grouped.today}
             onMarkRead={handleMarkRead}
             onClick={handleNotificationClick}
+            onDelete={handleDelete}
           />
           <NotificationGroup
             title="Yesterday"
             notifications={grouped.yesterday}
             onMarkRead={handleMarkRead}
             onClick={handleNotificationClick}
+            onDelete={handleDelete}
           />
           <NotificationGroup
             title="This Week"
             notifications={grouped.thisWeek}
             onMarkRead={handleMarkRead}
             onClick={handleNotificationClick}
+            onDelete={handleDelete}
           />
           <NotificationGroup
             title="Older"
             notifications={grouped.older}
             onMarkRead={handleMarkRead}
             onClick={handleNotificationClick}
+            onDelete={handleDelete}
           />
         </div>
       )}
 
-      {/* Load more (if applicable) */}
+      {/* Load more (if applicable) — grow the page size so older items are
+          actually fetched (previously this re-fetched page 1) (audit WB-10). */}
       {data?.hasMore && (
         <div className="flex justify-center pt-4">
-          <Button variant="outline" onClick={() => refetch()}>
+          <Button variant="outline" onClick={() => setPageSize((s) => s + 50)}>
             Load more
           </Button>
         </div>
