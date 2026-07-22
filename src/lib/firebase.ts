@@ -264,7 +264,7 @@ export function onForegroundMessage(callback: (payload: MessagePayload) => void)
     return null;
   }
 
-  const unsubscribe = onMessage(messaging, (payload) => {
+  const unsubscribe = onMessage(messaging, (payload: MessagePayload) => {
     callback(payload);
   });
 

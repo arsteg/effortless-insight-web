@@ -312,7 +312,7 @@ export function getStatusBadgeVariant(
   switch (status) {
     case 'active':
       return 'default'
-    case 'trialing':
+    case 'trial':
       return 'secondary'
     case 'paused':
       return 'outline'

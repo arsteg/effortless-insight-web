@@ -106,8 +106,13 @@ apiClient.interceptors.response.use(
 
     // Handle 402 - subscription required or trial expired
     if (error.response?.status === 402) {
-      const errorCode = error.response?.data?.error
-      const subscriptionStatus = error.response?.data?.subscriptionStatus
+      // 402 responses come from SubscriptionEnforcementMiddleware with a
+      // different shape than the standard ApiError envelope.
+      const subscriptionError = error.response?.data as
+        | { error?: string; subscriptionStatus?: string }
+        | undefined
+      const errorCode = subscriptionError?.error
+      const subscriptionStatus = subscriptionError?.subscriptionStatus
 
       // Redirect to subscription-required page with error details
       window.location.href = `/subscription-required?error=${errorCode}&status=${subscriptionStatus}`

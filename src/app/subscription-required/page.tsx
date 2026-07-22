@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AlertCircle, CreditCard, Clock, XCircle } from 'lucide-react'
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
-export default function SubscriptionRequiredPage() {
+function SubscriptionRequiredContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [errorDetails, setErrorDetails] = useState<{
@@ -168,5 +168,13 @@ export default function SubscriptionRequiredPage() {
         </CardFooter>
       </Card>
     </div>
+  )
+}
+
+export default function SubscriptionRequiredPage() {
+  return (
+    <Suspense fallback={null}>
+      <SubscriptionRequiredContent />
+    </Suspense>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { Loader2, AlertCircle } from 'lucide-react'
 
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackHandler() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const params = useParams()
@@ -150,5 +150,29 @@ export default function OAuthCallbackPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function OAuthCallbackLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Completing Sign In</CardTitle>
+          <CardDescription>Please wait...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense fallback={<OAuthCallbackLoading />}>
+      <OAuthCallbackHandler />
+    </Suspense>
   )
 }

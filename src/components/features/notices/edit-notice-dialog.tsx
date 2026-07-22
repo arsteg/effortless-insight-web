@@ -49,7 +49,7 @@ const editNoticeSchema = z.object({
   taxAmount: z.coerce.number().min(0).optional(),
   penaltyAmount: z.coerce.number().min(0).optional(),
   interestAmount: z.coerce.number().min(0).optional(),
-  priority: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
 });
 
 type EditNoticeFormData = z.infer<typeof editNoticeSchema>;

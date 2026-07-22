@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -45,7 +45,7 @@ import {
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-export default function OnboardingPage() {
+function OnboardingForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -479,5 +479,31 @@ export default function OnboardingPage() {
         </Form>
       </CardContent>
     </Card>
+  )
+}
+
+function OnboardingLoading() {
+  return (
+    <Card className="w-full max-w-lg">
+      <CardHeader className="space-y-1 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Building2 className="h-8 w-8 text-primary" />
+          </div>
+        </div>
+        <CardTitle className="text-2xl font-bold">Set up your organization</CardTitle>
+      </CardHeader>
+      <CardContent className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<OnboardingLoading />}>
+      <OnboardingForm />
+    </Suspense>
   )
 }
