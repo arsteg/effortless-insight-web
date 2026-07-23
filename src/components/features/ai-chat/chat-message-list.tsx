@@ -13,6 +13,7 @@ interface ChatMessageListProps {
   isTyping?: boolean
   onRegenerate?: (messageId: string) => void
   onFeedback?: (messageId: string, rating: 1 | -1) => void
+  onEditMessage?: (messageId: string, newContent: string) => void
   isRegenerating?: boolean
   className?: string
 }
@@ -23,6 +24,7 @@ export function ChatMessageList({
   isTyping = false,
   onRegenerate,
   onFeedback,
+  onEditMessage,
   isRegenerating = false,
   className,
 }: ChatMessageListProps) {
@@ -88,6 +90,14 @@ export function ChatMessageList({
                   onFeedback={
                     message.role === 'assistant' && onFeedback
                       ? (rating) => onFeedback(message.id, rating)
+                      : undefined
+                  }
+                  onEdit={
+                    message.role === 'user' &&
+                    onEditMessage &&
+                    !isStreaming &&
+                    !message.id.startsWith('temp-')
+                      ? (newContent) => onEditMessage(message.id, newContent)
                       : undefined
                   }
                   isRegenerating={isRegenerating && isLastAssistant}

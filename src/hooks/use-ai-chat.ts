@@ -84,10 +84,12 @@ export function useSendMessage(conversationId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: aiChatKeys.conversation(conversationId) })
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: 'Failed to send message',
-        description: 'Something went wrong. Please try again.',
+        description:
+          (error as { message?: string })?.message ||
+          'Something went wrong. Please try again.',
         variant: 'destructive',
       })
     },
@@ -113,50 +115,18 @@ export function useStreamingMessage() {
     }
   }, [])
 
-  const sendMessage = useCallback(
-    async (conversationId: string, message: string): Promise<MessageDto | null> => {
-      if (!conversationId) {
-        setError('No conversation selected')
-        return null
-      }
-
-      setIsStreaming(true)
-      setStreamingContent('')
-      setError(null)
-      setActiveConversationId(conversationId)
-      abortControllerRef.current = new AbortController()
-
+  // Shared event-processing loop for send and edit streams
+  const runStream = useCallback(
+    async (
+      conversationId: string,
+      events: AsyncGenerator<ChatStreamEvent>
+    ): Promise<MessageDto | null> => {
       try {
         let finalMessage: MessageDto | null = null
 
-        // First, optimistically add the user message to the cache
-        queryClient.setQueryData<ConversationDetailDto>(
-          aiChatKeys.conversation(conversationId),
-          (old) => {
-            if (!old) return old
-            const tempUserMessage: MessageDto = {
-              id: `temp-${Date.now()}`,
-              conversationId,
-              role: 'user',
-              content: message,
-              tokenCount: 0,
-              createdAt: new Date().toISOString(),
-            }
-            return {
-              ...old,
-              messages: [...old.messages, tempUserMessage],
-              messageCount: old.messageCount + 1,
-            }
-          }
-        )
-
-        for await (const event of aiChatApi.sendMessageStream(
-          conversationId,
-          { message },
-          abortControllerRef.current.signal
-        )) {
+        for await (const event of events) {
           switch (event.type) {
-            case 'UserMessageSaved':
+            case 'user_message_saved':
               // Update with the actual user message
               if (event.data && typeof event.data !== 'string') {
                 queryClient.setQueryData<ConversationDetailDto>(
@@ -175,7 +145,7 @@ export function useStreamingMessage() {
               }
               break
 
-            case 'StreamStarted':
+            case 'stream_started':
               // Add a temporary assistant message for streaming
               queryClient.setQueryData<ConversationDetailDto>(
                 aiChatKeys.conversation(conversationId),
@@ -197,7 +167,7 @@ export function useStreamingMessage() {
               )
               break
 
-            case 'ContentChunk':
+            case 'content_chunk':
               if (typeof event.data === 'string') {
                 setStreamingContent((prev) => prev + event.data)
                 // Update the streaming message in cache
@@ -216,7 +186,7 @@ export function useStreamingMessage() {
               }
               break
 
-            case 'StreamCompleted':
+            case 'stream_completed':
               if (event.data && typeof event.data !== 'string') {
                 finalMessage = event.data as MessageDto
                 // Replace streaming message with final message
@@ -237,13 +207,17 @@ export function useStreamingMessage() {
               }
               break
 
-            case 'Error':
+            case 'error':
               if (typeof event.data === 'string') {
                 setError(event.data)
                 toast({
                   title: 'Error',
                   description: event.data,
                   variant: 'destructive',
+                })
+                // Refetch so temp/streaming placeholders are replaced with server state
+                queryClient.invalidateQueries({
+                  queryKey: aiChatKeys.conversation(conversationId),
                 })
               }
               break
@@ -277,6 +251,109 @@ export function useStreamingMessage() {
     [queryClient, toast]
   )
 
+  const sendMessage = useCallback(
+    async (conversationId: string, message: string): Promise<MessageDto | null> => {
+      if (!conversationId) {
+        setError('No conversation selected')
+        return null
+      }
+
+      setIsStreaming(true)
+      setStreamingContent('')
+      setError(null)
+      setActiveConversationId(conversationId)
+      abortControllerRef.current = new AbortController()
+
+      // Optimistically add the user message to the cache
+      queryClient.setQueryData<ConversationDetailDto>(
+        aiChatKeys.conversation(conversationId),
+        (old) => {
+          if (!old) return old
+          const tempUserMessage: MessageDto = {
+            id: `temp-${Date.now()}`,
+            conversationId,
+            role: 'user',
+            content: message,
+            tokenCount: 0,
+            createdAt: new Date().toISOString(),
+          }
+          return {
+            ...old,
+            messages: [...old.messages, tempUserMessage],
+            messageCount: old.messageCount + 1,
+          }
+        }
+      )
+
+      return runStream(
+        conversationId,
+        aiChatApi.sendMessageStream(
+          conversationId,
+          { message },
+          abortControllerRef.current.signal
+        )
+      )
+    },
+    [queryClient, runStream]
+  )
+
+  // Edit a previously sent user message: rewinds the conversation to that
+  // message and streams a new AI response for the edited content
+  const editMessage = useCallback(
+    async (
+      conversationId: string,
+      messageId: string,
+      message: string
+    ): Promise<MessageDto | null> => {
+      if (!conversationId) {
+        setError('No conversation selected')
+        return null
+      }
+
+      setIsStreaming(true)
+      setStreamingContent('')
+      setError(null)
+      setActiveConversationId(conversationId)
+      abortControllerRef.current = new AbortController()
+
+      // Optimistically rewind: drop the edited message and everything after it,
+      // then append the edited content as a temp user message
+      queryClient.setQueryData<ConversationDetailDto>(
+        aiChatKeys.conversation(conversationId),
+        (old) => {
+          if (!old) return old
+          const idx = old.messages.findIndex((m) => m.id === messageId)
+          if (idx < 0) return old
+          const kept = old.messages.slice(0, idx)
+          const tempUserMessage: MessageDto = {
+            id: `temp-${Date.now()}`,
+            conversationId,
+            role: 'user',
+            content: message,
+            tokenCount: 0,
+            createdAt: new Date().toISOString(),
+          }
+          return {
+            ...old,
+            messages: [...kept, tempUserMessage],
+            messageCount: kept.length + 1,
+          }
+        }
+      )
+
+      return runStream(
+        conversationId,
+        aiChatApi.editMessageStream(
+          conversationId,
+          messageId,
+          { message },
+          abortControllerRef.current.signal
+        )
+      )
+    },
+    [queryClient, runStream]
+  )
+
   const stopStreaming = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
@@ -285,6 +362,7 @@ export function useStreamingMessage() {
 
   return {
     sendMessage,
+    editMessage,
     stopStreaming,
     isStreaming,
     activeConversationId,
@@ -309,10 +387,12 @@ export function useRegenerateMessage(conversationId: string) {
         variant: 'success',
       })
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: 'Failed to regenerate',
-        description: 'Something went wrong. Please try again.',
+        description:
+          (error as { message?: string })?.message ||
+          'Something went wrong. Please try again.',
         variant: 'destructive',
       })
     },

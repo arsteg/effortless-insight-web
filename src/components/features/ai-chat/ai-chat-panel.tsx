@@ -56,6 +56,7 @@ export function AIChatPanel({ noticeId, className }: AIChatPanelProps) {
   // Streaming hook
   const {
     sendMessage: streamSendMessage,
+    editMessage: streamEditMessage,
     stopStreaming,
     isStreaming,
   } = useStreamingMessage()
@@ -127,6 +128,14 @@ export function AIChatPanel({ noticeId, className }: AIChatPanelProps) {
       regenerateMessage.mutate(messageId)
     },
     [regenerateMessage]
+  )
+
+  const handleEditMessage = useCallback(
+    async (messageId: string, newContent: string) => {
+      if (!activeConversationId) return
+      await streamEditMessage(activeConversationId, messageId, newContent)
+    },
+    [activeConversationId, streamEditMessage]
   )
 
   const handleFeedback = useCallback(
@@ -234,6 +243,7 @@ export function AIChatPanel({ noticeId, className }: AIChatPanelProps) {
                 isStreaming={isStreaming}
                 onRegenerate={handleRegenerate}
                 onFeedback={handleFeedback}
+                onEditMessage={handleEditMessage}
                 isRegenerating={regenerateMessage.isPending}
                 className="flex-1"
               />

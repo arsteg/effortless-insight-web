@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Textarea } from '@/components/ui/textarea'
 import {
   User,
   Bot,
@@ -18,6 +19,7 @@ import {
   RefreshCw,
   Copy,
   Check,
+  Pencil,
 } from 'lucide-react'
 import type { MessageDto, Citation } from '@/types/ai-chat'
 
@@ -26,6 +28,7 @@ interface ChatMessageProps {
   isStreaming?: boolean
   onRegenerate?: () => void
   onFeedback?: (rating: 1 | -1) => void
+  onEdit?: (newContent: string) => void
   isRegenerating?: boolean
 }
 
@@ -34,12 +37,15 @@ export function ChatMessage({
   isStreaming = false,
   onRegenerate,
   onFeedback,
+  onEdit,
   isRegenerating = false,
 }: ChatMessageProps) {
   const [copied, setCopied] = useState(false)
   const [feedbackGiven, setFeedbackGiven] = useState<1 | -1 | null>(
-    message.feedbackRating as 1 | -1 | null
+    (message.feedback?.rating ?? null) as 1 | -1 | null
   )
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedContent, setEditedContent] = useState(message.content)
 
   const isUser = message.role === 'user'
   const isAssistant = message.role === 'assistant'
@@ -54,6 +60,18 @@ export function ChatMessage({
     if (feedbackGiven === rating) return
     setFeedbackGiven(rating)
     onFeedback?.(rating)
+  }
+
+  const startEditing = () => {
+    setEditedContent(message.content)
+    setIsEditing(true)
+  }
+
+  const submitEdit = () => {
+    const trimmed = editedContent.trim()
+    setIsEditing(false)
+    if (!trimmed || trimmed === message.content) return
+    onEdit?.(trimmed)
   }
 
   return (
@@ -84,7 +102,42 @@ export function ChatMessage({
           isUser ? 'items-end' : 'items-start'
         )}
       >
-        {/* Message bubble */}
+        {/* Edit mode */}
+        {isUser && isEditing ? (
+          <div className="w-full min-w-[280px] flex flex-col gap-2">
+            <Textarea
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  submitEdit()
+                } else if (e.key === 'Escape') {
+                  setIsEditing(false)
+                }
+              }}
+              rows={3}
+              autoFocus
+              className="resize-none"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditing(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={submitEdit}
+                disabled={!editedContent.trim()}
+              >
+                Save & Resend
+              </Button>
+            </div>
+          </div>
+        ) : (
         <div
           className={cn(
             'rounded-lg px-4 py-3',
@@ -104,6 +157,7 @@ export function ChatMessage({
             </div>
           )}
         </div>
+        )}
 
         {/* Citations */}
         {message.citations && message.citations.length > 0 && (
@@ -126,6 +180,24 @@ export function ChatMessage({
               addSuffix: true,
             })}
           </span>
+
+          {isUser && onEdit && !isEditing && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={startEditing}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit &amp; resend</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
           {isAssistant && !isStreaming && (
             <TooltipProvider>
@@ -223,12 +295,12 @@ export function ChatMessage({
 
 function CitationBadge({ citation }: { citation: Citation }) {
   const getLabel = () => {
-    switch (citation.type) {
-      case 'document':
+    switch (citation.source) {
+      case 'notice':
         return 'Notice'
-      case 'ai_report':
+      case 'analysis':
         return 'Analysis'
-      case 'previous_message':
+      case 'conversation':
         return 'Earlier'
       default:
         return citation.source
