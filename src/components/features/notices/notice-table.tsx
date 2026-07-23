@@ -36,6 +36,7 @@ import { StatusBadge } from './status-badge'
 import { PriorityBadge } from './priority-badge'
 import { RiskBadge } from './risk-badge'
 import { SourceBadge } from './source-badge'
+import { ProcessingIndicator } from './processing-indicator'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import type { Notice, NoticeFilters } from '@/types'
 
@@ -260,7 +261,14 @@ export function NoticeTable({
                 )}
               </TableCell>
               <TableCell>
-                <StatusBadge status={notice.status} />
+                <div className="flex flex-col gap-1">
+                  <StatusBadge status={notice.status} />
+                  {(notice.status === 'uploaded' || notice.status === 'processing') &&
+                    notice.processingStatus &&
+                    notice.processingStatus !== 'completed' && (
+                      <ProcessingIndicator status={notice.processingStatus} />
+                    )}
+                </div>
               </TableCell>
               <TableCell>
                 <PriorityBadge priority={notice.priority} />

@@ -293,6 +293,7 @@ function getProcessingMessage(status: ProcessingStatus): string {
     analyzing: 'Our AI is analyzing the notice and generating insights...',
     completed: 'Analysis complete!',
     failed: 'Analysis failed.',
+    retrying: 'Processing failed. Retrying...',
   }
   return messages[status] || 'Processing...'
 }
@@ -306,6 +307,7 @@ function getProcessingProgress(status: ProcessingStatus): number {
     analyzing: 90,
     completed: 100,
     failed: 0,
+    retrying: 20,
   }
   return progress[status] || 0
 }

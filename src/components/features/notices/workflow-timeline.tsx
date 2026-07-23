@@ -156,6 +156,7 @@ function getProcessingStatusLabel(status: ProcessingStatus): string {
     analyzing: 'Running AI analysis...',
     completed: 'Processing completed',
     failed: 'Processing failed',
+    retrying: 'Retrying processing...',
   }
   return labels[status] || status
 }

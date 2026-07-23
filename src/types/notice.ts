@@ -19,6 +19,7 @@ export type ProcessingStatus =
   | 'analyzing'
   | 'completed'
   | 'failed'
+  | 'retrying'
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'
 
@@ -38,6 +39,7 @@ export interface Notice {
   penaltyAmount?: number
   status: NoticeStatus
   priority: NoticePriority
+  processingStatus?: ProcessingStatus
   riskScore?: number
   riskLevel?: RiskLevel
   summaryEn?: string

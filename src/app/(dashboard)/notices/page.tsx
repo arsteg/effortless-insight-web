@@ -27,11 +27,14 @@ import {
   AssignNoticeDialog,
 } from '@/components/features/notices'
 import { useNotices, useDeleteNotice, useBulkDeleteNotices, useArchiveNotice, useExportNotices } from '@/hooks/use-notices'
+import { useNoticeUpdates } from '@/hooks/use-notice-updates'
 import type { NoticeFilters as NoticeFiltersType, Notice } from '@/types'
 
 const DEFAULT_PAGE_SIZE = 10
 
 export default function NoticesPage() {
+  // Enable real-time notice status updates
+  useNoticeUpdates()
   // Filters state
   const [filters, setFilters] = useState<NoticeFiltersType>({
     page: 1,

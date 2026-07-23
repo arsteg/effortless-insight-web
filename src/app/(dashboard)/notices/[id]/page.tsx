@@ -32,6 +32,7 @@ import { CommentList } from '@/components/features/comments'
 import { DocumentRequestPanel } from '@/components/features/document-requests/document-request-panel'
 import { WorkflowPanel } from '@/components/features/workflow'
 import { useNotice, useDeleteNotice } from '@/hooks/use-notices'
+import { useNoticeUpdates } from '@/hooks/use-notice-updates'
 import {
   useAttachments,
   useDeleteAttachment,
@@ -48,6 +49,8 @@ interface NoticeDetailPageProps {
 }
 
 export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
+  // Enable real-time notice status updates
+  useNoticeUpdates()
   const router = useRouter()
   const { toast } = useToast()
   const { id: noticeId } = use(params)
