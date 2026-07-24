@@ -113,7 +113,17 @@ export function BillingDetailsForm({
     resolver: zodResolver(billingDetailsSchema),
     defaultValues: {
       companyName: organizationName || '',
+      billingEmail: '',
+      phone: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      postalCode: '',
       country: 'India',
+      gstin: '',
+      panNumber: '',
+      isSameAsOrg: false,
       ...defaultValues,
     },
   })

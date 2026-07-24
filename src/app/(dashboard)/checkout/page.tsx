@@ -59,6 +59,9 @@ function CheckoutContent() {
   // Get selected plan
   const selectedPlan = plans?.find((p) => p.code === selectedPlanCode)
 
+  // Check if user is upgrading from trial
+  const isUpgradingFromTrial = subscription?.isTrialing === true
+
   // Handle plan selection from URL
   useEffect(() => {
     if (selectedPlanCode && selectedPlan) {
@@ -254,6 +257,7 @@ function CheckoutContent() {
               plan={selectedPlan}
               billingCycle={billingCycle}
               additionalSeats={additionalSeats}
+              isUpgradingFromTrial={isUpgradingFromTrial}
             />
           </div>
         </div>
@@ -356,6 +360,7 @@ function CheckoutContent() {
               coupon={coupon}
               companyState={billingDetails.state}
               companyGstin={billingDetails.gstin}
+              isUpgradingFromTrial={isUpgradingFromTrial}
             />
           </div>
         </div>

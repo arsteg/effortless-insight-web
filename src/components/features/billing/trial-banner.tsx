@@ -18,7 +18,7 @@ export function TrialBanner({ subscription, onUpgrade, className }: TrialBannerP
   const [isDismissed, setIsDismissed] = useState(false)
 
   // Only show for trialing subscriptions
-  if (subscription.status !== 'trial' || !subscription.isTrialing || !subscription.trialDaysRemaining) {
+  if (subscription.status !== 'trialing' || !subscription.isTrialing || !subscription.trialDaysRemaining) {
     return null
   }
 

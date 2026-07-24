@@ -142,7 +142,7 @@ function SubscriptionRequiredContent() {
 
         <CardFooter className="flex flex-col gap-3">
           <Button asChild className="w-full" size="lg">
-            <Link href="/pricing">View Plans & Pricing</Link>
+            <Link href="/select-plan">Choose a Plan</Link>
           </Button>
 
           {errorDetails.status === 'expired' || errorDetails.status === 'cancelled' ? (
@@ -151,12 +151,8 @@ function SubscriptionRequiredContent() {
             </Button>
           ) : null}
 
-          <Button
-            variant="ghost"
-            className="w-full"
-            onClick={() => router.back()}
-          >
-            Go Back
+          <Button asChild variant="ghost" className="w-full">
+            <Link href="/pricing">View All Plans & Pricing</Link>
           </Button>
 
           <div className="text-center text-sm text-muted-foreground pt-2">

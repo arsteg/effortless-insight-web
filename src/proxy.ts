@@ -12,12 +12,14 @@ const protectedRoutePatterns = [
   '/reports',
   '/team',
   '/settings',
+  '/select-plan',
+  '/checkout',
 ]
 
 // Routes that should redirect to dashboard if authenticated
 const authRoutes = ['/login', '/register', '/forgot-password']
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Get the access token from cookies (for middleware) or check authorization

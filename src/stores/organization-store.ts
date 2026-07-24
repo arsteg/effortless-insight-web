@@ -44,15 +44,44 @@ export const useOrganizationStore = create<OrganizationState>()(
             targetOrg = organizations[0]
           }
 
-          // Always call switchOrganization to ensure JWT has org_id claim
+          // Try to call switchOrganization to ensure JWT has org_id claim
           if (targetOrg) {
-            await authApi.switchOrganization({ organizationId: targetOrg.id })
+            try {
+              await authApi.switchOrganization({ organizationId: targetOrg.id })
+            } catch (switchError: unknown) {
+              // If switchOrganization fails with 402 (subscription required),
+              // just continue - we'll handle subscription separately
+              const isPaymentRequired =
+                (switchError && typeof switchError === 'object' && 'status' in switchError &&
+                 (switchError as { status: number }).status === 402) ||
+                (switchError && typeof switchError === 'object' && 'response' in switchError &&
+                 (switchError as { response: { status: number } }).response?.status === 402)
+
+              if (!isPaymentRequired) {
+                throw switchError
+              }
+              // For 402 errors, continue without re-throwing - organization is still valid
+            }
             set({ currentOrganization: targetOrg, isLoading: false })
           } else {
             set({ isLoading: false })
           }
-        } catch (error) {
-          set({ isLoading: false })
+        } catch (error: unknown) {
+          // Check for NOT_A_MEMBER or similar errors - clear stale data
+          const errorCode = (error && typeof error === 'object' && 'code' in error)
+            ? String((error as { code: unknown }).code)
+            : ''
+
+          if (errorCode === 'NOT_A_MEMBER' || errorCode === 'NOT_FOUND' || errorCode === 'FORBIDDEN') {
+            // Clear stale organization data
+            set({
+              currentOrganization: null,
+              organizations: [],
+              isLoading: false,
+            })
+          } else {
+            set({ isLoading: false })
+          }
           throw error
         }
       },
