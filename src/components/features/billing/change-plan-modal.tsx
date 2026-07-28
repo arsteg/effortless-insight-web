@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertCircle, ArrowUp, ArrowDown, Calendar } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -23,7 +23,7 @@ interface ChangePlanModalProps {
   onOpenChange: (open: boolean) => void
   plans: Plan[]
   currentSubscription: Subscription
-  onConfirm: (planCode: string, billingCycle: BillingCycle, immediate: boolean) => void
+  onConfirm: (planCode: string, billingCycle: BillingCycle) => void
   isLoading?: boolean
 }
 
@@ -37,15 +37,13 @@ export function ChangePlanModal({
 }: ChangePlanModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<string>(currentSubscription.planCode)
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(currentSubscription.billingCycle)
-  const [immediate, setImmediate] = useState(true)
 
   const currentPlan = plans.find((p) => p.code === currentSubscription.planCode)
   const newPlan = plans.find((p) => p.code === selectedPlan)
 
-  const isUpgrade = newPlan && currentPlan ? getPlanTier(newPlan.code) > getPlanTier(currentPlan.code) : false
-  const isDowngrade = newPlan && currentPlan ? getPlanTier(newPlan.code) < getPlanTier(currentPlan.code) : false
   const isSamePlan = selectedPlan === currentSubscription.planCode
   const isBillingCycleChange = billingCycle !== currentSubscription.billingCycle
+  const hasChanges = !isSamePlan || isBillingCycleChange
 
   const availablePlans = plans.filter((p) => !p.contactSales && p.code !== 'free')
 
@@ -55,7 +53,7 @@ export function ChangePlanModal({
   }
 
   const handleConfirm = () => {
-    onConfirm(selectedPlan, billingCycle, immediate)
+    onConfirm(selectedPlan, billingCycle)
   }
 
   return (
@@ -120,59 +118,16 @@ export function ChangePlanModal({
             </div>
           </RadioGroup>
 
-          {/* Change Type Info */}
-          {!isSamePlan && newPlan && (
-            <Alert variant={isUpgrade ? 'default' : 'destructive'}>
-              {isUpgrade ? (
-                <ArrowUp className="h-4 w-4" />
-              ) : (
-                <ArrowDown className="h-4 w-4" />
-              )}
-              <AlertTitle>
-                {isUpgrade ? 'Upgrade' : 'Downgrade'} to {newPlan.displayName}
-              </AlertTitle>
-              <AlertDescription>
-                {isUpgrade ? (
-                  <>
-                    Your new plan will be activated immediately. You will be charged a
-                    prorated amount for the remainder of your current billing period.
-                  </>
-                ) : (
-                  <>
-                    Your downgrade will take effect at the end of your current billing
-                    period on {formatDate(currentSubscription.currentPeriodEnd)}.
-                  </>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Billing Cycle Change Only */}
-          {isSamePlan && isBillingCycleChange && (
+          {/* Plan Change Info */}
+          {hasChanges && newPlan && (
             <Alert>
-              <Calendar className="h-4 w-4" />
-              <AlertTitle>Billing Cycle Change</AlertTitle>
+              <Info className="h-4 w-4" />
+              <AlertTitle>Plan Change</AlertTitle>
               <AlertDescription>
-                Your billing cycle will change to {billingCycle} at the end of your
-                current billing period.
+                Your plan will be changed to {newPlan.displayName} ({billingCycle}) immediately.
+                Your subscription end date will be adjusted based on the remaining value of your current plan.
               </AlertDescription>
             </Alert>
-          )}
-
-          {/* Downgrade Immediate Option */}
-          {isDowngrade && (
-            <div className="flex items-center space-x-2 p-4 bg-muted rounded-lg">
-              <input
-                type="checkbox"
-                id="immediate"
-                checked={immediate}
-                onChange={(e) => setImmediate(e.target.checked)}
-                className="h-4 w-4"
-              />
-              <Label htmlFor="immediate" className="text-sm">
-                Apply immediately (you will receive a prorated credit)
-              </Label>
-            </div>
           )}
 
           {/* Summary */}
@@ -194,7 +149,7 @@ export function ChangePlanModal({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={isLoading || (isSamePlan && !isBillingCycleChange)}
+            disabled={isLoading || !hasChanges}
           >
             {isLoading ? 'Processing...' : 'Confirm Change'}
           </Button>
@@ -202,22 +157,4 @@ export function ChangePlanModal({
       </DialogContent>
     </Dialog>
   )
-}
-
-function getPlanTier(planCode: string): number {
-  const tiers: Record<string, number> = {
-    free: 0,
-    starter: 1,
-    professional: 2,
-    enterprise: 3,
-  }
-  return tiers[planCode] ?? 0
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
 }

@@ -252,18 +252,17 @@ export interface ChangePlanRequest {
   newPlanCode: string
   billingCycle: BillingCycle
   additionalSeats?: number
-  effectiveDate: 'immediate' | 'period_end'
 }
 
 export interface ChangePlanResponse {
-  type: 'upgrade' | 'downgrade'
+  type: string // Always "changed" - plan changes are immediate with prorated end date
   prorationAmount?: number
   newPlanAmount?: number
   totalDue?: number
-  effectiveImmediately: boolean
+  effectiveImmediately: boolean // Always true
   razorpayOrder?: RazorpayOrder
   scheduledPlanCode?: string
-  effectiveDate?: string
+  effectiveDate?: string // New subscription end date after proration
   message?: string
 }
 

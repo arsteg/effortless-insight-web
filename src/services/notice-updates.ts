@@ -18,8 +18,14 @@ class NoticeUpdateService {
   private callbacks = new Set<NoticeUpdateCallback>()
   private isConnecting = false
   private currentOrganizationId: string | null = null
+  private shouldConnect = false // Track if connection is desired (for React Strict Mode)
+  private connectionPromise: Promise<void> | null = null
+  private pendingOrganizationId: string | null = null
 
   async connect(organizationId: string): Promise<void> {
+    this.shouldConnect = true
+    this.pendingOrganizationId = organizationId
+
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       if (this.currentOrganizationId !== organizationId) {
         await this.switchOrganization(organizationId)
@@ -27,6 +33,20 @@ class NoticeUpdateService {
       return
     }
 
+    // If already connecting, wait for that connection attempt
+    if (this.connectionPromise) {
+      return this.connectionPromise
+    }
+
+    this.connectionPromise = this.doConnect(organizationId)
+    try {
+      await this.connectionPromise
+    } finally {
+      this.connectionPromise = null
+    }
+  }
+
+  private async doConnect(organizationId: string): Promise<void> {
     if (this.isConnecting) return
     this.isConnecting = true
 
@@ -34,6 +54,12 @@ class NoticeUpdateService {
       const token = getAccessToken()
       if (!token) {
         console.warn('No access token for NoticeHub')
+        this.isConnecting = false
+        return
+      }
+
+      // Check if connection was cancelled before we start
+      if (!this.shouldConnect) {
         this.isConnecting = false
         return
       }
@@ -64,14 +90,25 @@ class NoticeUpdateService {
         }
       })
 
+      // Check again if connection was cancelled during setup
+      if (!this.shouldConnect) {
+        this.connection = null
+        this.isConnecting = false
+        return
+      }
+
       await this.connection.start()
       await this.connection.invoke('JoinOrganization', organizationId)
       this.currentOrganizationId = organizationId
       this.isConnecting = false
     } catch (error) {
-      console.error('Failed to connect to NoticeHub:', error)
       this.isConnecting = false
-      throw error
+      // Don't log or throw if the connection was intentionally stopped
+      // This happens in React Strict Mode during development
+      if (this.shouldConnect) {
+        console.error('Failed to connect to NoticeHub:', error)
+        throw error
+      }
     }
   }
 
@@ -93,8 +130,16 @@ class NoticeUpdateService {
   }
 
   async disconnect(): Promise<void> {
+    this.shouldConnect = false
+    this.isConnecting = false
+
     if (this.connection) {
-      await this.connection.stop()
+      try {
+        await this.connection.stop()
+      } catch {
+        // Ignore errors when stopping - connection may already be stopped
+        // or may be in a state where stop() throws (e.g., during negotiation)
+      }
       this.connection = null
       this.currentOrganizationId = null
     }

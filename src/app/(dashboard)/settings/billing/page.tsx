@@ -93,14 +93,12 @@ export default function BillingSettingsPage() {
 
   const handleChangePlanConfirm = (
     planCode: string,
-    billingCycle: BillingCycle,
-    immediate: boolean
+    billingCycle: BillingCycle
   ) => {
     changePlan.mutate(
       {
         newPlanCode: planCode,
         billingCycle,
-        effectiveDate: immediate ? 'immediate' : 'period_end',
       },
       {
         onSuccess: () => {
