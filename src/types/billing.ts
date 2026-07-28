@@ -81,7 +81,7 @@ export interface Subscription {
   scheduledChange?: ScheduledChange
 }
 
-export type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'
 export type BillingCycle = 'monthly' | 'annually'
 
 export interface Seats {

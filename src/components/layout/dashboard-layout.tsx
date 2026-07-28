@@ -3,11 +3,12 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { useAuthStore, useOrganizationStore } from '@/stores'
+import { useAuthStore, useOrganizationStore, useSubscriptionStore } from '@/stores'
 import { Header } from './header'
 import { Sidebar } from './sidebar'
 import { Toaster } from '@/components/ui/toaster'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SubscriptionGuard } from '@/components/features/subscription'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -17,6 +18,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const { isAuthenticated, isInitialized, initialize, user } = useAuthStore()
   const { fetchOrganizations, organizations } = useOrganizationStore()
+  const { initialize: initializeSubscription } = useSubscriptionStore()
 
   // Initialize auth on mount
   useEffect(() => {
@@ -32,19 +34,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [isAuthenticated, organizations.length, fetchOrganizations])
 
+  // Initialize subscription store when authenticated AND has organization
+  const hasOrganization = user?.organization || (user?.organizations && user.organizations.length > 0)
+  useEffect(() => {
+    if (isAuthenticated && hasOrganization) {
+      initializeSubscription().catch(() => {
+        // Silently handle subscription initialization errors
+        // The SubscriptionGuard will handle the redirect
+      })
+    }
+  }, [isAuthenticated, hasOrganization, initializeSubscription])
+
   // Redirect to login if not authenticated, or to onboarding if no organization
   useEffect(() => {
     if (isInitialized) {
       if (!isAuthenticated) {
         router.push('/login')
-      } else if (user) {
-        const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
-        if (!hasOrganization) {
-          router.push('/onboarding')
-        }
+      } else if (user && !hasOrganization) {
+        router.push('/onboarding')
       }
     }
-  }, [isInitialized, isAuthenticated, user, router])
+  }, [isInitialized, isAuthenticated, user, hasOrganization, router])
 
   // Show loading state while initializing
   if (!isInitialized) {
@@ -64,7 +74,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   // Don't render dashboard if no organization (redirect to onboarding)
-  const hasOrganization = user?.organization || (user?.organizations && user.organizations.length > 0)
   if (!hasOrganization) {
     return null
   }
@@ -75,7 +84,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
         <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6">
-          {children}
+          <SubscriptionGuard>{children}</SubscriptionGuard>
         </main>
       </div>
       <Toaster />

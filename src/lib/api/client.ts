@@ -106,16 +106,33 @@ apiClient.interceptors.response.use(
 
     // Handle 402 - subscription required or trial expired
     if (error.response?.status === 402) {
-      // 402 responses come from SubscriptionEnforcementMiddleware with a
-      // different shape than the standard ApiError envelope.
-      const subscriptionError = error.response?.data as
-        | { error?: string; subscriptionStatus?: string }
-        | undefined
-      const errorCode = subscriptionError?.error
-      const subscriptionStatus = subscriptionError?.subscriptionStatus
+      // Check if we're already on subscription-related pages to avoid redirect loops
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+      const isOnExemptPage = currentPath.startsWith('/select-plan') ||
+                             currentPath.startsWith('/checkout') ||
+                             currentPath.startsWith('/subscription-required') ||
+                             currentPath.startsWith('/settings/billing')
 
-      // Redirect to subscription-required page with error details
-      window.location.href = `/subscription-required?error=${errorCode}&status=${subscriptionStatus}`
+      // Also check if this is an organization/auth operation that shouldn't trigger redirect
+      const isExemptEndpoint = originalRequest.url?.includes('/auth/switch-organization') ||
+                               originalRequest.url?.includes('/organizations')
+
+      // Don't redirect if already on exempt page or if the endpoint is exempt
+      if (isOnExemptPage || isExemptEndpoint) {
+        return Promise.reject(error)
+      }
+
+      const errorCode = error.response?.data?.error
+      const subscriptionStatus = error.response?.data?.subscriptionStatus
+
+      // For "no subscription" cases, redirect to plan selection
+      // For expired/cancelled cases, show subscription required page
+      if (errorCode === 'SUBSCRIPTION_REQUIRED' || subscriptionStatus === 'none' || !subscriptionStatus) {
+        window.location.href = '/select-plan'
+      } else {
+        // Expired, cancelled, or other subscription issues
+        window.location.href = `/subscription-required?error=${errorCode}&status=${subscriptionStatus}`
+      }
       return Promise.reject(error)
     }
 

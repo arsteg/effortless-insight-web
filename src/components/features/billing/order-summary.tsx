@@ -14,6 +14,7 @@ interface OrderSummaryProps {
   coupon?: CouponValidation | null
   companyState?: string
   companyGstin?: string
+  isUpgradingFromTrial?: boolean
 }
 
 const GST_RATE = 18
@@ -26,6 +27,7 @@ export function OrderSummary({
   seatPrice = 0,
   coupon,
   companyState,
+  isUpgradingFromTrial = false,
 }: OrderSummaryProps) {
   const basePrice = billingCycle === 'annually' ? plan.pricing.annually : plan.pricing.monthly
   const seatsTotal = additionalSeats * seatPrice
@@ -145,13 +147,25 @@ export function OrderSummary({
         </p>
 
         {/* Trial Info */}
-        {plan.trialDays > 0 && (
+        {plan.trialDays > 0 && !isUpgradingFromTrial && (
           <div className="p-3 bg-primary/5 rounded-lg">
             <p className="text-sm font-medium text-primary">
               {plan.trialDays}-day free trial included
             </p>
             <p className="text-xs text-muted-foreground">
               You won&apos;t be charged until your trial ends
+            </p>
+          </div>
+        )}
+
+        {/* Upgrading from trial */}
+        {isUpgradingFromTrial && (
+          <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+            <p className="text-sm font-medium text-green-700 dark:text-green-400">
+              Upgrade to paid plan
+            </p>
+            <p className="text-xs text-green-600 dark:text-green-500">
+              Your paid subscription will start immediately after payment
             </p>
           </div>
         )}

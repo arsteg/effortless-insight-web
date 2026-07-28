@@ -178,10 +178,8 @@ function OnboardingForm() {
             billingCycle: selectedPlan.billingCycle,
           })
 
-          // Clear stored plan selection after successful trial start
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('selected_plan')
-          }
+          // Plan selection is stored in BillingSubscription table
+          // No need for localStorage - subscription data contains planCode and billingCycle
 
           toast({
             title: 'Organization created!',
@@ -196,9 +194,7 @@ function OnboardingForm() {
             description: 'Welcome to EffortlessInsight. Please select a plan to continue.',
             variant: 'default',
           })
-          // Redirect to pricing page to select plan
-          router.push('/pricing')
-          return
+          // Redirect to dashboard - subscription guard will show "Subscription Required"
         }
       } else {
         toast({
@@ -206,9 +202,7 @@ function OnboardingForm() {
           description: 'Welcome to EffortlessInsight. Please select a plan to continue.',
           variant: 'default',
         })
-        // No plan selected - redirect to pricing
-        router.push('/pricing')
-        return
+        // Redirect to dashboard - subscription guard will show "Subscription Required"
       }
 
       router.push('/dashboard')

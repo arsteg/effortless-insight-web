@@ -59,6 +59,9 @@ function CheckoutContent() {
   // Get selected plan
   const selectedPlan = plans?.find((p) => p.code === selectedPlanCode)
 
+  // Check if user is upgrading from trial
+  const isUpgradingFromTrial = subscription?.isTrialing === true
+
   // Handle plan selection from URL: advances the wizard once the async plan
   // list resolves and confirms the plan code from the URL is valid.
   useEffect(() => {
@@ -256,6 +259,7 @@ function CheckoutContent() {
               plan={selectedPlan}
               billingCycle={billingCycle}
               additionalSeats={additionalSeats}
+              isUpgradingFromTrial={isUpgradingFromTrial}
             />
           </div>
         </div>
@@ -358,6 +362,7 @@ function CheckoutContent() {
               coupon={coupon}
               companyState={billingDetails.state}
               companyGstin={billingDetails.gstin}
+              isUpgradingFromTrial={isUpgradingFromTrial}
             />
           </div>
         </div>
