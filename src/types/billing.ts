@@ -267,6 +267,29 @@ export interface ChangePlanResponse {
 }
 
 // ============================================================================
+// Plan Change Validation Types
+// ============================================================================
+
+export interface ValidatePlanChangeRequest {
+  newPlanCode: string
+  additionalSeats?: number
+}
+
+export interface PlanChangeValidationResult {
+  canChange: boolean
+  blockers?: PlanChangeBlocker[]
+  featuresToLose?: string[]
+}
+
+export interface PlanChangeBlocker {
+  type: 'users' | 'storage' | 'organizations' | 'notices' | 'api_calls' | 'additional_seats' | 'feature'
+  message: string
+  currentUsage: number
+  newLimit: number
+  excessAmount: number
+}
+
+// ============================================================================
 // Cancel Subscription Types
 // ============================================================================
 

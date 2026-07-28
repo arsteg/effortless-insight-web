@@ -172,14 +172,16 @@ function OnboardingForm() {
 
       // If plan was selected, start trial
       if (selectedPlan) {
+        // Clear the localStorage immediately to prevent re-use
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('selected_plan')
+        }
+
         try {
           await startTrialMutation.mutateAsync({
             planCode: selectedPlan.planCode,
             billingCycle: selectedPlan.billingCycle,
           })
-
-          // Plan selection is stored in BillingSubscription table
-          // No need for localStorage - subscription data contains planCode and billingCycle
 
           toast({
             title: 'Organization created!',

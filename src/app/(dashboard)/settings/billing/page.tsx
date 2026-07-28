@@ -71,9 +71,20 @@ export default function BillingSettingsPage() {
     }
   }
 
-  const handleManageBilling = () => {
+  const handleAddSeats = () => {
     setShowAddSeatsModal(true)
   }
+
+  // Check if user can add seats:
+  // - Not on trial
+  // - Not on free plan
+  // - Plan allows additional users
+  const currentPlan = plans?.find(p => p.code === subscription?.planCode)
+  const isFreePlan = currentPlan ? (currentPlan.pricing.monthly === 0 && currentPlan.pricing.annually === 0) : false
+  const canAddSeats = subscription
+    && subscription.status === 'active'
+    && !isFreePlan
+    && currentPlan?.limits.additionalUsersAllowed === true
 
   const handleCancel = () => {
     setShowCancelModal(true)
@@ -184,7 +195,8 @@ export default function BillingSettingsPage() {
         subscription={subscription}
         isLoading={isLoadingSubscription}
         onUpgrade={handleUpgrade}
-        onManage={handleManageBilling}
+        onAddSeats={handleAddSeats}
+        canAddSeats={canAddSeats}
         onCancel={handleCancel}
         onPause={handlePause}
         onResume={handleResume}
@@ -250,12 +262,16 @@ export default function BillingSettingsPage() {
       )}
 
       {/* Add Seats Modal */}
-      {subscription && (
+      {subscription && currentPlan && canAddSeats && (
         <AddSeatsModal
           open={showAddSeatsModal}
           onOpenChange={setShowAddSeatsModal}
           subscription={subscription}
-          pricePerSeat={1000}
+          pricePerSeat={
+            subscription.billingCycle === 'annually'
+              ? currentPlan.pricing.perSeat?.annually ?? 0
+              : currentPlan.pricing.perSeat?.monthly ?? 0
+          }
           onConfirm={handleAddSeatsConfirm}
           isLoading={addSeats.isPending}
         />

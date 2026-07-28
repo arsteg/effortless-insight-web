@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Info } from 'lucide-react'
+import { Info, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,9 +14,10 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { formatAmount } from '@/lib/api/billing'
+import { billingApi, formatAmount } from '@/lib/api/billing'
 import { BillingToggle } from './billing-toggle'
-import type { Plan, BillingCycle, Subscription } from '@/types/billing'
+import { PlanChangeValidationModal } from './plan-change-validation-modal'
+import type { Plan, BillingCycle, Subscription, PlanChangeValidationResult } from '@/types/billing'
 
 interface ChangePlanModalProps {
   open: boolean
@@ -37,6 +38,9 @@ export function ChangePlanModal({
 }: ChangePlanModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<string>(currentSubscription.planCode)
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(currentSubscription.billingCycle)
+  const [isValidating, setIsValidating] = useState(false)
+  const [validationResult, setValidationResult] = useState<PlanChangeValidationResult | null>(null)
+  const [showValidationModal, setShowValidationModal] = useState(false)
 
   const currentPlan = plans.find((p) => p.code === currentSubscription.planCode)
   const newPlan = plans.find((p) => p.code === selectedPlan)
@@ -52,7 +56,39 @@ export function ChangePlanModal({
     return billingCycle === 'annually' ? newPlan.pricing.annually : newPlan.pricing.monthly
   }
 
-  const handleConfirm = () => {
+  const handleValidateAndConfirm = async () => {
+    // If same plan, just skip validation
+    if (isSamePlan) {
+      onConfirm(selectedPlan, billingCycle)
+      return
+    }
+
+    setIsValidating(true)
+    try {
+      const result = await billingApi.validatePlanChange({
+        newPlanCode: selectedPlan,
+        additionalSeats: 0,
+      })
+      setValidationResult(result)
+
+      // If there are blockers or warnings, show the validation modal
+      if (!result.canChange || (result.featuresToLose && result.featuresToLose.length > 0)) {
+        setShowValidationModal(true)
+      } else {
+        // No issues, proceed directly
+        onConfirm(selectedPlan, billingCycle)
+      }
+    } catch (error) {
+      console.error('Validation failed:', error)
+      // On error, still allow the change (API will catch it)
+      onConfirm(selectedPlan, billingCycle)
+    } finally {
+      setIsValidating(false)
+    }
+  }
+
+  const handleConfirmFromValidation = () => {
+    setShowValidationModal(false)
     onConfirm(selectedPlan, billingCycle)
   }
 
@@ -148,13 +184,30 @@ export function ChangePlanModal({
             Cancel
           </Button>
           <Button
-            onClick={handleConfirm}
-            disabled={isLoading || !hasChanges}
+            onClick={handleValidateAndConfirm}
+            disabled={isLoading || isValidating || !hasChanges}
           >
-            {isLoading ? 'Processing...' : 'Confirm Change'}
+            {isLoading || isValidating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isValidating ? 'Validating...' : 'Processing...'}
+              </>
+            ) : (
+              'Confirm Change'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Validation Modal */}
+      <PlanChangeValidationModal
+        open={showValidationModal}
+        onOpenChange={setShowValidationModal}
+        validation={validationResult}
+        targetPlanName={newPlan?.displayName}
+        onConfirm={validationResult?.canChange ? handleConfirmFromValidation : undefined}
+        isLoading={isLoading}
+      />
     </Dialog>
   )
 }

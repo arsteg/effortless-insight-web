@@ -10,6 +10,8 @@ import type {
   VerifyPaymentResponse,
   ChangePlanRequest,
   ChangePlanResponse,
+  ValidatePlanChangeRequest,
+  PlanChangeValidationResult,
   CancelSubscriptionRequest,
   CancelSubscriptionResponse,
   PauseSubscriptionRequest,
@@ -96,6 +98,20 @@ export const billingApi = {
   async verifyPayment(data: VerifyPaymentRequest): Promise<VerifyPaymentResponse> {
     const response = await apiClient.post<{ data: VerifyPaymentResponse }>(
       '/subscriptions/verify',
+      data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Validate a plan change before executing it
+   * Returns validation result with any blockers that would prevent the change
+   */
+  async validatePlanChange(
+    data: ValidatePlanChangeRequest
+  ): Promise<PlanChangeValidationResult> {
+    const response = await apiClient.post<{ data: PlanChangeValidationResult }>(
+      '/subscriptions/current/plan/validate',
       data
     )
     return response.data.data

@@ -5,6 +5,7 @@ import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2, Plus } from 'lucide-react'
+import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -35,7 +36,10 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertCircle, ArrowUpRight } from 'lucide-react'
 import { useInviteMember } from '@/hooks/use-team'
+import { useCurrentSubscription } from '@/hooks/use-billing'
 import type { OrganizationRole } from '@/types'
 
 const inviteFormSchema = z.object({
@@ -50,6 +54,11 @@ type InviteFormValues = z.infer<typeof inviteFormSchema>
 
 interface InviteMemberDialogProps {
   currentUserRole: OrganizationRole
+  /** Optional override for plan limits - useful for testing */
+  planLimits?: {
+    users: number
+    additionalUsersAllowed: boolean
+  }
 }
 
 const roleOptions: { value: OrganizationRole; label: string; description: string }[] = [
@@ -59,9 +68,24 @@ const roleOptions: { value: OrganizationRole; label: string; description: string
   { value: 'ca', label: 'CA', description: 'External chartered accountant access' },
 ]
 
-export function InviteMemberDialog({ currentUserRole }: InviteMemberDialogProps) {
+export function InviteMemberDialog({ currentUserRole, planLimits }: InviteMemberDialogProps) {
   const [open, setOpen] = useState(false)
   const inviteMutation = useInviteMember()
+  const { data: subscription } = useCurrentSubscription()
+
+  // Calculate user limits from subscription or props
+  const seats = subscription?.subscription?.seats
+  const usage = subscription?.usage?.users
+  const totalSeats = seats ? seats.included + seats.additional : undefined
+  const usedSeats = usage?.used ?? seats?.used ?? 0
+
+  // Check if additional users are allowed (from plan limits)
+  const additionalUsersAllowed = planLimits?.additionalUsersAllowed ?? true // Default to true if not specified
+  const baseUserLimit = planLimits?.users ?? seats?.included ?? 0
+
+  // Determine if user can invite
+  const isAtLimit = totalSeats !== undefined && totalSeats > 0 && usedSeats >= totalSeats
+  const canAddMoreSeats = additionalUsersAllowed && isAtLimit
 
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteFormSchema),
@@ -102,10 +126,13 @@ export function InviteMemberDialog({ currentUserRole }: InviteMemberDialogProps)
 
   if (!canInvite) return null
 
+  // Show disabled button with tooltip when at limit and can't add more
+  const showLimitReached = isAtLimit && !canAddMoreSeats
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={showLimitReached} title={showLimitReached ? 'User limit reached' : undefined}>
           <Plus className="mr-2 h-4 w-4" />
           Invite Member
         </Button>
@@ -118,6 +145,30 @@ export function InviteMemberDialog({ currentUserRole }: InviteMemberDialogProps)
             instructions.
           </DialogDescription>
         </DialogHeader>
+
+        {/* User limit warning */}
+        {isAtLimit && (
+          <Alert variant={canAddMoreSeats ? 'default' : 'destructive'}>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>
+              {canAddMoreSeats ? 'Seat Limit Reached' : 'Additional Users Not Allowed'}
+            </AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>
+                {canAddMoreSeats
+                  ? `You have used all ${totalSeats} seats (${baseUserLimit} included + ${(totalSeats ?? 0) - baseUserLimit} additional). Add more seats to invite users.`
+                  : `Your plan allows ${baseUserLimit} user${baseUserLimit > 1 ? 's' : ''} and does not support additional users. Please upgrade to a plan that allows additional seats.`}
+              </p>
+              <Button size="sm" variant="outline" className="w-fit" asChild>
+                <Link href="/settings/billing">
+                  {canAddMoreSeats ? 'Add More Seats' : 'View Upgrade Options'}
+                  <ArrowUpRight className="ml-1 h-3 w-3" />
+                </Link>
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField

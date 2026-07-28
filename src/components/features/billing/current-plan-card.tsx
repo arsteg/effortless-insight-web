@@ -14,10 +14,13 @@ interface CurrentPlanCardProps {
   isLoading?: boolean
   onUpgrade?: () => void
   onManage?: () => void
+  onAddSeats?: () => void
   onCancel?: () => void
   onReactivate?: () => void
   onPause?: () => void
   onResume?: () => void
+  /** Whether the current plan allows adding additional seats */
+  canAddSeats?: boolean
 }
 
 export function CurrentPlanCard({
@@ -25,10 +28,12 @@ export function CurrentPlanCard({
   isLoading,
   onUpgrade,
   onManage,
+  onAddSeats,
   onCancel,
   onReactivate,
   onPause,
   onResume,
+  canAddSeats = false,
 }: CurrentPlanCardProps) {
   if (isLoading) {
     return (
@@ -221,9 +226,18 @@ export function CurrentPlanCard({
             <Button onClick={onUpgrade} variant="outline">
               Change Plan
             </Button>
-            <Button onClick={onManage} variant="outline">
-              Manage Billing
-            </Button>
+            {/* Add Seats - only show if: not trialing, plan allows it, and callback provided */}
+            {!isTrialing && canAddSeats && onAddSeats && (
+              <Button onClick={onAddSeats} variant="outline">
+                Add Seats
+              </Button>
+            )}
+            {/* Legacy manage billing - for backward compatibility */}
+            {onManage && !onAddSeats && (
+              <Button onClick={onManage} variant="outline">
+                Manage Billing
+              </Button>
+            )}
             <Button onClick={onPause} variant="outline">
               Pause
             </Button>

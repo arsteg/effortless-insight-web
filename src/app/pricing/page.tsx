@@ -287,6 +287,12 @@ function PricingCard({
                   /{billingCycle === 'annually' ? 'year' : 'month'}
                 </span>
               )}
+              {/* Per-seat pricing info */}
+              {plan.limits.additionalUsersAllowed && plan.pricing.perSeat && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  +{formatAmount(billingCycle === 'annually' ? plan.pricing.perSeat.annually || 0 : plan.pricing.perSeat.monthly || 0)}/user/{billingCycle === 'annually' ? 'year' : 'month'}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -387,7 +393,12 @@ function getTopFeatures(plan: Plan): string[] {
   if (plan.limits.users === -1) {
     features.push('Unlimited team members')
   } else {
-    features.push(`${plan.limits.users} team member${plan.limits.users > 1 ? 's' : ''}`)
+    const userText = `${plan.limits.users} team member${plan.limits.users > 1 ? 's' : ''}`
+    if (plan.limits.additionalUsersAllowed) {
+      features.push(`${userText} (add more seats)`)
+    } else {
+      features.push(userText)
+    }
   }
 
   features.push(`${plan.limits.storageGb === -1 ? 'Unlimited' : plan.limits.storageGb + 'GB'} storage`)
