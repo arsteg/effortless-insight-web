@@ -262,6 +262,7 @@ export function useNotificationConnection() {
 
   // Auto-connect on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- connect() syncs connection state with the external SignalR client
     connect()
     return () => {
       disconnect()

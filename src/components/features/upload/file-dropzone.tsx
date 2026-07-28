@@ -22,6 +22,12 @@ const DEFAULT_ACCEPT: Accept = {
 
 const DEFAULT_MAX_SIZE = 10 * 1024 * 1024 // 10MB
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export function FileDropzone({
   onFileSelect,
   accept = DEFAULT_ACCEPT,
@@ -70,12 +76,6 @@ export function FileDropzone({
   const removeFile = () => {
     setSelectedFile(null)
     setError(null)
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
   // If a file is selected, show the file preview

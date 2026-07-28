@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -70,11 +70,10 @@ function ResetPasswordForm() {
 
   const token = searchParams.get('token')
 
-  useEffect(() => {
-    if (!token) {
-      setError('Invalid or missing reset token. Please request a new password reset link.')
-    }
-  }, [token])
+  // Derived rather than set via effect: a missing token is knowable at render time
+  const missingTokenError = !token
+    ? 'Invalid or missing reset token. Please request a new password reset link.'
+    : null
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -120,7 +119,7 @@ function ResetPasswordForm() {
   }
 
   // Show error state (invalid/missing token)
-  if (error && !token) {
+  if (missingTokenError) {
     return (
       <Card>
         <CardHeader className="space-y-1 text-center">
@@ -130,7 +129,7 @@ function ResetPasswordForm() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">Invalid Link</CardTitle>
-          <CardDescription className="text-base">{error}</CardDescription>
+          <CardDescription className="text-base">{missingTokenError}</CardDescription>
         </CardHeader>
         <CardContent className="text-center">
           <Button asChild>

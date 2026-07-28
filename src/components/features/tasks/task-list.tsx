@@ -12,8 +12,6 @@ import {
   AlertCircle,
   PauseCircle,
   ChevronRight,
-  LayoutList,
-  LayoutGrid,
   Archive,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,8 +35,13 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TaskItem } from './task-item'
 import { TaskForm } from './task-form'
+import { TimeTracker } from './time-tracker'
+import { TaskDependencies } from './task-dependencies'
+import { TaskReminders } from './task-reminders'
+import { TaskAttachments } from './task-attachments'
 import {
   useTasks,
   useCreateTask,
@@ -75,7 +78,6 @@ interface TaskListProps {
 
 type SortOption = 'priority' | 'dueDate' | 'createdAt' | 'title'
 type SortDirection = 'asc' | 'desc'
-type ViewMode = 'list' | 'grid'
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = {
   critical: 0,
@@ -188,11 +190,11 @@ export function TaskList({
   const [showForm, setShowForm] = useState(false)
   const [editingTask, setEditingTask] = useState<TaskDetail | null>(null)
   const [deletingTask, setDeletingTask] = useState<Task | null>(null)
+  const [subtaskParent, setSubtaskParent] = useState<Task | null>(null)
   const [statusFilter, setStatusFilter] = useState<TaskStatus[]>([])
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority[]>([])
   const [sortBy, setSortBy] = useState<SortOption>('priority')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
-  const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [showOverdueOnly, setShowOverdueOnly] = useState(false)
 
   const { data, isLoading } = useTasks(noticeId)
@@ -201,7 +203,7 @@ export function TaskList({
   const deleteMutation = useDeleteTask(noticeId)
   const completeMutation = useCompleteTask(noticeId)
 
-  const tasks = data?.tasks ?? []
+  const tasks = useMemo(() => data?.tasks ?? [], [data?.tasks])
   const summary = data?.summary
 
   // Filter and sort tasks
@@ -253,7 +255,27 @@ export function TaskList({
     return result
   }, [tasks, statusFilter, priorityFilter, sortBy, sortDirection, showOverdueOnly])
 
-  const displayedTasks = maxItems ? filteredAndSortedTasks.slice(0, maxItems) : filteredAndSortedTasks
+  // Group subtasks directly under their parent (subtasks whose parent is
+  // filtered out render at the top level)
+  const orderedTasks = useMemo(() => {
+    const byParent = new Map<string, Task[]>()
+    const topLevel: Task[] = []
+    for (const task of filteredAndSortedTasks) {
+      if (
+        task.parentTaskId &&
+        filteredAndSortedTasks.some((p) => p.id === task.parentTaskId)
+      ) {
+        const children = byParent.get(task.parentTaskId) ?? []
+        children.push(task)
+        byParent.set(task.parentTaskId, children)
+      } else {
+        topLevel.push(task)
+      }
+    }
+    return topLevel.flatMap((task) => [task, ...(byParent.get(task.id) ?? [])])
+  }, [filteredAndSortedTasks])
+
+  const displayedTasks = maxItems ? orderedTasks.slice(0, maxItems) : orderedTasks
   const completedCount = tasks.filter((t) => t.status === 'done').length
   const totalCount = tasks.length
 
@@ -280,6 +302,7 @@ export function TaskList({
   const handleCreate = async (data: CreateTaskRequest) => {
     await createMutation.mutateAsync(data)
     setShowForm(false)
+    setSubtaskParent(null)
   }
 
   const handleUpdate = async (data: CreateTaskRequest) => {
@@ -466,11 +489,16 @@ export function TaskList({
                   onStatusChange={(status) => handleStatusChange(task, status)}
                   onEdit={(t) => setEditingTask(t as TaskDetail)}
                   onDelete={setDeletingTask}
+                  onAddSubtask={setSubtaskParent}
+                  isSubtask={
+                    !!task.parentTaskId &&
+                    displayedTasks.some((p) => p.id === task.parentTaskId)
+                  }
                 />
               ))}
-              {maxItems && filteredAndSortedTasks.length > maxItems && (
+              {maxItems && orderedTasks.length > maxItems && (
                 <p className="text-sm text-muted-foreground text-center pt-2">
-                  +{filteredAndSortedTasks.length - maxItems} more tasks
+                  +{orderedTasks.length - maxItems} more tasks
                 </p>
               )}
             </div>
@@ -480,34 +508,76 @@ export function TaskList({
 
       {/* Create/Edit Dialog */}
       <Dialog
-        open={showForm || !!editingTask}
+        open={showForm || !!editingTask || !!subtaskParent}
         onOpenChange={(open) => {
           if (!open) {
             setShowForm(false)
             setEditingTask(null)
+            setSubtaskParent(null)
           }
         }}
       >
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingTask ? 'Edit Task' : 'Create Task'}</DialogTitle>
+            <DialogTitle>
+              {editingTask ? 'Edit Task' : subtaskParent ? 'Add Subtask' : 'Create Task'}
+            </DialogTitle>
             <DialogDescription>
               {editingTask
-                ? 'Update the task details below.'
+                ? 'Update details, dependencies, reminders, and time tracking.'
+                : subtaskParent
+                ? `Add a subtask under "${subtaskParent.title}".`
                 : 'Add a new task to track work on this notice.'}
             </DialogDescription>
           </DialogHeader>
-          <TaskForm
-            task={editingTask || undefined}
-            noticeType={noticeType}
-            availableMembers={availableMembers}
-            onSubmit={editingTask ? handleUpdate : handleCreate}
-            onCancel={() => {
-              setShowForm(false)
-              setEditingTask(null)
-            }}
-            isLoading={createMutation.isPending || updateMutation.isPending}
-          />
+          {editingTask ? (
+            <Tabs defaultValue="details">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="dependencies">Dependencies</TabsTrigger>
+                <TabsTrigger value="reminders">Reminders</TabsTrigger>
+                <TabsTrigger value="time">Time</TabsTrigger>
+                <TabsTrigger value="files">Files</TabsTrigger>
+              </TabsList>
+              <TabsContent value="details" className="mt-4">
+                <TaskForm
+                  task={editingTask}
+                  noticeType={noticeType}
+                  availableMembers={availableMembers}
+                  onSubmit={handleUpdate}
+                  onCancel={() => setEditingTask(null)}
+                  isLoading={updateMutation.isPending}
+                />
+              </TabsContent>
+              <TabsContent value="dependencies" className="mt-4">
+                <TaskDependencies taskId={editingTask.id} noticeId={noticeId} />
+              </TabsContent>
+              <TabsContent value="reminders" className="mt-4">
+                <TaskReminders taskId={editingTask.id} dueDate={editingTask.dueDate} />
+              </TabsContent>
+              <TabsContent value="time" className="mt-4">
+                <TimeTracker
+                  taskId={editingTask.id}
+                  estimatedHours={editingTask.estimatedHours}
+                />
+              </TabsContent>
+              <TabsContent value="files" className="mt-4">
+                <TaskAttachments taskId={editingTask.id} />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <TaskForm
+              noticeType={noticeType}
+              parentTaskId={subtaskParent?.id}
+              availableMembers={availableMembers}
+              onSubmit={handleCreate}
+              onCancel={() => {
+                setShowForm(false)
+                setSubtaskParent(null)
+              }}
+              isLoading={createMutation.isPending}
+            />
+          )}
         </DialogContent>
       </Dialog>
 

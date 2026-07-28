@@ -53,6 +53,7 @@ export function MentionAutocomplete({
 
   // Reset selection when search changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset of highlighted row when the search term changes
     setSelectedIndex(0)
   }, [searchTerm])
 

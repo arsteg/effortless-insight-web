@@ -108,6 +108,7 @@ export function NotificationItem({
           getIconBackground(notification.priority)
         )}
       >
+        {/* eslint-disable-next-line react-hooks/static-components -- icon selected from static lucide components, not created during render */}
         <Icon className="w-5 h-5 text-white" />
       </div>
 

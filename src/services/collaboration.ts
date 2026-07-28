@@ -27,6 +27,15 @@ import type {
   FileFolder,
   TaskStatus,
   TaskPriority,
+  TaskDependency,
+  CreateTaskDependencyRequest,
+  TaskReminder,
+  CreateTaskReminderRequest,
+  Team,
+  CreateTeamRequest,
+  UpdateTeamRequest,
+  TaskAttachment,
+  AttachmentDownloadInfo,
 } from '@/types/collaboration'
 
 // =============================================================================
@@ -99,6 +108,123 @@ export const taskApi = {
   assignTask: async (taskId: string, assignees: string[]): Promise<TaskDetail> => {
     const response = await apiClient.patch(`/tasks/${taskId}`, { assignees })
     return response.data
+  },
+}
+
+// =============================================================================
+// TEAMS API
+// =============================================================================
+
+export const teamsApi = {
+  // List active teams in the organization
+  getTeams: async (): Promise<Team[]> => {
+    const response = await apiClient.get('/teams')
+    return response.data
+  },
+
+  // Create a team
+  createTeam: async (data: CreateTeamRequest): Promise<Team> => {
+    const response = await apiClient.post('/teams', data)
+    return response.data
+  },
+
+  // Update a team (name, description, color, member list)
+  updateTeam: async (teamId: string, data: UpdateTeamRequest): Promise<Team> => {
+    const response = await apiClient.put(`/teams/${teamId}`, data)
+    return response.data
+  },
+
+  // Delete a team (soft delete; assigned tasks keep their history)
+  deleteTeam: async (teamId: string): Promise<void> => {
+    await apiClient.delete(`/teams/${teamId}`)
+  },
+}
+
+// =============================================================================
+// TASK ATTACHMENT API
+// =============================================================================
+
+export const taskAttachmentApi = {
+  // List attachments for a task
+  getAttachments: async (taskId: string): Promise<TaskAttachment[]> => {
+    const response = await apiClient.get(`/tasks/${taskId}/attachments`)
+    return response.data
+  },
+
+  // Upload a file to a task (max 50MB)
+  uploadAttachment: async (taskId: string, file: File): Promise<TaskAttachment> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await apiClient.post(`/tasks/${taskId}/attachments`, formData)
+    return response.data
+  },
+
+  // Get a short-lived download URL for an attachment
+  getDownloadUrl: async (
+    taskId: string,
+    attachmentId: string
+  ): Promise<AttachmentDownloadInfo> => {
+    const response = await apiClient.get(
+      `/tasks/${taskId}/attachments/${attachmentId}/download`
+    )
+    return response.data
+  },
+
+  // Delete an attachment
+  deleteAttachment: async (taskId: string, attachmentId: string): Promise<void> => {
+    await apiClient.delete(`/tasks/${taskId}/attachments/${attachmentId}`)
+  },
+}
+
+// =============================================================================
+// TASK DEPENDENCY API
+// =============================================================================
+
+export const taskDependencyApi = {
+  // Get dependencies for a task
+  getDependencies: async (taskId: string): Promise<TaskDependency[]> => {
+    const response = await apiClient.get(`/tasks/${taskId}/dependencies`)
+    return response.data
+  },
+
+  // Add a dependency (this task depends on another)
+  addDependency: async (
+    taskId: string,
+    data: CreateTaskDependencyRequest
+  ): Promise<TaskDependency> => {
+    const response = await apiClient.post(`/tasks/${taskId}/dependencies`, data)
+    return response.data
+  },
+
+  // Remove a dependency
+  removeDependency: async (taskId: string, dependsOnId: string): Promise<void> => {
+    await apiClient.delete(`/tasks/${taskId}/dependencies/${dependsOnId}`)
+  },
+}
+
+// =============================================================================
+// TASK REMINDER API
+// =============================================================================
+
+export const taskReminderApi = {
+  // Get reminders for a task
+  getReminders: async (taskId: string): Promise<TaskReminder[]> => {
+    const response = await apiClient.get(`/tasks/${taskId}/reminders`)
+    return response.data
+  },
+
+  // Create a reminder (sent N days before the task's due date)
+  createReminder: async (
+    taskId: string,
+    data: CreateTaskReminderRequest
+  ): Promise<TaskReminder> => {
+    const response = await apiClient.post(`/tasks/${taskId}/reminders`, data)
+    return response.data
+  },
+
+  // Delete a reminder
+  deleteReminder: async (taskId: string, reminderId: string): Promise<void> => {
+    await apiClient.delete(`/tasks/${taskId}/reminders/${reminderId}`)
   },
 }
 

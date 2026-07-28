@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2, Plus } from 'lucide-react'
@@ -73,7 +73,7 @@ export function InviteMemberDialog({ currentUserRole }: InviteMemberDialogProps)
     },
   })
 
-  const isExternal = form.watch('isExternal')
+  const isExternal = useWatch({ control: form.control, name: 'isExternal' })
 
   const canInvite = currentUserRole === 'owner' || currentUserRole === 'admin'
   const availableRoles = roleOptions.filter((option) => {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { addDays, format } from 'date-fns'
@@ -133,8 +133,8 @@ export function DocumentRequestForm({
     },
   })
 
-  const selectedMemberId = form.watch('requestedFrom')
-  const currentFormats = form.watch('acceptedFormats') || []
+  const selectedMemberId = useWatch({ control: form.control, name: 'requestedFrom' })
+  const currentFormats = useWatch({ control: form.control, name: 'acceptedFormats' }) || []
 
   const selectedMember = availableMembers.find((m) => m.id === selectedMemberId)
 

@@ -114,6 +114,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
   // Initialize content from response
   useEffect(() => {
     if (response) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync of editor content with the async-loaded draft
       setContent(response.draftContent || response.finalContent || '')
     }
   }, [response])
@@ -157,8 +158,10 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
       let errorTitle = 'Auto-draft failed'
       let errorDescription = 'Failed to generate draft. Please try again.'
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const apiError = error as any
+      const apiError = error as {
+        response?: { data?: { error?: string; code?: string; message?: string } }
+        message?: string
+      }
       const errorCode = apiError?.response?.data?.error || apiError?.response?.data?.code
       const errorMessage = apiError?.response?.data?.message || apiError?.message
 

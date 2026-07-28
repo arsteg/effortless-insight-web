@@ -50,9 +50,12 @@ function VerifyEmailContent() {
 
   const token = searchParams.get('token')
 
+  // A missing token is knowable at render time; only the async verification
+  // result needs state.
+  const viewState: VerificationState = token ? state : 'no-token'
+
   useEffect(() => {
     if (!token) {
-      setState('no-token')
       return
     }
 
@@ -74,7 +77,7 @@ function VerifyEmailContent() {
   }, [token])
 
   // Loading state
-  if (state === 'loading') {
+  if (viewState === 'loading') {
     return (
       <Card>
         <CardHeader className="space-y-1 text-center">
@@ -93,7 +96,7 @@ function VerifyEmailContent() {
   }
 
   // No token state
-  if (state === 'no-token') {
+  if (viewState === 'no-token') {
     return (
       <Card>
         <CardHeader className="space-y-1 text-center">
@@ -125,7 +128,7 @@ function VerifyEmailContent() {
   }
 
   // Error state
-  if (state === 'error') {
+  if (viewState === 'error') {
     return (
       <Card>
         <CardHeader className="space-y-1 text-center">

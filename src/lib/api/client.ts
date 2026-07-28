@@ -168,11 +168,16 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Transform error for consistent handling
+    // Transform error for consistent handling. Some endpoints (collaboration)
+    // return { error: "..." } instead of the standard { message } envelope.
     const apiError: ApiError = {
       success: false,
       code: error.response?.data?.code || 'UNKNOWN_ERROR',
-      message: error.response?.data?.message || error.message || 'An unexpected error occurred',
+      message:
+        error.response?.data?.message ||
+        (error.response?.data as { error?: string } | undefined)?.error ||
+        error.message ||
+        'An unexpected error occurred',
       errors: error.response?.data?.errors,
     }
 

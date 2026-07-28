@@ -22,11 +22,12 @@ import {
   AIAnalysisView,
   DocumentsManager,
   ActivityTimeline,
-  CollaborationPanel,
   ResponseEditor,
   EditNoticeDialog,
   SimilarNotices,
 } from '@/components/features/notices'
+import { TaskList } from '@/components/features/tasks'
+import { ActivityFeed } from '@/components/features/activity/activity-feed'
 import { AIChatPanel } from '@/components/features/ai-chat'
 import { CommentList } from '@/components/features/comments'
 import { DocumentRequestPanel } from '@/components/features/document-requests/document-request-panel'
@@ -218,7 +219,11 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="collaboration" className="mt-6">
-          <CollaborationPanel noticeId={noticeId} />
+          <TaskList
+            noticeId={noticeId}
+            noticeType={notice?.noticeType}
+            availableMembers={teamMembers}
+          />
         </TabsContent>
 
         <TabsContent value="comments" className="mt-6">
@@ -258,11 +263,16 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="activity" className="mt-6">
-          <ActivityTimeline
-            activities={workflowActivities}
-            isLoading={isLoadingNotice || workflow.isLoading}
-            emptyMessage="No activity recorded for this notice yet."
-          />
+          <div className="space-y-6">
+            {/* Collaboration events: tasks, comments, document requests */}
+            <ActivityFeed noticeId={noticeId} />
+            {/* Workflow stage history */}
+            <ActivityTimeline
+              activities={workflowActivities}
+              isLoading={isLoadingNotice || workflow.isLoading}
+              emptyMessage="No workflow activity recorded for this notice yet."
+            />
+          </div>
         </TabsContent>
       </Tabs>
         </div>

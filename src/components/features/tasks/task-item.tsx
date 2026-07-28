@@ -16,8 +16,9 @@ import {
   AlertCircle,
   PauseCircle,
   Archive,
-  UserPlus,
+  ListPlus,
   Tag,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,8 +47,10 @@ interface TaskItemProps {
   onStatusChange?: (status: TaskStatus) => void
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
+  onAddSubtask?: (task: Task) => void
   isUpdating?: boolean
   compact?: boolean
+  isSubtask?: boolean
 }
 
 const PRIORITY_CONFIG: Record<
@@ -124,8 +127,10 @@ export function TaskItem({
   onStatusChange,
   onEdit,
   onDelete,
+  onAddSubtask,
   isUpdating = false,
   compact = false,
+  isSubtask = false,
 }: TaskItemProps) {
   const [isHovered, setIsHovered] = useState(false)
   const isCompleted = task.status === 'done'
@@ -154,7 +159,8 @@ export function TaskItem({
         'group flex items-start gap-3 rounded-lg border p-3 transition-all',
         'hover:shadow-sm hover:border-primary/20',
         isCompleted && 'bg-muted/30 opacity-75',
-        task.isOverdue && !isCompleted && 'border-l-4 border-l-red-500 bg-red-50/50'
+        task.isOverdue && !isCompleted && 'border-l-4 border-l-red-500 bg-red-50/50',
+        isSubtask && 'ml-8 border-l-2 border-l-muted-foreground/20'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -230,6 +236,17 @@ export function TaskItem({
             <span className="flex items-center gap-1">
               <Check className="h-3 w-3" />
               Completed {formatDistanceToNow(new Date(task.completedAt), { addSuffix: true })}
+            </span>
+          )}
+
+          {/* Assigned team */}
+          {task.assignedTeam && (
+            <span className="flex items-center gap-1">
+              <Users
+                className="h-3 w-3"
+                style={task.assignedTeam.color ? { color: task.assignedTeam.color } : undefined}
+              />
+              {task.assignedTeam.name}
             </span>
           )}
 
@@ -357,6 +374,13 @@ export function TaskItem({
             <DropdownMenuItem onClick={() => onEdit(task)}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
+            </DropdownMenuItem>
+          )}
+
+          {onAddSubtask && !task.parentTaskId && (
+            <DropdownMenuItem onClick={() => onAddSubtask(task)}>
+              <ListPlus className="mr-2 h-4 w-4" />
+              Add Subtask
             </DropdownMenuItem>
           )}
 

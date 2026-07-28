@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2, X, Plus, Clock, Users, Tag, FileText } from 'lucide-react'
@@ -41,11 +41,12 @@ import {
 } from '@/components/ui/popover'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
-import { useTaskTemplates } from '@/hooks/use-collaboration'
+import { useTaskTemplates, useTeams } from '@/hooks/use-collaboration'
 import type {
   Task,
   TaskDetail,
   CreateTaskRequest,
+  UpdateTaskRequest,
   TaskPriority,
   TaskTemplate,
   TaskAssignee,
@@ -60,6 +61,7 @@ const taskSchema = z.object({
   estimatedHours: z.number().min(0).max(999).optional(),
   labels: z.array(z.string()).optional(),
   assignees: z.array(z.string()).max(5, 'Maximum 5 assignees allowed').optional(),
+  assignedTeamId: z.string().optional(),
   parentTaskId: z.string().optional(),
   templateId: z.string().optional(),
 })
@@ -125,6 +127,7 @@ export function TaskForm({
   const [templatePopoverOpen, setTemplatePopoverOpen] = useState(false)
 
   const { data: templates } = useTaskTemplates(noticeType)
+  const { data: teams } = useTeams()
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -136,12 +139,13 @@ export function TaskForm({
       estimatedHours: task?.estimatedHours,
       labels: task?.labels || [],
       assignees: task?.assignees?.map((a) => a.id) || [],
+      assignedTeamId: task?.assignedTeam?.id || 'none',
       parentTaskId: parentTaskId || task?.parentTaskId,
     },
   })
 
-  const selectedAssignees = form.watch('assignees') || []
-  const currentLabels = form.watch('labels') || []
+  const selectedAssignees = useWatch({ control: form.control, name: 'assignees' }) || []
+  const currentLabels = useWatch({ control: form.control, name: 'labels' }) || []
 
   const handleTemplateSelect = (template: TaskTemplate) => {
     form.setValue('title', template.defaultTitle)
@@ -186,7 +190,11 @@ export function TaskForm({
   }
 
   const handleSubmit = (data: TaskFormData) => {
-    onSubmit({
+    const teamId = data.assignedTeamId && data.assignedTeamId !== 'none'
+      ? data.assignedTeamId
+      : undefined
+
+    const payload: CreateTaskRequest & Pick<UpdateTaskRequest, 'clearTeamAssignment'> = {
       title: data.title,
       description: data.description || undefined,
       dueDate: data.dueDate || undefined,
@@ -194,9 +202,18 @@ export function TaskForm({
       estimatedHours: data.estimatedHours,
       labels: data.labels && data.labels.length > 0 ? data.labels : undefined,
       assignees: data.assignees && data.assignees.length > 0 ? data.assignees : undefined,
+      assignedTeamId: teamId,
       parentTaskId: data.parentTaskId,
       templateId: data.templateId,
-    })
+    }
+
+    // When editing a task that had a team and the team was deselected,
+    // explicitly clear the assignment on the server
+    if (isEditing && task?.assignedTeam && !teamId) {
+      payload.clearTeamAssignment = true
+    }
+
+    onSubmit(payload)
   }
 
   const selectedMemberDetails = availableMembers.filter((m) =>
@@ -364,6 +381,52 @@ export function TaskForm({
             </FormItem>
           )}
         />
+
+        {/* Team assignment */}
+        {teams && teams.length > 0 && (
+          <FormField
+            control={form.control}
+            name="assignedTeamId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Assign to Team{' '}
+                  <span className="text-muted-foreground font-normal">(optional)</span>
+                </FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="No team" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">No team</SelectItem>
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        <div className="flex items-center gap-2">
+                          {team.color && (
+                            <span
+                              className="inline-block h-2 w-2 rounded-full"
+                              style={{ backgroundColor: team.color }}
+                            />
+                          )}
+                          {team.name}
+                          <span className="text-xs text-muted-foreground">
+                            ({team.memberCount} {team.memberCount === 1 ? 'member' : 'members'})
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  All team members become assignees of this task.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Assignees */}
         {availableMembers.length > 0 && (

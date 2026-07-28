@@ -61,10 +61,11 @@ export function AIChatPanel({ noticeId, className }: AIChatPanelProps) {
     isStreaming,
   } = useStreamingMessage()
 
-  // Auto-select first conversation or create new one
+  // Auto-select first conversation when the async list arrives and none is active
   useEffect(() => {
     if (conversationsData?.conversations && conversationsData.conversations.length > 0) {
       if (!activeConversationId) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync of selection with async-loaded conversation list
         setActiveConversationId(conversationsData.conversations[0].id)
       }
     }

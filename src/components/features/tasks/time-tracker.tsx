@@ -83,10 +83,10 @@ export function TimeTracker({ taskId, estimatedHours, className }: TimeTrackerPr
   const entries = timeEntriesData?.entries ?? []
   const isTimerRunning = activeTimer?.isTimerRunning ?? false
 
-  // Update elapsed time when timer is running
+  // Update elapsed time while the timer is running. The immediate update runs
+  // via a zero-delay timeout so no state is set synchronously in the effect.
   useEffect(() => {
     if (!isTimerRunning || !activeTimer?.startTime) {
-      setElapsedSeconds(0)
       return
     }
 
@@ -97,9 +97,12 @@ export function TimeTracker({ taskId, estimatedHours, className }: TimeTrackerPr
       setElapsedSeconds(elapsed)
     }
 
-    updateElapsed()
+    const initial = setTimeout(updateElapsed, 0)
     const interval = setInterval(updateElapsed, 1000)
-    return () => clearInterval(interval)
+    return () => {
+      clearTimeout(initial)
+      clearInterval(interval)
+    }
   }, [isTimerRunning, activeTimer?.startTime])
 
   const handleStartTimer = () => {

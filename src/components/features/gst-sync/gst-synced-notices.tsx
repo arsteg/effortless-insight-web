@@ -56,7 +56,7 @@ export function GstSyncedNotices() {
   const { data, isLoading, error, refetch } = useGstNoticesRaw(filters)
   const { data: clientsData } = useGstClients({ pageSize: 100 })
 
-  const notices = data?.items ?? []
+  const notices = useMemo(() => data?.items ?? [], [data?.items])
   const totalCount = data?.totalCount ?? 0
   const totalPages = data?.totalPages ?? 1
 

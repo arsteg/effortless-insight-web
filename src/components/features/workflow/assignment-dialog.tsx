@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, UserPlus } from 'lucide-react';
@@ -101,7 +101,7 @@ export function AssignmentDialog({
     },
   });
 
-  const assignmentType = form.watch('assignmentType');
+  const assignmentType = useWatch({ control: form.control, name: 'assignmentType' });
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {

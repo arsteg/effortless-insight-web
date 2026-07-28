@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { AlertCircle, CreditCard, Clock, XCircle } from 'lucide-react'
@@ -19,20 +19,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 function SubscriptionRequiredContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [errorDetails, setErrorDetails] = useState<{
-    error: string | null
-    status: string | null
-  }>({
-    error: null,
-    status: null,
-  })
-
-  useEffect(() => {
-    setErrorDetails({
-      error: searchParams.get('error'),
-      status: searchParams.get('status'),
-    })
-  }, [searchParams])
+  // Derived directly from the URL; no state needed
+  const errorDetails = {
+    error: searchParams.get('error'),
+    status: searchParams.get('status'),
+  }
 
   const getErrorMessage = () => {
     if (errorDetails.error === 'TRIAL_EXPIRED') {
@@ -118,7 +109,7 @@ function SubscriptionRequiredContent() {
           )}
 
           <div className="rounded-lg bg-muted p-4 space-y-2">
-            <h4 className="font-semibold text-sm">What you'll get with a subscription:</h4>
+            <h4 className="font-semibold text-sm">What you&apos;ll get with a subscription:</h4>
             <ul className="space-y-1 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <span className="text-primary">✓</span>

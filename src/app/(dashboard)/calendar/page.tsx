@@ -94,27 +94,24 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('month')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
-  // Type filters with localStorage persistence
-  const [typeFilters, setTypeFilters] = useState<TypeFilters>({
-    notices: true,
-    tasks: true,
-  })
-
-  // Load filter state from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem(FILTER_STORAGE_KEY)
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setTypeFilters({
-          notices: parsed.notices ?? true,
-          tasks: parsed.tasks ?? true,
-        })
-      } catch {
-        // Invalid JSON, use defaults
+  // Type filters with localStorage persistence (lazy init; defaults during SSR)
+  const [typeFilters, setTypeFilters] = useState<TypeFilters>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(FILTER_STORAGE_KEY)
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          return {
+            notices: parsed.notices ?? true,
+            tasks: parsed.tasks ?? true,
+          }
+        } catch {
+          // Invalid JSON, use defaults
+        }
       }
     }
-  }, [])
+    return { notices: true, tasks: true }
+  })
 
   // Save filter state to localStorage when it changes
   useEffect(() => {
@@ -124,10 +121,11 @@ export default function CalendarPage() {
   const { data, isLoading } = useDashboard()
 
   // Transform dashboard deadlines into calendar events
+  const next7Days = data?.deadlines?.next7Days
   const allDeadlines: Deadline[] = useMemo(() => {
-    if (!data?.deadlines?.next7Days) return []
+    if (!next7Days) return []
 
-    return data.deadlines.next7Days.map((d) => ({
+    return next7Days.map((d) => ({
       id: d.id,
       noticeId: d.noticeId || d.id,
       noticeNumber: d.noticeNumber || `#${(d.noticeId || d.id)?.slice(0, 8)}`,
@@ -138,7 +136,7 @@ export default function CalendarPage() {
       noticeType: d.type === 'task' ? 'Task' : 'GST Notice',
       itemType: d.type === 'task' ? 'task' : 'notice',
     }))
-  }, [data?.deadlines?.next7Days])
+  }, [next7Days])
 
   // Apply type filters
   const deadlines = useMemo(() => {

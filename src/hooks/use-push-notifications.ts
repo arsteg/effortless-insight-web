@@ -248,6 +248,7 @@ export function usePushNotifications(
 
   // Initialize on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs status with browser permission/localStorage state on mount
     checkStatus()
   }, [checkStatus])
 
@@ -269,6 +270,7 @@ export function usePushNotifications(
   // Auto-register if enabled and permission is granted
   useEffect(() => {
     if (autoRegister && status === 'permission-granted') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional auto-registration side effect when permission becomes granted
       registerToken()
     }
   }, [autoRegister, status, registerToken])

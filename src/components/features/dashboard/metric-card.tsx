@@ -73,6 +73,7 @@ export function MetricCard({
             <div className="text-2xl font-bold">{value}</div>
             {(trend !== undefined || trendLabel) && (
               <div className="flex items-center gap-1 text-xs">
+                {/* eslint-disable-next-line react-hooks/static-components -- icon selected from static lucide components, not created during render */}
                 <TrendIcon className={cn('h-3 w-3', getTrendColor())} />
                 <span className={getTrendColor()}>
                   {trend !== undefined && (

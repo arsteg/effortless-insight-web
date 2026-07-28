@@ -207,7 +207,7 @@ export function DocumentRequestList({
   const reviewMutation = useReviewDocumentRequest(noticeId)
   const reminderMutation = useSendDocumentRequestReminder()
 
-  const requests = data?.requests ?? []
+  const requests = useMemo(() => data?.requests ?? [], [data?.requests])
   const summary = data?.summary
 
   // Filter and sort requests

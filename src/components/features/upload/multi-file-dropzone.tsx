@@ -24,6 +24,12 @@ const DEFAULT_ACCEPT: Accept = {
 const DEFAULT_MAX_SIZE = 10 * 1024 * 1024 // 10MB
 const DEFAULT_MAX_FILES = 10
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export function MultiFileDropzone({
   onFilesChange,
   accept = DEFAULT_ACCEPT,
@@ -91,12 +97,6 @@ export function MultiFileDropzone({
     setSelectedFiles([])
     onFilesChange([])
     setError(null)
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
   return (

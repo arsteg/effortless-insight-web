@@ -19,6 +19,14 @@ export interface TaskUser {
   avatarUrl?: string
 }
 
+export interface TaskTeam {
+  id: string
+  name: string
+  color?: string
+  icon?: string
+  memberCount: number
+}
+
 export interface Task {
   id: string
   noticeId: string
@@ -28,6 +36,7 @@ export interface Task {
   priority: TaskPriority
   dueDate?: string
   estimatedHours?: number
+  assignedTeam?: TaskTeam
   actualHours?: number
   isOverdue: boolean
   assignees: TaskAssignee[]
@@ -94,6 +103,7 @@ export interface CreateTaskRequest {
   title: string
   description?: string
   assignees?: string[]
+  assignedTeamId?: string
   priority?: TaskPriority
   dueDate?: string
   estimatedHours?: number
@@ -106,6 +116,8 @@ export interface UpdateTaskRequest {
   title?: string
   description?: string
   assignees?: string[]
+  assignedTeamId?: string
+  clearTeamAssignment?: boolean
   priority?: TaskPriority
   dueDate?: string
   estimatedHours?: number
@@ -113,6 +125,66 @@ export interface UpdateTaskRequest {
   labels?: string[]
   status?: TaskStatus
   completionNote?: string
+}
+
+// =============================================================================
+// TEAM TYPES
+// =============================================================================
+
+export interface TeamMemberInfo {
+  id: string
+  name: string
+  email?: string
+  avatarUrl?: string
+}
+
+export interface Team {
+  id: string
+  name: string
+  description?: string
+  color?: string
+  icon?: string
+  memberCount: number
+  members: TeamMemberInfo[]
+}
+
+export interface CreateTeamRequest {
+  name: string
+  description?: string
+  color?: string
+  memberIds?: string[]
+}
+
+export interface UpdateTeamRequest {
+  name?: string
+  description?: string
+  color?: string
+  memberIds?: string[]
+}
+
+// =============================================================================
+// TASK ATTACHMENT TYPES
+// =============================================================================
+
+export interface TaskAttachment {
+  id: string
+  fileName: string
+  fileUrl: string
+  fileSize?: number
+  fileType?: string
+  documentType?: string
+  description?: string
+  uploadedBy: {
+    id: string
+    name: string
+    avatarUrl?: string
+  }
+  createdAt: string
+}
+
+export interface AttachmentDownloadInfo {
+  downloadUrl: string
+  expiresAt: string
 }
 
 export interface TaskTemplate {
@@ -139,6 +211,50 @@ export interface CreateTaskTemplateRequest {
   defaultEstimatedHours?: number
   defaultLabels?: string[]
   applicableNoticeTypes?: string[]
+}
+
+// =============================================================================
+// TASK DEPENDENCY TYPES
+// =============================================================================
+
+export interface TaskSummaryInfo {
+  id: string
+  title: string
+  status: TaskStatus
+  priority: TaskPriority
+  dueDate?: string
+  isOverdue: boolean
+}
+
+export interface TaskDependency {
+  id: string
+  taskId: string
+  dependsOnTaskId: string
+  dependsOnTask: TaskSummaryInfo
+  dependencyType: string
+  createdAt: string
+}
+
+export interface CreateTaskDependencyRequest {
+  dependsOnTaskId: string
+  type?: string
+}
+
+// =============================================================================
+// TASK REMINDER TYPES
+// =============================================================================
+
+export interface TaskReminder {
+  id: string
+  taskId: string
+  daysBeforeDue: number
+  isSent: boolean
+  sentAt?: string
+  createdAt: string
+}
+
+export interface CreateTaskReminderRequest {
+  daysBeforeDue: number
 }
 
 // =============================================================================

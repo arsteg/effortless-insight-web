@@ -64,6 +64,7 @@ export function CommentForm({
 
   // Reset content when initialContent changes (for edit mode)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when switching the comment being edited
     setContent(initialContent)
   }, [initialContent])
 

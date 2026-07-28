@@ -112,6 +112,7 @@ function BranchCard({ branch, onComplete }: BranchCardProps) {
           'flex items-center justify-center w-8 h-8 rounded-full',
           statusColor
         )}>
+          {/* eslint-disable-next-line react-hooks/static-components -- icon selected from static lucide components, not created during render */}
           <StatusIcon className="h-4 w-4" />
         </div>
         <div>
@@ -316,6 +317,7 @@ function StageInstanceCard({ instance, onComplete }: StageInstanceCardProps) {
             'flex items-center justify-center w-8 h-8 rounded-full',
             statusColor
           )}>
+            {/* eslint-disable-next-line react-hooks/static-components -- icon selected from static lucide components, not created during render */}
             <StatusIcon className="h-4 w-4" />
           </div>
           <div>

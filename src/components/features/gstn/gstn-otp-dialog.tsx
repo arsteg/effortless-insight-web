@@ -48,6 +48,7 @@ export function GstnOtpDialog({
   // Focus input when dialog opens and reset all state
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional full reset each time the dialog opens
       setOtp('');
       setError(null);
       setRemainingAttempts(null);

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -59,42 +59,41 @@ function OnboardingForm() {
   } | null>(null)
 
   // Get plan selection from query params or localStorage
-  const [selectedPlan, setSelectedPlan] = useState<{
+  const selectedPlan = useMemo<{
     planCode: string
     billingCycle: BillingCycle
-  } | null>(null)
-
-  useEffect(() => {
+  } | null>(() => {
     // Try query params first
     const planFromUrl = searchParams.get('plan')
     const billingFromUrl = searchParams.get('billing') as BillingCycle | null
 
     if (planFromUrl) {
-      setSelectedPlan({
+      return {
         planCode: planFromUrl,
-        billingCycle: billingFromUrl || 'monthly'
-      })
-      return
+        billingCycle: billingFromUrl || 'monthly',
+      }
     }
 
     // Fallback to localStorage
+    if (typeof window === 'undefined') return null
     try {
       const stored = localStorage.getItem('selected_plan')
       if (stored) {
         const parsed = JSON.parse(stored)
         // Only use if less than 24 hours old
+        // eslint-disable-next-line react-hooks/purity -- one-time freshness check of the stored plan selection
         if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-          setSelectedPlan({
+          return {
             planCode: parsed.planCode,
-            billingCycle: parsed.billingCycle
-          })
-        } else {
-          localStorage.removeItem('selected_plan')
+            billingCycle: parsed.billingCycle,
+          }
         }
+        localStorage.removeItem('selected_plan')
       }
     } catch {
       // Ignore parsing errors
     }
+    return null
   }, [searchParams])
 
   const startTrialMutation = useStartTrial()

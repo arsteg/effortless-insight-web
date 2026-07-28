@@ -59,9 +59,11 @@ function CheckoutContent() {
   // Get selected plan
   const selectedPlan = plans?.find((p) => p.code === selectedPlanCode)
 
-  // Handle plan selection from URL
+  // Handle plan selection from URL: advances the wizard once the async plan
+  // list resolves and confirms the plan code from the URL is valid.
   useEffect(() => {
     if (selectedPlanCode && selectedPlan) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync of wizard state with async-loaded plan data
       setCompletedSteps(['plan'])
       setCurrentStep('billing')
     }

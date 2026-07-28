@@ -66,7 +66,7 @@ export function OAuthButtons({ mode = 'login', disabled = false, className }: OA
     try {
       const response = await authApi.getOAuthLoginUrl(providerId)
       // Redirect to provider's login page
-      window.location.href = response.loginUrl
+      window.location.assign(response.loginUrl)
     } catch (error) {
       console.error(`Failed to get ${providerId} login URL:`, error)
       setLoadingProvider(null)
@@ -78,7 +78,7 @@ export function OAuthButtons({ mode = 'login', disabled = false, className }: OA
     setLoadingProvider(providerId)
     try {
       const response = await authApi.getOAuthLoginUrl(providerId, { forceReauth: true })
-      window.location.href = response.loginUrl
+      window.location.assign(response.loginUrl)
     } catch (error) {
       console.error(`Failed to get ${providerId} reauth URL:`, error)
       setLoadingProvider(null)

@@ -2,6 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   taskApi,
   taskTemplateApi,
+  taskDependencyApi,
+  taskReminderApi,
+  teamsApi,
+  taskAttachmentApi,
   commentApi,
   documentRequestApi,
   documentRequestTemplateApi,
@@ -14,6 +18,10 @@ import type {
   CreateTaskRequest,
   UpdateTaskRequest,
   CreateTaskTemplateRequest,
+  CreateTaskDependencyRequest,
+  CreateTaskReminderRequest,
+  CreateTeamRequest,
+  UpdateTeamRequest,
   CreateCommentRequest,
   UpdateCommentRequest,
   CreateDocumentRequestRequest,
@@ -156,6 +164,165 @@ export function useDeleteTaskTemplate() {
     mutationFn: (templateId: string) => taskTemplateApi.deleteTemplate(templateId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['taskTemplates'] })
+    },
+  })
+}
+
+// =============================================================================
+// TEAM HOOKS
+// =============================================================================
+
+export function useTeams() {
+  return useQuery({
+    queryKey: ['teams'],
+    queryFn: () => teamsApi.getTeams(),
+  })
+}
+
+export function useCreateTeam() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: CreateTeamRequest) => teamsApi.createTeam(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] })
+    },
+  })
+}
+
+export function useUpdateTeam() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ teamId, data }: { teamId: string; data: UpdateTeamRequest }) =>
+      teamsApi.updateTeam(teamId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] })
+    },
+  })
+}
+
+export function useDeleteTeam() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (teamId: string) => teamsApi.deleteTeam(teamId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] })
+    },
+  })
+}
+
+// =============================================================================
+// TASK ATTACHMENT HOOKS
+// =============================================================================
+
+export function useTaskAttachments(taskId: string) {
+  return useQuery({
+    queryKey: ['taskAttachments', taskId],
+    queryFn: () => taskAttachmentApi.getAttachments(taskId),
+    enabled: !!taskId,
+  })
+}
+
+export function useUploadTaskAttachment(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (file: File) => taskAttachmentApi.uploadAttachment(taskId, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskAttachments', taskId] })
+    },
+  })
+}
+
+export function useDownloadTaskAttachment(taskId: string) {
+  return useMutation({
+    mutationFn: (attachmentId: string) =>
+      taskAttachmentApi.getDownloadUrl(taskId, attachmentId),
+  })
+}
+
+export function useDeleteTaskAttachment(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (attachmentId: string) =>
+      taskAttachmentApi.deleteAttachment(taskId, attachmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskAttachments', taskId] })
+    },
+  })
+}
+
+// =============================================================================
+// TASK DEPENDENCY HOOKS
+// =============================================================================
+
+export function useTaskDependencies(taskId: string) {
+  return useQuery({
+    queryKey: ['taskDependencies', taskId],
+    queryFn: () => taskDependencyApi.getDependencies(taskId),
+    enabled: !!taskId,
+  })
+}
+
+export function useAddTaskDependency(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: CreateTaskDependencyRequest) =>
+      taskDependencyApi.addDependency(taskId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskDependencies', taskId] })
+    },
+  })
+}
+
+export function useRemoveTaskDependency(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (dependsOnId: string) =>
+      taskDependencyApi.removeDependency(taskId, dependsOnId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskDependencies', taskId] })
+    },
+  })
+}
+
+// =============================================================================
+// TASK REMINDER HOOKS
+// =============================================================================
+
+export function useTaskReminders(taskId: string) {
+  return useQuery({
+    queryKey: ['taskReminders', taskId],
+    queryFn: () => taskReminderApi.getReminders(taskId),
+    enabled: !!taskId,
+  })
+}
+
+export function useCreateTaskReminder(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: CreateTaskReminderRequest) =>
+      taskReminderApi.createReminder(taskId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskReminders', taskId] })
+    },
+  })
+}
+
+export function useDeleteTaskReminder(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (reminderId: string) =>
+      taskReminderApi.deleteReminder(taskId, reminderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskReminders', taskId] })
     },
   })
 }

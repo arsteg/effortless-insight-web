@@ -36,37 +36,40 @@ export function UploadProgress({
   onRetry,
   onUploadAnother,
 }: UploadProgressProps) {
-  const [state, setState] = useState<UploadState>('uploading')
-  const [progressValue, setProgressValue] = useState(0)
+  // State is fully derived from props
+  const state: UploadState = error
+    ? 'error'
+    : isUploading
+      ? 'uploading'
+      : uploadResponse
+        ? processingStatus === 'completed'
+          ? 'success'
+          : processingStatus === 'failed'
+            ? 'error'
+            : 'processing'
+        : 'uploading'
+
+  // Auto-advance creep for visual feedback during processing
+  const [processingCreep, setProcessingCreep] = useState(0)
 
   useEffect(() => {
-    if (error) {
-      setState('error')
-    } else if (isUploading) {
-      setState('uploading')
-      setProgressValue(uploadProgress)
-    } else if (uploadResponse) {
-      if (processingStatus === 'completed') {
-        setState('success')
-        setProgressValue(100)
-      } else if (processingStatus === 'failed') {
-        setState('error')
-      } else {
-        setState('processing')
-        setProgressValue(getProcessingProgress(processingStatus))
-      }
+    if (state !== 'processing') {
+      return
     }
-  }, [isUploading, uploadProgress, uploadResponse, processingStatus, error])
+    const timer = setInterval(() => {
+      setProcessingCreep((prev) => prev + 1)
+    }, 500)
+    return () => clearInterval(timer)
+  }, [state])
 
-  // Auto-advance progress for visual feedback during processing
-  useEffect(() => {
-    if (state === 'processing' && progressValue < 95) {
-      const timer = setInterval(() => {
-        setProgressValue((prev) => Math.min(prev + 1, 95))
-      }, 500)
-      return () => clearInterval(timer)
-    }
-  }, [state, progressValue])
+  const progressValue =
+    state === 'uploading'
+      ? uploadProgress
+      : state === 'success'
+        ? 100
+        : state === 'processing'
+          ? Math.min(getProcessingProgress(processingStatus) + processingCreep, 95)
+          : 0
 
   return (
     <Card className="max-w-md mx-auto">

@@ -254,11 +254,12 @@ export default function NotificationsSettingsPage() {
   const { data: preferences, isLoading } = useNotificationPreferences()
   const updatePreferences = useUpdatePreferences()
 
-  // Local state for optimistic updates
+  // Local state for optimistic updates, re-synced whenever the server copy refetches
   const [localPrefs, setLocalPrefs] = useState<NotificationPreferences | null>(null)
 
   useEffect(() => {
     if (preferences) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional re-sync of optimistic state with async-loaded server data
       setLocalPrefs(preferences)
     }
   }, [preferences])
