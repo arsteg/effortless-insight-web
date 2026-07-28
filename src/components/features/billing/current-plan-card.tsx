@@ -61,7 +61,7 @@ export function CurrentPlanCard({
     )
   }
 
-  const isTrialing = subscription.status === 'trial'
+  const isTrialing = subscription.status === 'trialing'
   const isCancelled = subscription.status === 'cancelled' || subscription.cancelAtPeriodEnd
   const isPastDue = subscription.status === 'past_due'
   const isPaused = subscription.status === 'paused'
@@ -239,7 +239,7 @@ export function CurrentPlanCard({
 
 function formatStatus(status: string): string {
   switch (status) {
-    case 'trial':
+    case 'trialing':
       return 'Trial'
     case 'active':
       return 'Active'
