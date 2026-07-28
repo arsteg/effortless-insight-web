@@ -122,7 +122,7 @@ apiClient.interceptors.response.use(
         return Promise.reject(error)
       }
 
-      const errorCode = error.response?.data?.error
+      const errorCode = error.response?.data?.code
       const subscriptionStatus = error.response?.data?.subscriptionStatus
 
       // For "no subscription" cases, redirect to plan selection
