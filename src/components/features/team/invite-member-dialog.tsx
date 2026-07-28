@@ -71,13 +71,13 @@ const roleOptions: { value: OrganizationRole; label: string; description: string
 export function InviteMemberDialog({ currentUserRole, planLimits }: InviteMemberDialogProps) {
   const [open, setOpen] = useState(false)
   const inviteMutation = useInviteMember()
-  const { data: subscriptionData } = useCurrentSubscription()
+  const { data: subscription } = useCurrentSubscription()
 
   // Calculate user limits from subscription or props
-  const seats = subscriptionData?.subscription?.seats
-  const usage = subscriptionData?.usage?.users
+  // useCurrentSubscription returns Subscription directly with seats.used
+  const seats = subscription?.seats
   const totalSeats = seats ? seats.included + seats.additional : undefined
-  const usedSeats = usage?.used ?? seats?.used ?? 0
+  const usedSeats = seats?.used ?? 0
 
   // Check if additional users are allowed (from plan limits)
   const additionalUsersAllowed = planLimits?.additionalUsersAllowed ?? true // Default to true if not specified
