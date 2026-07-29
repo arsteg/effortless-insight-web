@@ -186,13 +186,15 @@ apiClient.interceptors.response.use(
     }
 
     // Transform error for consistent handling. Some endpoints (collaboration)
-    // return { error: "..." } instead of the standard { message } envelope.
+    // return { error: "..." } instead of the standard { message } envelope, and
+    // ASP.NET model validation returns ProblemDetails ({ title, errors }).
     const apiError: ApiError = {
       success: false,
       code: error.response?.data?.code || 'UNKNOWN_ERROR',
       message:
         error.response?.data?.message ||
         (error.response?.data as { error?: string } | undefined)?.error ||
+        (error.response?.data as { title?: string } | undefined)?.title ||
         error.message ||
         'An unexpected error occurred',
       errors: error.response?.data?.errors,

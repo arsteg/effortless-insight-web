@@ -5,11 +5,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react'
+import { AlertCircle, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react'
 
 import { registerSchema, type RegisterFormData } from '@/lib/validations/auth'
 import { authApi } from '@/lib/api'
+import type { ApiError } from '@/types'
 import { useToast } from '@/hooks/use-toast'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -39,6 +41,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -52,8 +55,58 @@ export default function RegisterPage() {
     },
   })
 
+  // Server-side validation errors come back keyed by DTO property name
+  // (e.g. "Password"); map them onto the matching form fields.
+  const serverFieldMap: Record<string, keyof RegisterFormData> = {
+    name: 'name',
+    email: 'email',
+    password: 'password',
+    mobile: 'mobile',
+    acceptterms: 'acceptTerms',
+  }
+
+  const applyServerErrors = (error: ApiError): void => {
+    const unmappedMessages: string[] = []
+    let firstErrorField: keyof RegisterFormData | null = null
+
+    for (const [key, messages] of Object.entries(error.errors ?? {})) {
+      if (messages.length === 0) continue
+      const field = serverFieldMap[key.toLowerCase().replace(/^request\./, '')]
+      if (field) {
+        form.setError(field, { type: 'server', message: messages.join(' ') })
+        firstErrorField = firstErrorField ?? field
+      } else {
+        unmappedMessages.push(...messages)
+      }
+    }
+
+    if (error.code === 'EMAIL_EXISTS') {
+      form.setError('email', {
+        type: 'server',
+        message: 'This email is already registered. Try signing in instead.',
+      })
+      firstErrorField = firstErrorField ?? 'email'
+    } else if (error.code === 'MOBILE_EXISTS') {
+      form.setError('mobile', {
+        type: 'server',
+        message: 'This mobile number is already registered.',
+      })
+      firstErrorField = firstErrorField ?? 'mobile'
+    }
+
+    if (firstErrorField) {
+      setServerError(unmappedMessages.length > 0 ? unmappedMessages.join(' ') : null)
+      form.setFocus(firstErrorField)
+    } else {
+      setServerError(
+        [error.message || 'Registration failed. Please try again.', ...unmappedMessages].join(' ')
+      )
+    }
+  }
+
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
+    setServerError(null)
     try {
       await authApi.register({
         name: data.name,
@@ -70,16 +123,11 @@ export default function RegisterPage() {
         variant: 'success',
       })
     } catch (error: unknown) {
-      const message =
-        error && typeof error === 'object' && 'message' in error
-          ? (error as { message: string }).message
-          : 'Registration failed. Please try again.'
-
-      toast({
-        title: 'Registration failed',
-        description: message,
-        variant: 'destructive',
-      })
+      if (error && typeof error === 'object' && 'code' in error) {
+        applyServerErrors(error as ApiError)
+      } else {
+        setServerError('Registration failed. Please check your connection and try again.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -125,6 +173,13 @@ export default function RegisterPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {serverError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Registration failed</AlertTitle>
+            <AlertDescription>{serverError}</AlertDescription>
+          </Alert>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -226,7 +281,8 @@ export default function RegisterPage() {
                     </div>
                   </FormControl>
                   <FormDescription>
-                    At least 8 characters with uppercase, lowercase, and number
+                    At least 8 characters with uppercase, lowercase, number,
+                    and special character
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
