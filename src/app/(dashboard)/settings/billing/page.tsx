@@ -28,6 +28,8 @@ import {
   useResumeSubscription,
   useReactivateSubscription,
   useAddSeats,
+  useVerifySeatsPayment,
+  useRazorpayCheckout,
   useDownloadInvoice,
   usePaymentMethods,
   useSetDefaultPaymentMethod,
@@ -57,6 +59,8 @@ export default function BillingSettingsPage() {
   const resumeSubscription = useResumeSubscription()
   const reactivateSubscription = useReactivateSubscription()
   const addSeats = useAddSeats()
+  const verifySeatsPayment = useVerifySeatsPayment()
+  const { openCheckout } = useRazorpayCheckout()
   const downloadInvoice = useDownloadInvoice()
   const setDefaultPaymentMethod = useSetDefaultPaymentMethod()
   const deletePaymentMethod = useDeletePaymentMethod()
@@ -149,8 +153,36 @@ export default function BillingSettingsPage() {
     addSeats.mutate(
       { additionalSeats: quantity },
       {
-        onSuccess: () => {
-          setShowAddSeatsModal(false)
+        onSuccess: (data) => {
+          if (data.razorpayOrder) {
+            // Payment required - open Razorpay checkout
+            openCheckout(
+              {
+                key: data.razorpayOrder.key,
+                amount: data.razorpayOrder.amount,
+                currency: data.razorpayOrder.currency,
+                name: 'EffortlessInsight',
+                description: `Add ${quantity} seat(s)`,
+                orderId: data.razorpayOrder.id,
+              },
+              (response) => {
+                // Payment successful - verify and apply seats
+                verifySeatsPayment.mutate({
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                  additionalSeats: quantity,
+                })
+                setShowAddSeatsModal(false)
+              },
+              () => {
+                // Payment dismissed - do nothing, modal stays open
+              }
+            )
+          } else {
+            // No payment required - seats already applied
+            setShowAddSeatsModal(false)
+          }
         },
       }
     )

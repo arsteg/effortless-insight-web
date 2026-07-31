@@ -11,6 +11,7 @@ import type {
   CancelSubscriptionRequest,
   PauseSubscriptionRequest,
   AddSeatsRequest,
+  VerifySeatsPaymentRequest,
   ValidateCouponRequest,
   RazorpayPaymentResponse,
 } from '@/types/billing'
@@ -137,7 +138,9 @@ export function useChangePlan() {
   return useMutation({
     mutationFn: (data: ChangePlanRequest) => billingApi.changePlan(data),
     onSuccess: (data) => {
+      // Invalidate both subscription and usage to refresh limits after plan change
       queryClient.invalidateQueries({ queryKey: billingKeys.subscription() })
+      queryClient.invalidateQueries({ queryKey: billingKeys.usage() })
       if (data.message) {
         toast({
           title: 'Plan change processed',
@@ -187,8 +190,41 @@ export function useAddSeats() {
 
   return useMutation({
     mutationFn: (data: AddSeatsRequest) => billingApi.addSeats(data),
+    // Note: onSuccess is intentionally NOT showing a toast here.
+    // If razorpayOrder is returned, the caller must open Razorpay checkout
+    // and call verifySeatsPayment. Only show success after verification.
+    // If no razorpayOrder (free), seats are applied immediately - caller handles toast.
+    onSuccess: (data) => {
+      // Only invalidate if seats were applied immediately (no payment required)
+      if (!data.razorpayOrder) {
+        queryClient.invalidateQueries({ queryKey: billingKeys.subscription() })
+        toast({
+          title: 'Seats added',
+          description: 'Additional seats have been added to your subscription.',
+          variant: 'default',
+        })
+      }
+      // If razorpayOrder is present, caller must handle payment flow
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Failed to add seats',
+        description: error.message,
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useVerifySeatsPayment() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (data: VerifySeatsPaymentRequest) => billingApi.verifySeatsPayment(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: billingKeys.subscription() })
+      queryClient.invalidateQueries({ queryKey: billingKeys.invoices() })
       toast({
         title: 'Seats added',
         description: 'Additional seats have been added to your subscription.',
@@ -197,7 +233,7 @@ export function useAddSeats() {
     },
     onError: (error: Error) => {
       toast({
-        title: 'Failed to add seats',
+        title: 'Payment verification failed',
         description: error.message,
         variant: 'destructive',
       })

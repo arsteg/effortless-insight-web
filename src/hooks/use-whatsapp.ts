@@ -176,6 +176,44 @@ export function useWhatsAppOptIn() {
 }
 
 /**
+ * Hook for sending a test message
+ */
+export function useSendTestMessage() {
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: () => whatsappApi.sendTestMessage(),
+    onSuccess: (response: { success: boolean; message: string; messageId?: string; phoneNumber?: string; debug?: { formattedPhone?: string; note?: string } }) => {
+      const description = response.debug?.note
+        ? `${response.message}\n\nPhone: ${response.phoneNumber}\nNote: ${response.debug.note}`
+        : response.message
+
+      toast({
+        title: response.success ? 'Test message sent!' : 'Message queued',
+        description: description,
+        duration: 10000, // Show longer for debug info
+      })
+
+      // Log debug info to console
+      if (response.debug) {
+        console.log('WhatsApp Test Message Debug:', response)
+      }
+    },
+    onError: (error: { message?: string; response?: { data?: { message?: string; errorCode?: string } } }) => {
+      const errorMessage = error.response?.data?.message || error.message || 'Please try again later.'
+      const errorCode = error.response?.data?.errorCode
+
+      toast({
+        title: 'Failed to send test message',
+        description: errorCode ? `${errorMessage} (Code: ${errorCode})` : errorMessage,
+        variant: 'destructive',
+        duration: 10000,
+      })
+    },
+  })
+}
+
+/**
  * Hook for getting WhatsApp health status (admin)
  */
 export function useWhatsAppHealth() {

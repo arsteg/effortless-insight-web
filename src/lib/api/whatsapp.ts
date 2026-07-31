@@ -168,9 +168,19 @@ export async function retryMessage(messageId: string): Promise<{ success: boolea
 }
 
 /**
- * Send a test message (admin only, for debugging)
+ * Send a test message to verify WhatsApp integration
  */
-export async function sendTestMessage(
+export async function sendTestMessage(): Promise<{ success: boolean; message: string; messageId?: string }> {
+  const response = await apiClient.post<{ success: boolean; message: string; messageId?: string }>(
+    `${BASE_URL}/test`
+  )
+  return response.data
+}
+
+/**
+ * Send a custom test message (admin only, for debugging)
+ */
+export async function sendCustomTestMessage(
   phoneNumber: string,
   message: string
 ): Promise<{ success: boolean; messageId: string }> {
@@ -196,6 +206,7 @@ export const whatsappApi = {
   syncTemplates,
   retryMessage,
   sendTestMessage,
+  sendCustomTestMessage,
 }
 
 export default whatsappApi

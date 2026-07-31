@@ -104,8 +104,17 @@ apiClient.interceptors.response.use(
                            originalRequest.url?.includes('/auth/2fa/login') ||
                            originalRequest.url?.includes('/auth/oauth/')
 
-    // Handle 402 - subscription required or trial expired
+    // Handle 402 - subscription required, trial expired, or feature not available
     if (error.response?.status === 402) {
+      const errorCode = error.response?.data?.code || error.response?.data?.error
+
+      // Check if this is a feature access issue (not a subscription issue)
+      // These should NOT redirect - let the caller handle the error
+      if (errorCode === 'FEATURE_NOT_AVAILABLE') {
+        // The error contains the feature info - just pass it through for UI to handle
+        return Promise.reject(error)
+      }
+
       // Check if we're already on subscription-related pages to avoid redirect loops
       const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
       const isOnExemptPage = currentPath.startsWith('/select-plan') ||
@@ -122,7 +131,6 @@ apiClient.interceptors.response.use(
         return Promise.reject(error)
       }
 
-      const errorCode = error.response?.data?.code
       const subscriptionStatus = error.response?.data?.subscriptionStatus
 
       // For "no subscription" cases, redirect to plan selection
@@ -177,8 +185,13 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
-        clearTokens()
-        window.location.href = '/login'
+        // Only clear tokens and redirect on actual auth errors (401/403), not network errors
+        const refreshStatus = (refreshError as AxiosError)?.response?.status
+        if (refreshStatus === 401 || refreshStatus === 403) {
+          clearTokens()
+          window.location.href = '/login'
+        }
+        // For network errors, just reject - user can retry when connection is restored
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false

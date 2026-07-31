@@ -7,6 +7,8 @@ import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   CheckoutSteps,
   BillingToggle,
@@ -15,6 +17,7 @@ import {
   OrderSummary,
   CouponInput,
 } from '@/components/features/billing'
+import { formatAmount } from '@/lib/api/billing'
 import type { CheckoutStep, BillingDetailsFormValues } from '@/components/features/billing'
 import {
   usePlans,
@@ -41,7 +44,7 @@ function CheckoutContent() {
     (searchParams.get('billing') as BillingCycle) || 'annually'
   )
   const [billingDetails, setBillingDetails] = useState<BillingDetailsFormValues | null>(null)
-  const [additionalSeats] = useState(0)
+  const [additionalSeats, setAdditionalSeats] = useState(0)
   const [coupon, setCoupon] = useState<CouponValidation | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -243,7 +246,65 @@ function CheckoutContent() {
 
       {currentStep === 'billing' && selectedPlan && (
         <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Additional Seats Selector - only shown if plan allows it */}
+            {selectedPlan.limits.additionalUsersAllowed && selectedPlan.pricing.perSeat && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Additional Team Members</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Your plan includes {selectedPlan.limits.users} user{selectedPlan.limits.users !== 1 ? 's' : ''}.
+                      You can add extra seats at{' '}
+                      {formatAmount(
+                        billingCycle === 'annually'
+                          ? selectedPlan.pricing.perSeat.annually || 0
+                          : selectedPlan.pricing.perSeat.monthly || 0
+                      )}
+                      /{billingCycle === 'annually' ? 'year' : 'month'} per user.
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <Label htmlFor="additionalSeats">Additional seats:</Label>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setAdditionalSeats(Math.max(0, additionalSeats - 1))}
+                          disabled={additionalSeats === 0}
+                        >
+                          -
+                        </Button>
+                        <Input
+                          id="additionalSeats"
+                          type="number"
+                          min={0}
+                          value={additionalSeats}
+                          onChange={(e) => setAdditionalSeats(Math.max(0, parseInt(e.target.value) || 0))}
+                          className="w-20 text-center"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setAdditionalSeats(additionalSeats + 1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+                    {additionalSeats > 0 && (
+                      <p className="text-sm font-medium text-primary">
+                        Total team size: {selectedPlan.limits.users + additionalSeats} users
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <BillingDetailsForm
               defaultValues={billingDetails || undefined}
               organizationName={organization?.name}

@@ -73,7 +73,7 @@ const billingDetailsSchema = z.object({
   addressLine2: z.string().optional(),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
-  postalCode: z.string().min(1, 'Postal code is required'),
+  postalCode: z.string().regex(/^[1-9][0-9]{5}$/, 'Postal code must be 6 digits'),
   country: z.string().default('India'),
   gstin: z
     .string()

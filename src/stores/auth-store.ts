@@ -68,14 +68,25 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             isInitialized: true,
           })
-        } catch {
-          clearTokens()
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            isInitialized: true,
-          })
+        } catch (error) {
+          // Only clear tokens on actual auth errors (401/403), not network errors
+          const status = (error as { response?: { status?: number } })?.response?.status
+          if (status === 401 || status === 403) {
+            clearTokens()
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              isInitialized: true,
+            })
+          } else {
+            // Network error or server error - preserve session, mark as initialized but not loaded
+            // The user can retry when network is available
+            set({
+              isLoading: false,
+              isInitialized: true,
+            })
+          }
         }
       },
 

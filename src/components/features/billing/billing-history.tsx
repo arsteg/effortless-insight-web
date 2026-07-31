@@ -105,7 +105,7 @@ export function BillingHistory({
                 <TableCell className="font-medium">
                   {invoice.invoiceNumber}
                 </TableCell>
-                <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
+                <TableCell>{formatDate(invoice.date)}</TableCell>
                 <TableCell>{formatAmount(invoice.total)}</TableCell>
                 <TableCell>
                   <Badge variant={getInvoiceStatusBadgeVariant(invoice.status)}>

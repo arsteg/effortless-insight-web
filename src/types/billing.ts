@@ -279,6 +279,9 @@ export interface PlanChangeValidationResult {
   canChange: boolean
   blockers?: PlanChangeBlocker[]
   featuresToLose?: string[]
+  featuresToGain?: string[]
+  activeFeaturesToLose?: string[] // Features currently in use that will be lost - shows warning but doesn't block
+  limitsComparison?: PlanLimitsComparison
 }
 
 export interface PlanChangeBlocker {
@@ -287,6 +290,20 @@ export interface PlanChangeBlocker {
   currentUsage: number
   newLimit: number
   excessAmount: number
+}
+
+export interface PlanLimitsComparison {
+  users: LimitChange
+  storage: LimitChange
+  notices: LimitChange
+  apiCalls: LimitChange
+  organizations: LimitChange
+}
+
+export interface LimitChange {
+  current: number
+  new: number
+  direction: 'increase' | 'decrease' | 'same'
 }
 
 // ============================================================================
@@ -345,6 +362,19 @@ export interface AddSeatsResponse {
   totalSeats: number
   prorationAmount: number
   razorpayOrder?: RazorpayOrder
+}
+
+export interface VerifySeatsPaymentRequest {
+  razorpayOrderId: string
+  razorpayPaymentId: string
+  razorpaySignature: string
+  additionalSeats: number
+}
+
+export interface VerifySeatsPaymentResponse {
+  success: boolean
+  totalSeats: number
+  invoice?: InvoiceSummary
 }
 
 // ============================================================================

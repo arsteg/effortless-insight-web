@@ -58,6 +58,7 @@ import {
   useWhatsAppPreferences,
   useUpdateWhatsAppPreferences,
   useWhatsAppOptIn,
+  useSendTestMessage,
 } from '@/hooks/use-whatsapp'
 
 // Phone number validation for Indian numbers
@@ -120,6 +121,7 @@ export default function WhatsAppSettingsPage() {
   const unlinkWhatsApp = useUnlinkWhatsApp()
   const updatePreferences = useUpdateWhatsAppPreferences()
   const setOptIn = useWhatsAppOptIn()
+  const sendTestMessage = useSendTestMessage()
 
   // Local state
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -264,6 +266,29 @@ export default function WhatsAppSettingsPage() {
                   onCheckedChange={handleOptInChange}
                   disabled={setOptIn.isPending}
                 />
+              </div>
+
+              {/* Send Test Message Button */}
+              <div className="flex items-center justify-between rounded-lg border p-4 bg-blue-50 dark:bg-blue-950/20">
+                <div className="space-y-0.5">
+                  <Label className="font-medium">Test Integration</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Send a test message to verify WhatsApp is working.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => sendTestMessage.mutate()}
+                  disabled={sendTestMessage.isPending}
+                >
+                  {sendTestMessage.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                  )}
+                  Send Test
+                </Button>
               </div>
 
               {status?.lastMessageAt && (

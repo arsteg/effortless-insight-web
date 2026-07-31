@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, AlertCircle, XCircle, Users, HardDrive, Building2, FileText, Zap, Info } from 'lucide-react'
+import { AlertTriangle, AlertCircle, XCircle, Users, HardDrive, Building2, FileText, Zap, Info, CheckCircle, ArrowUp, ArrowDown, Minus } from 'lucide-react'
 
 import {
   Dialog,
@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import type { PlanChangeValidationResult, PlanChangeBlocker } from '@/types/billing'
+import type { PlanChangeValidationResult, PlanChangeBlocker, LimitChange } from '@/types/billing'
 
 export interface PlanChangeValidationModalProps {
   open: boolean
@@ -67,6 +67,37 @@ function BlockerItem({ blocker }: { blocker: PlanChangeBlocker }) {
   )
 }
 
+function formatLimit(value: number): string {
+  if (value === -1) return 'Unlimited'
+  return value.toLocaleString()
+}
+
+function LimitComparisonRow({ label, change, icon: Icon }: { label: string; change: LimitChange; icon: React.ElementType }) {
+  if (change.direction === 'same') return null
+
+  const isIncrease = change.direction === 'increase'
+
+  return (
+    <div className={`flex items-center justify-between p-2 rounded ${isIncrease ? 'bg-green-50 dark:bg-green-950/20' : 'bg-orange-50 dark:bg-orange-950/20'}`}>
+      <div className="flex items-center gap-2">
+        <Icon className={`h-4 w-4 ${isIncrease ? 'text-green-600' : 'text-orange-600'}`} />
+        <span className="text-sm">{label}</span>
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-muted-foreground">{formatLimit(change.current)}</span>
+        {isIncrease ? (
+          <ArrowUp className="h-4 w-4 text-green-600" />
+        ) : (
+          <ArrowDown className="h-4 w-4 text-orange-600" />
+        )}
+        <span className={isIncrease ? 'text-green-600 font-medium' : 'text-orange-600 font-medium'}>
+          {formatLimit(change.new)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export function PlanChangeValidationModal({
   open,
   onOpenChange,
@@ -79,6 +110,9 @@ export function PlanChangeValidationModal({
 
   const hasBlockers = validation.blockers && validation.blockers.length > 0
   const hasWarnings = validation.featuresToLose && validation.featuresToLose.length > 0
+  const hasActiveFeatureLoss = validation.activeFeaturesToLose && validation.activeFeaturesToLose.length > 0
+  const hasGains = validation.featuresToGain && validation.featuresToGain.length > 0
+  const hasLimitsComparison = validation.limitsComparison
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -90,6 +124,11 @@ export function PlanChangeValidationModal({
                 <XCircle className="h-5 w-5 text-destructive" />
                 Cannot Switch to {targetPlanName || 'New Plan'}
               </>
+            ) : hasActiveFeatureLoss ? (
+              <>
+                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                Important: Active Features Will Be Lost
+              </>
             ) : hasWarnings ? (
               <>
                 <AlertTriangle className="h-5 w-5 text-yellow-600" />
@@ -97,7 +136,7 @@ export function PlanChangeValidationModal({
               </>
             ) : (
               <>
-                <Info className="h-5 w-5 text-primary" />
+                <CheckCircle className="h-5 w-5 text-green-600" />
                 Plan Change Available
               </>
             )}
@@ -105,9 +144,9 @@ export function PlanChangeValidationModal({
           <DialogDescription>
             {hasBlockers
               ? 'Please resolve the following issues before changing your plan.'
-              : hasWarnings
-              ? 'Please review the following before confirming your plan change.'
-              : `You can switch to ${targetPlanName || 'the new plan'}.`}
+              : hasActiveFeatureLoss
+                ? 'You are actively using features that will become unavailable. Please review carefully before proceeding.'
+                : 'Review what changes when you switch plans.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -125,20 +164,78 @@ export function PlanChangeValidationModal({
             </div>
           )}
 
+          {/* Active features warning - shows for features currently in use */}
+          {hasActiveFeatureLoss && !hasBlockers && (
+            <Alert className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
+              <AlertTriangle className="h-4 w-4 text-orange-600" />
+              <AlertTitle className="text-orange-800 dark:text-orange-400">
+                Active Features Will Become Unavailable
+              </AlertTitle>
+              <AlertDescription className="text-orange-700 dark:text-orange-300">
+                <p className="text-sm mb-2">
+                  The following features are currently in use and will stop working after you switch plans:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {validation.activeFeaturesToLose!.map((feature, index) => (
+                    <li key={index} className="font-medium">{feature}</li>
+                  ))}
+                </ul>
+                <p className="text-sm mt-3 font-medium">
+                  By confirming, you acknowledge that these features will be immediately disabled.
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Limits Comparison */}
+          {hasLimitsComparison && !hasBlockers && (
+            <>
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium flex items-center gap-2">
+                  <Info className="h-4 w-4" />
+                  Limit Changes
+                </h4>
+                <div className="space-y-1">
+                  <LimitComparisonRow label="Users" change={validation.limitsComparison!.users} icon={Users} />
+                  <LimitComparisonRow label="Storage (GB)" change={validation.limitsComparison!.storage} icon={HardDrive} />
+                  <LimitComparisonRow label="Notices/Month" change={validation.limitsComparison!.notices} icon={FileText} />
+                  <LimitComparisonRow label="API Calls" change={validation.limitsComparison!.apiCalls} icon={Zap} />
+                  <LimitComparisonRow label="Organizations" change={validation.limitsComparison!.organizations} icon={Building2} />
+                </div>
+              </div>
+              <Separator />
+            </>
+          )}
+
+          {/* Features to gain */}
+          {hasGains && !hasBlockers && (
+            <>
+              <Alert className="border-green-500/50 bg-green-50 dark:bg-green-950/20">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertTitle className="text-green-800 dark:text-green-400">
+                  Features You Will Gain
+                </AlertTitle>
+                <AlertDescription className="text-green-700 dark:text-green-300">
+                  <ul className="list-disc list-inside space-y-1 text-sm mt-2">
+                    {validation.featuresToGain!.map((feature, index) => (
+                      <li key={index}>{feature}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            </>
+          )}
+
           {/* Features to lose warning */}
           {hasWarnings && (
             <>
-              {hasBlockers && <Separator />}
               <Alert className="border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20">
                 <AlertTriangle className="h-4 w-4 text-yellow-600" />
                 <AlertTitle className="text-yellow-800 dark:text-yellow-400">
                   Features You Will Lose
                 </AlertTitle>
                 <AlertDescription className="text-yellow-700 dark:text-yellow-300">
-                  <p className="mb-2">
-                    The following features are not available in the new plan:
-                  </p>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
+                  <ul className="list-disc list-inside space-y-1 text-sm mt-2">
                     {validation.featuresToLose!.map((feature, index) => (
                       <li key={index}>{feature}</li>
                     ))}
@@ -148,10 +245,10 @@ export function PlanChangeValidationModal({
             </>
           )}
 
-          {/* Success state */}
-          {!hasBlockers && !hasWarnings && (
+          {/* Ready state when no blockers */}
+          {!hasBlockers && !hasWarnings && !hasGains && !hasActiveFeatureLoss && (
             <Alert className="border-green-500/50 bg-green-50 dark:bg-green-950/20">
-              <Info className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertTitle className="text-green-800 dark:text-green-400">
                 Ready to Switch
               </AlertTitle>
@@ -167,8 +264,16 @@ export function PlanChangeValidationModal({
             {hasBlockers ? 'Close' : 'Cancel'}
           </Button>
           {!hasBlockers && onConfirm && (
-            <Button onClick={onConfirm} disabled={isLoading}>
-              {isLoading ? 'Processing...' : 'Confirm Change'}
+            <Button
+              onClick={onConfirm}
+              disabled={isLoading}
+              variant={hasActiveFeatureLoss ? 'destructive' : 'default'}
+            >
+              {isLoading
+                ? 'Processing...'
+                : hasActiveFeatureLoss
+                  ? 'I Understand, Switch Plan'
+                  : 'Confirm Change'}
             </Button>
           )}
         </DialogFooter>

@@ -10,6 +10,9 @@ export interface ApiError {
   message: string
   errors?: Record<string, string[]>
   subscriptionStatus?: string
+  // Feature access error fields
+  featureCode?: string
+  upgradeRequired?: boolean
 }
 
 export interface PaginatedResponse<T> {

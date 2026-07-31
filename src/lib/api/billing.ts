@@ -19,6 +19,8 @@ import type {
   ResumeSubscriptionResponse,
   AddSeatsRequest,
   AddSeatsResponse,
+  VerifySeatsPaymentRequest,
+  VerifySeatsPaymentResponse,
   Subscription,
   InvoiceListResponse,
   InvoiceDetail,
@@ -147,6 +149,17 @@ export const billingApi = {
   async addSeats(data: AddSeatsRequest): Promise<AddSeatsResponse> {
     const response = await apiClient.post<{ data: AddSeatsResponse }>(
       '/subscriptions/current/seats',
+      data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Verify seats payment and apply additional seats
+   */
+  async verifySeatsPayment(data: VerifySeatsPaymentRequest): Promise<VerifySeatsPaymentResponse> {
+    const response = await apiClient.post<{ data: VerifySeatsPaymentResponse }>(
+      '/subscriptions/current/seats/verify',
       data
     )
     return response.data.data
