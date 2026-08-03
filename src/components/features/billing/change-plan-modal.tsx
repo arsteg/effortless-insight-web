@@ -14,6 +14,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { billingApi, formatAmount } from '@/lib/api/billing'
 import { BillingToggle } from './billing-toggle'
 import { PlanChangeValidationModal } from './plan-change-validation-modal'
@@ -49,6 +50,7 @@ export function ChangePlanModal({
   const isBillingCycleChange = billingCycle !== currentSubscription.billingCycle
   const hasChanges = !isSamePlan || isBillingCycleChange
 
+  // Exclude free plan (can't downgrade to free) and enterprise plans (contactSales)
   const availablePlans = plans.filter((p) => !p.contactSales && p.code !== 'free')
 
   const getNewPrice = () => {
@@ -57,8 +59,13 @@ export function ChangePlanModal({
   }
 
   const handleValidateAndConfirm = async () => {
-    // If same plan, just skip validation
-    if (isSamePlan) {
+    // If same plan and same billing cycle, nothing to do
+    if (isSamePlan && !isBillingCycleChange) {
+      return
+    }
+
+    // If only billing cycle change (same plan), proceed directly
+    if (isSamePlan && isBillingCycleChange) {
       onConfirm(selectedPlan, billingCycle)
       return
     }
@@ -71,13 +78,9 @@ export function ChangePlanModal({
       })
       setValidationResult(result)
 
-      // If there are blockers or warnings, show the validation modal
-      if (!result.canChange || (result.featuresToLose && result.featuresToLose.length > 0)) {
-        setShowValidationModal(true)
-      } else {
-        // No issues, proceed directly
-        onConfirm(selectedPlan, billingCycle)
-      }
+      // Always show the validation modal when changing plans
+      // This ensures user sees what features they gain/lose before confirming
+      setShowValidationModal(true)
     } catch (error) {
       console.error('Validation failed:', error)
       // On error, still allow the change (API will catch it)
@@ -94,7 +97,7 @@ export function ChangePlanModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Change Your Plan</DialogTitle>
           <DialogDescription>
@@ -102,7 +105,7 @@ export function ChangePlanModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 overflow-y-auto flex-1">
           {/* Billing Cycle Toggle */}
           <div className="flex justify-center">
             <BillingToggle
@@ -124,18 +127,18 @@ export function ChangePlanModal({
                     key={plan.code}
                     className={`relative flex items-center space-x-4 rounded-lg border p-4 cursor-pointer hover:bg-accent ${
                       selectedPlan === plan.code ? 'border-primary bg-accent' : ''
-                    }`}
+                    } ${isCurrentPlan ? 'border-primary/50' : ''}`}
                     onClick={() => setSelectedPlan(plan.code)}
                   >
                     <RadioGroupItem value={plan.code} id={plan.code} />
                     <div className="flex-1">
                       <Label
                         htmlFor={plan.code}
-                        className="flex items-center gap-2 cursor-pointer"
+                        className="flex items-center gap-2 cursor-pointer flex-wrap"
                       >
                         {plan.displayName}
                         {isCurrentPlan && (
-                          <span className="text-xs text-muted-foreground">(Current)</span>
+                          <Badge variant="outline" className="text-xs">Current</Badge>
                         )}
                       </Label>
                       <p className="text-sm text-muted-foreground">
@@ -143,7 +146,9 @@ export function ChangePlanModal({
                       </p>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">{formatAmount(price || 0)}</div>
+                      <div className="font-semibold">
+                        {formatAmount(price || 0)}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         per {billingCycle === 'annually' ? 'year' : 'month'}
                       </div>
@@ -155,31 +160,37 @@ export function ChangePlanModal({
           </RadioGroup>
 
           {/* Plan Change Info */}
-          {hasChanges && newPlan && (
+          {hasChanges && newPlan && !isSamePlan && (
             <Alert>
               <Info className="h-4 w-4" />
               <AlertTitle>Plan Change</AlertTitle>
               <AlertDescription>
-                Your plan will be changed to {newPlan.displayName} ({billingCycle}) immediately.
-                Your subscription end date will be adjusted based on the remaining value of your current plan.
+                You are switching to {newPlan.displayName}.
+                Click &quot;Review Changes&quot; to see what features will change.
               </AlertDescription>
             </Alert>
           )}
 
           {/* Summary */}
           {!isSamePlan && newPlan && (
-            <div className="p-4 bg-muted rounded-lg">
+            <div className="p-4 bg-muted rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
-                <span>New plan price:</span>
+                <span>Current plan:</span>
                 <span className="font-medium">
-                  {formatAmount(getNewPrice() || 0)} / {billingCycle === 'annually' ? 'year' : 'month'}
+                  {currentPlan?.displayName} - {formatAmount(currentPlan?.pricing.monthly || 0)}/month
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>New plan:</span>
+                <span className="font-medium">
+                  {newPlan.displayName} - {formatAmount(getNewPrice() || 0)} / {billingCycle === 'annually' ? 'year' : 'month'}
                 </span>
               </div>
             </div>
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0 border-t pt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
@@ -190,10 +201,12 @@ export function ChangePlanModal({
             {isLoading || isValidating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isValidating ? 'Validating...' : 'Processing...'}
+                {isValidating ? 'Checking changes...' : 'Processing...'}
               </>
+            ) : isSamePlan && isBillingCycleChange ? (
+              'Change Billing Cycle'
             ) : (
-              'Confirm Change'
+              'Review Changes'
             )}
           </Button>
         </DialogFooter>

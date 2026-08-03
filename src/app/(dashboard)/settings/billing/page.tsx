@@ -119,6 +119,15 @@ export default function BillingSettingsPage() {
         onSuccess: () => {
           setShowChangePlanModal(false)
         },
+        onError: (error: Error) => {
+          // Check if this is a PAYMENT_REQUIRED error (free to paid transition)
+          if (error.message?.includes('PAYMENT_REQUIRED')) {
+            setShowChangePlanModal(false)
+            // Redirect to checkout with the selected plan and billing cycle
+            router.push(`/checkout?plan=${planCode}&billing=${billingCycle}`)
+          }
+          // Other errors are handled by the hook's default onError
+        },
       }
     )
   }
