@@ -106,7 +106,7 @@ apiClient.interceptors.response.use(
 
     // Handle 402 - subscription required, trial expired, or feature not available
     if (error.response?.status === 402) {
-      const errorCode = error.response?.data?.code || error.response?.data?.error
+      const errorCode = error.response?.data?.code || error.response?.data?.errors
 
       // Check if this is a feature access issue (not a subscription issue)
       // These should NOT redirect - let the caller handle the error
