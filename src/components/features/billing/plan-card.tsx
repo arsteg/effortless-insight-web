@@ -156,7 +156,7 @@ function getFeaturesToDisplay(plan: Plan): string[] {
     features.push('API access')
   }
 
-  if (plan.features.includes('custom_workflows')) {
+  if (plan.features.includes('workflows')) {
     features.push('Custom workflows')
   }
 

@@ -71,7 +71,7 @@ const FEATURE_ROWS: FeatureRow[] = [
   {
     name: 'Custom workflows',
     category: 'Core Features',
-    getValue: (plan) => plan.features.includes('custom_workflows'),
+    getValue: (plan) => plan.features.includes('workflows'),
   },
 
   // Collaboration
