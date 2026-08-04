@@ -13,9 +13,10 @@ export interface GstClient {
   syncEnabled: boolean
   syncFrequencyHours: number
   lastSyncAt: string | null
-  lastSyncStatus: string | null
+  lastSuccessfulSyncAt?: string | null
+  lastSyncStatus?: string | null
   totalNoticesSynced: number
-  lastNoticeDate: string | null
+  lastNoticeDate?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -95,14 +96,32 @@ export interface GstExtensionEvent {
 // API Request/Response Types
 export interface CreateGstClientRequest {
   gstin: string
-  clientName?: string
+  /** Friendly client name — stored as the client's trade name */
+  tradeName?: string
   syncFrequencyHours?: number
 }
 
 export interface UpdateGstClientRequest {
-  clientName?: string
+  /** Friendly client name — stored as the client's trade name */
+  tradeName?: string
   syncEnabled?: boolean
   syncFrequencyHours?: number
+}
+
+export interface BulkCreateGstClientItem {
+  gstin: string
+  tradeName?: string
+}
+
+export interface BulkCreateGstClientResult {
+  created: number
+  skipped: number
+  failed: number
+  items: {
+    gstin: string
+    status: 'created' | 'skipped' | 'failed'
+    error?: string
+  }[]
 }
 
 export interface GstClientListResponse {

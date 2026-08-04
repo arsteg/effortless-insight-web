@@ -9,6 +9,7 @@ import type {
   NoticeFilters,
   NoticeListResponse,
   NoticeStatistics,
+  GstinNoticeSummary,
   NoticeStatus,
   UpdateNoticeRequest,
   AssignNoticeRequest,
@@ -49,6 +50,15 @@ export function useNoticeStatistics() {
   return useQuery<NoticeStatistics>({
     queryKey: noticeKeys.statistics(),
     queryFn: () => noticesApi.getStatistics(),
+    staleTime: 60 * 1000,
+  })
+}
+
+// Get per-GSTIN notice counts for the client summary strip
+export function useGstinSummaries() {
+  return useQuery<GstinNoticeSummary[]>({
+    queryKey: [...noticeKeys.all, 'gstin-summary'] as const,
+    queryFn: () => noticesApi.getGstinSummary(),
     staleTime: 60 * 1000,
   })
 }

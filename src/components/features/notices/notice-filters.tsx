@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { useGstClients } from '@/hooks/use-gst-sync'
 import type { NoticeFilters as NoticeFiltersType, NoticeStatus, NoticePriority } from '@/types'
 
 interface NoticeFiltersProps {
@@ -45,9 +46,45 @@ export function NoticeFilters({
 }: NoticeFiltersProps) {
   const [searchValue, setSearchValue] = useState(filters.search || '')
 
+  // Connected GSTINs power the client filter (a CA sees one entry per client).
+  const { data: gstClientsData } = useGstClients({ pageSize: 100 })
+  const gstinOptions = (gstClientsData?.items ?? []).map((client) => ({
+    gstin: client.gstin,
+    label: client.tradeName || client.legalName || client.clientName || client.gstin,
+  }))
+
+  const gstinLabel = (gstin: string) =>
+    gstinOptions.find((o) => o.gstin === gstin)?.label || gstin
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onFiltersChange({ ...filters, search: searchValue || undefined, page: 1 })
+  }
+
+  const handleGstinChange = (value: string) => {
+    onFiltersChange({
+      ...filters,
+      gstin: value === 'all' ? undefined : value,
+      page: 1,
+    })
+  }
+
+  const toggleOverdue = () => {
+    onFiltersChange({
+      ...filters,
+      overdue: filters.overdue ? undefined : true,
+      dueWithinDays: undefined,
+      page: 1,
+    })
+  }
+
+  const toggleDueThisWeek = () => {
+    onFiltersChange({
+      ...filters,
+      dueWithinDays: filters.dueWithinDays ? undefined : 7,
+      overdue: undefined,
+      page: 1,
+    })
   }
 
   const handleStatusChange = (value: string) => {
@@ -77,10 +114,35 @@ export function NoticeFilters({
     filters.search,
     filters.noticeType,
     filters.gstin,
+    filters.pan,
+    filters.overdue,
+    filters.dueWithinDays,
   ].filter(Boolean).length
 
   return (
     <div className="space-y-4">
+      {/* Deadline quick chips — the two questions a CA asks every morning */}
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant={filters.overdue ? 'destructive' : 'outline'}
+          onClick={toggleOverdue}
+          disabled={isLoading}
+        >
+          Overdue
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={filters.dueWithinDays ? 'default' : 'outline'}
+          onClick={toggleDueThisWeek}
+          disabled={isLoading}
+        >
+          Due this week
+        </Button>
+      </div>
+
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1">
@@ -96,6 +158,30 @@ export function NoticeFilters({
             />
           </div>
         </form>
+
+        {/* GSTIN / Client Filter — only shown when the org has connected GSTINs */}
+        {gstinOptions.length > 0 && (
+          <Select
+            value={filters.gstin || 'all'}
+            onValueChange={handleGstinChange}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue placeholder="GSTIN" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All GSTINs</SelectItem>
+              {gstinOptions.map((option) => (
+                <SelectItem key={option.gstin} value={option.gstin}>
+                  <span className="flex flex-col items-start">
+                    <span>{option.label}</span>
+                    <span className="text-xs text-muted-foreground">{option.gstin}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {/* Status Filter */}
         <Select
@@ -162,6 +248,18 @@ export function NoticeFilters({
                 setSearchValue('')
                 onFiltersChange({ ...filters, search: undefined, page: 1 })
               }}
+            />
+          )}
+          {filters.gstin && (
+            <FilterTag
+              label={`Client: ${gstinLabel(filters.gstin)}`}
+              onRemove={() => onFiltersChange({ ...filters, gstin: undefined, page: 1 })}
+            />
+          )}
+          {filters.pan && (
+            <FilterTag
+              label={`Client (all GSTINs): PAN ${filters.pan}`}
+              onRemove={() => onFiltersChange({ ...filters, pan: undefined, page: 1 })}
             />
           )}
           {filters.status && (

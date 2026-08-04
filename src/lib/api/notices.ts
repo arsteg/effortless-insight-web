@@ -6,6 +6,7 @@ import type {
   NoticeListResponse,
   NoticeFilters,
   NoticeStatistics,
+  GstinNoticeSummary,
   NoticeUploadResponse,
   UpdateNoticeRequest,
   UpdateNoticeStatusRequest,
@@ -129,6 +130,14 @@ export const noticesApi = {
   // Statistics
   async getStatistics(): Promise<NoticeStatistics> {
     const response = await apiClient.get<ApiResponse<NoticeStatistics>>('/notices/statistics')
+    return response.data.data
+  },
+
+  // Per-GSTIN notice counts for the client summary strip
+  async getGstinSummary(): Promise<GstinNoticeSummary[]> {
+    const response = await apiClient.get<ApiResponse<GstinNoticeSummary[]>>(
+      '/notices/gstin-summary'
+    )
     return response.data.data
   },
 

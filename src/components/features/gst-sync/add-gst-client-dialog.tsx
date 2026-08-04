@@ -70,7 +70,7 @@ export function AddGstClientDialog({ open, onOpenChange }: AddGstClientDialogPro
     try {
       await createMutation.mutateAsync({
         gstin: values.gstin.toUpperCase(),
-        clientName: values.clientName || undefined,
+        tradeName: values.clientName || undefined,
         syncFrequencyHours: values.syncFrequencyHours,
       })
       form.reset()

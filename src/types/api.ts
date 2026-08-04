@@ -9,6 +9,8 @@ export interface ApiError {
   code: string
   message: string
   errors?: Record<string, string[]>
+  /** Error code field used by middleware responses (e.g. TRIAL_EXPIRED from subscription enforcement) */
+  error?: string
   subscriptionStatus?: string
   // Feature access error fields
   featureCode?: string

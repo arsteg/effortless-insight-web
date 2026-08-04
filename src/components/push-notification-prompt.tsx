@@ -31,7 +31,7 @@ export function PushNotificationPrompt({
   onEnabled,
 }: PushNotificationPromptProps) {
   const [isVisible, setIsVisible] = useState(false)
-  const { status, isSupported, isLoading, registerToken } = usePushNotifications()
+  const { status, isSupported, isLoading, error, registerToken } = usePushNotifications()
 
   // Check if we should show the prompt
   useEffect(() => {
@@ -39,8 +39,13 @@ export function PushNotificationPrompt({
       return
     }
 
-    // Don't show if already registered or denied
-    if (status === 'registered' || status === 'permission-denied') {
+    // Don't show if already registered, denied, or push can't work at all
+    if (
+      status === 'registered' ||
+      status === 'permission-denied' ||
+      status === 'not-configured' ||
+      status === 'unsupported'
+    ) {
       return
     }
 
@@ -101,7 +106,13 @@ export function PushNotificationPrompt({
     onDismiss?.()
   }
 
-  if (!isVisible || status === 'registered' || !isSupported) {
+  if (
+    !isVisible ||
+    status === 'registered' ||
+    status === 'not-configured' ||
+    status === 'unsupported' ||
+    !isSupported
+  ) {
     return null
   }
 
@@ -139,6 +150,7 @@ export function PushNotificationPrompt({
                 Later
               </Button>
             </div>
+            {error && <p className="text-xs text-destructive mt-2">{error}</p>}
           </div>
           <button
             onClick={handleDismiss}
@@ -184,6 +196,7 @@ export function PushNotificationPrompt({
               )}
             </Button>
           </div>
+          {error && <p className="text-xs text-destructive mt-3">{error}</p>}
           <button
             onClick={handleRemindLater}
             className="text-sm text-muted-foreground hover:text-foreground mt-3"

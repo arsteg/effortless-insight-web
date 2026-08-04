@@ -105,6 +105,12 @@ export interface NoticeFilters {
   priority?: NoticePriority
   noticeType?: string
   gstin?: string
+  /** All GSTINs of one client business (PAN = GSTIN chars 3-12) */
+  pan?: string
+  /** Deadline passed and still actionable */
+  overdue?: boolean
+  /** Actionable notices due within N days */
+  dueWithinDays?: number
   deadlineFrom?: string
   deadlineTo?: string
   search?: string
@@ -141,6 +147,13 @@ export interface NoticeStatistics {
   dueThisMonth: number
   totalDemandAmount: number
   totalCount: number
+}
+
+// Per-GSTIN notice counts for the client summary strip
+export interface GstinNoticeSummary {
+  gstin: string
+  totalCount: number
+  overdueCount: number
 }
 
 // Upload

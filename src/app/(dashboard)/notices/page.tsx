@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Upload, Trash2, Archive, UserPlus, Download, FileText, FileSpreadsheet, File } from 'lucide-react'
 
@@ -25,6 +26,7 @@ import {
   NoticeFilters,
   NoticeTable,
   AssignNoticeDialog,
+  ClientSummaryStrip,
 } from '@/components/features/notices'
 import { useNotices, useDeleteNotice, useBulkDeleteNotices, useArchiveNotice, useExportNotices } from '@/hooks/use-notices'
 import { useNoticeUpdates } from '@/hooks/use-notice-updates'
@@ -33,14 +35,29 @@ import type { NoticeFilters as NoticeFiltersType, Notice } from '@/types'
 const DEFAULT_PAGE_SIZE = 10
 
 export default function NoticesPage() {
+  return (
+    <Suspense>
+      <NoticesPageInner />
+    </Suspense>
+  )
+}
+
+function NoticesPageInner() {
   // Enable real-time notice status updates
   useNoticeUpdates()
+  // Deep-link support (e.g. dashboard widget links /notices?gstin=X&overdue=true)
+  const searchParams = useSearchParams()
   // Filters state
-  const [filters, setFilters] = useState<NoticeFiltersType>({
+  const [filters, setFilters] = useState<NoticeFiltersType>(() => ({
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
     includeAggregations: true,
-  })
+    gstin: searchParams.get('gstin') || undefined,
+    overdue: searchParams.get('overdue') === 'true' ? true : undefined,
+    dueWithinDays: searchParams.get('dueWithinDays')
+      ? Number(searchParams.get('dueWithinDays'))
+      : undefined,
+  }))
 
   // Selection state for bulk actions
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -174,6 +191,9 @@ export default function NoticesPage() {
           </Button>
         </div>
       </div>
+
+      {/* Per-client summary — one card per GSTIN, click to filter */}
+      <ClientSummaryStrip filters={filters} onFiltersChange={handleFiltersChange} />
 
       {/* Filters */}
       <Card>

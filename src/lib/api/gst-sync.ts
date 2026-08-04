@@ -13,6 +13,8 @@ import type {
   GstSyncStatistics,
   CreateGstClientRequest,
   UpdateGstClientRequest,
+  BulkCreateGstClientItem,
+  BulkCreateGstClientResult,
   GstClientFilters,
   GstNoticeFilters,
   GstSyncSessionFilters,
@@ -62,6 +64,17 @@ export const gstSyncApi = {
     const response = await apiClient.post<{ data: GstClient }>(
       `${BASE_URL}/clients`,
       data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Register many client GSTINs at once (CA bulk onboarding)
+   */
+  async bulkCreateClients(items: BulkCreateGstClientItem[]): Promise<BulkCreateGstClientResult> {
+    const response = await apiClient.post<{ data: BulkCreateGstClientResult }>(
+      `${BASE_URL}/clients/bulk`,
+      { items }
     )
     return response.data.data
   },
@@ -214,17 +227,6 @@ export const gstSyncApi = {
   async getExtensionConfig(): Promise<ExtensionConfig> {
     const response = await apiClient.get<{ data: ExtensionConfig }>(
       `${BASE_URL}/extension/config`
-    )
-    return response.data.data
-  },
-
-  /**
-   * Update extension configuration
-   */
-  async updateExtensionConfig(config: Partial<ExtensionConfig>): Promise<ExtensionConfig> {
-    const response = await apiClient.patch<{ data: ExtensionConfig }>(
-      `${BASE_URL}/extension/config`,
-      config
     )
     return response.data.data
   },

@@ -16,6 +16,7 @@ import type {
   GstSyncSessionFilters,
   CreateGstClientRequest,
   UpdateGstClientRequest,
+  BulkCreateGstClientItem,
   ImportNoticesRequest,
   ExtensionConfig,
 } from '@/types/gst-sync'
@@ -79,6 +80,31 @@ export function useCreateGstClient() {
       toast({
         title: 'Failed to add GSTIN',
         description: error.message || 'Please check the GSTIN and try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+export function useBulkCreateGstClients() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (items: BulkCreateGstClientItem[]) => gstSyncApi.bulkCreateClients(items),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: gstSyncKeys.clients() })
+      queryClient.invalidateQueries({ queryKey: gstSyncKeys.statistics() })
+      toast({
+        title: 'Bulk Add Complete',
+        description: `${result.created} added, ${result.skipped} skipped, ${result.failed} failed.`,
+        variant: result.failed > 0 ? 'destructive' : 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Bulk Add Failed',
+        description: 'Could not register the GSTINs. Please try again.',
         variant: 'destructive',
       })
     },
@@ -292,29 +318,5 @@ export function useExtensionConfig() {
     queryKey: gstSyncKeys.extensionConfig(),
     queryFn: () => gstSyncApi.getExtensionConfig(),
     staleTime: 5 * 60 * 1000,
-  })
-}
-
-export function useUpdateExtensionConfig() {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
-  return useMutation({
-    mutationFn: (config: Partial<ExtensionConfig>) => gstSyncApi.updateExtensionConfig(config),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: gstSyncKeys.extensionConfig() })
-      toast({
-        title: 'Settings Saved',
-        description: 'Extension settings have been updated.',
-        variant: 'success',
-      })
-    },
-    onError: () => {
-      toast({
-        title: 'Save Failed',
-        description: 'Failed to save settings. Please try again.',
-        variant: 'destructive',
-      })
-    },
   })
 }

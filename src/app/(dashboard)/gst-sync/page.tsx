@@ -25,12 +25,14 @@ import {
   GstSyncedNotices,
   GstSyncHistory,
   AddGstClientDialog,
+  BulkAddGstClientsDialog,
   ExtensionSetupGuide,
 } from '@/components/features/gst-sync'
 import { useGstSyncStatistics, useGstClients } from '@/hooks/use-gst-sync'
 
 export default function GstSyncPage() {
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showBulkAddDialog, setShowBulkAddDialog] = useState(false)
   const [activeTab, setActiveTab] = useState('clients')
 
   const { data: statistics, isLoading: statsLoading } = useGstSyncStatistics()
@@ -58,6 +60,10 @@ export default function GstSyncPage() {
               <Download className="mr-2 h-4 w-4" />
               Get Extension
             </a>
+          </Button>
+          <Button variant="outline" onClick={() => setShowBulkAddDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Bulk Add
           </Button>
           <Button onClick={() => setShowAddDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -197,6 +203,12 @@ export default function GstSyncPage() {
       <AddGstClientDialog
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
+      />
+
+      {/* Bulk Add Dialog */}
+      <BulkAddGstClientsDialog
+        open={showBulkAddDialog}
+        onOpenChange={setShowBulkAddDialog}
       />
     </div>
   )

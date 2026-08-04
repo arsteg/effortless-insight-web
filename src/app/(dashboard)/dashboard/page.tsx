@@ -26,6 +26,7 @@ import {
   ActivityFeed,
   NoticesByStatusChart,
   NoticesByPriorityChart,
+  ClientAttentionCard,
 } from '@/components/features/dashboard'
 import { useDashboard } from '@/hooks/use-dashboard'
 import { useAuthStore } from '@/stores/auth-store'
@@ -159,6 +160,9 @@ export default function DashboardPage() {
           isLoading={isLoading}
         />
       </div>
+
+      {/* Clients needing attention (hidden when nothing is overdue) */}
+      <ClientAttentionCard />
 
       {/* Additional Stats Row */}
       {data?.notices && (

@@ -6,7 +6,7 @@ import {
   Pause,
   Play,
   Trash2,
-  Settings,
+  Pencil,
   RefreshCw,
   CheckCircle2,
   AlertCircle,
@@ -36,7 +36,16 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
-import { useGstClients, useDeleteGstClient, usePauseGstClient, useResumeGstClient } from '@/hooks/use-gst-sync'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { useGstClients, useDeleteGstClient, usePauseGstClient, useResumeGstClient, useUpdateGstClient } from '@/hooks/use-gst-sync'
 import type { GstClient, GstClientStatus } from '@/types/gst-sync'
 
 interface GstClientListProps {
@@ -45,15 +54,32 @@ interface GstClientListProps {
 
 export function GstClientList({ onAddNew }: GstClientListProps) {
   const [deleteClient, setDeleteClient] = useState<GstClient | null>(null)
+  const [renameClient, setRenameClient] = useState<GstClient | null>(null)
+  const [renameValue, setRenameValue] = useState('')
   const { data, isLoading, error, refetch } = useGstClients({ pageSize: 50 })
   const deleteMutation = useDeleteGstClient()
   const pauseMutation = usePauseGstClient()
   const resumeMutation = useResumeGstClient()
+  const updateMutation = useUpdateGstClient()
 
   const handleDelete = async () => {
     if (!deleteClient) return
     await deleteMutation.mutateAsync(deleteClient.id)
     setDeleteClient(null)
+  }
+
+  const openRename = (client: GstClient) => {
+    setRenameValue(client.tradeName || client.clientName || '')
+    setRenameClient(client)
+  }
+
+  const handleRename = async () => {
+    if (!renameClient) return
+    await updateMutation.mutateAsync({
+      id: renameClient.id,
+      data: { tradeName: renameValue.trim() || undefined },
+    })
+    setRenameClient(null)
   }
 
   if (isLoading) {
@@ -116,6 +142,7 @@ export function GstClientList({ onAddNew }: GstClientListProps) {
             onPause={() => pauseMutation.mutate(client.id)}
             onResume={() => resumeMutation.mutate(client.id)}
             onDelete={() => setDeleteClient(client)}
+            onRename={() => openRename(client)}
             isPausing={pauseMutation.isPending}
             isResuming={resumeMutation.isPending}
           />
@@ -144,6 +171,38 @@ export function GstClientList({ onAddNew }: GstClientListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Rename Client Dialog */}
+      <Dialog open={!!renameClient} onOpenChange={(open) => !open && setRenameClient(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Rename Client</DialogTitle>
+            <DialogDescription>
+              A friendly name for <span className="font-mono">{renameClient?.gstin}</span> — shown
+              everywhere instead of the raw GSTIN.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            placeholder="e.g. Arsteg Foods (Rohit)"
+            maxLength={255}
+            onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRenameClient(null)}
+              disabled={updateMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleRename} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
@@ -153,6 +212,7 @@ interface GstClientCardProps {
   onPause: () => void
   onResume: () => void
   onDelete: () => void
+  onRename: () => void
   isPausing: boolean
   isResuming: boolean
 }
@@ -162,18 +222,34 @@ function GstClientCard({
   onPause,
   onResume,
   onDelete,
+  onRename,
   isPausing,
   isResuming,
 }: GstClientCardProps) {
   const statusInfo = getStatusInfo(client.status)
+  const displayName = client.tradeName || client.legalName || client.clientName
+
+  // Stale = no successful sync in 14+ days. The extension only captures when
+  // the user visits this client's portal, so stale clients may have unseen notices.
+  const STALE_DAYS = 14
+  const lastSync = client.lastSuccessfulSyncAt || client.lastSyncAt
+  const isStale =
+    client.syncEnabled &&
+    client.status === 'active' &&
+    (!lastSync ||
+      Date.now() - new Date(lastSync).getTime() > STALE_DAYS * 24 * 60 * 60 * 1000)
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="space-y-1">
-          <CardTitle className="text-lg font-mono">{client.gstin}</CardTitle>
-          {client.clientName && (
-            <p className="text-sm text-muted-foreground">{client.clientName}</p>
+          {displayName ? (
+            <>
+              <CardTitle className="text-lg">{displayName}</CardTitle>
+              <p className="font-mono text-sm text-muted-foreground">{client.gstin}</p>
+            </>
+          ) : (
+            <CardTitle className="text-lg font-mono">{client.gstin}</CardTitle>
           )}
         </div>
         <DropdownMenu>
@@ -194,9 +270,9 @@ function GstClientCard({
                 Pause Sync
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
+            <DropdownMenuItem onClick={onRename}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Rename
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onDelete} className="text-destructive">
@@ -212,6 +288,12 @@ function GstClientCard({
             {statusInfo.icon}
             <span className="ml-1">{statusInfo.label}</span>
           </Badge>
+          {isStale && (
+            <Badge variant="outline" className="border-amber-500 text-amber-600">
+              <Clock className="mr-1 h-3 w-3" />
+              Needs portal visit
+            </Badge>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4 text-sm">
