@@ -71,6 +71,26 @@ export const billingApi = {
   },
 
   /**
+   * Get available features for current organization
+   */
+  async getAvailableFeatures(): Promise<string[]> {
+    const response = await apiClient.get<{ data: { features: string[] } }>(
+      '/subscriptions/features'
+    )
+    return response.data.data.features
+  },
+
+  /**
+   * Check if a specific feature is available
+   */
+  async checkFeatureAccess(featureCode: string): Promise<boolean> {
+    const response = await apiClient.get<{ data: { featureCode: string; hasAccess: boolean } }>(
+      `/subscriptions/features/${featureCode}`
+    )
+    return response.data.data.hasAccess
+  },
+
+  /**
    * Create a new subscription (initiate checkout)
    */
   async createSubscription(

@@ -272,6 +272,7 @@ export interface ChangePlanResponse {
 
 export interface ValidatePlanChangeRequest {
   newPlanCode: string
+  billingCycle?: BillingCycle // Required for proration preview
   additionalSeats?: number
 }
 
@@ -282,6 +283,26 @@ export interface PlanChangeValidationResult {
   featuresToGain?: string[]
   activeFeaturesToLose?: string[] // Features currently in use that will be lost - shows warning but doesn't block
   limitsComparison?: PlanLimitsComparison
+  prorationPreview?: ProrationPreview // Preview of how billing period will change
+}
+
+/**
+ * Preview of how proration will affect the billing period.
+ * Shows how the remaining value is converted between plans.
+ */
+export interface ProrationPreview {
+  isUpgrade: boolean // true if new plan is more expensive per day
+  currentDailyRate: number // Current plan's daily rate in base currency
+  newDailyRate: number // New plan's daily rate in base currency
+  remainingDays: number // Days left in current billing period
+  remainingValue: number // Monetary value remaining from current period
+  currentPeriodEnd: string // Current subscription end date
+  newPeriodEnd: string // New end date after proration
+  newPeriodDays: number // Number of days in new prorated period
+  currentPlanName: string
+  newPlanName: string
+  currentBillingCycle: BillingCycle
+  newBillingCycle: BillingCycle
 }
 
 export interface PlanChangeBlocker {

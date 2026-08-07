@@ -14,6 +14,7 @@ import {
   Upload,
   RefreshCw,
   Calendar,
+  Lock,
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -27,12 +28,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useFeatures, FeatureCodes } from '@/hooks/use-feature-access'
 
 interface NavItem {
   title: string
   href: string
   icon: React.ComponentType<{ className?: string }>
   badge?: number
+  /** Feature code required to access this item. If not available, shows lock icon */
+  requiredFeature?: string
 }
 
 const mainNavItems: NavItem[] = [
@@ -60,11 +64,13 @@ const mainNavItems: NavItem[] = [
     title: 'Tasks',
     href: '/tasks',
     icon: CheckSquare,
+    requiredFeature: FeatureCodes.Workflows,
   },
   {
     title: 'Reports',
     href: '/reports',
     icon: BarChart3,
+    requiredFeature: FeatureCodes.AdvancedReporting,
   },
   {
     title: 'Calendar',
@@ -90,6 +96,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const { sidebarOpen, sidebarCollapsed, toggleSidebarCollapsed, setSidebarOpen } =
     useAppStore()
+  const { data: features } = useFeatures()
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -98,13 +105,19 @@ export function Sidebar() {
     return pathname.startsWith(href)
   }
 
+  const hasFeatureAccess = (featureCode?: string) => {
+    if (!featureCode) return true
+    return features?.includes(featureCode) ?? true // Default to true while loading
+  }
+
   const NavLink = ({ item }: { item: NavItem }) => {
     const active = isActive(item.href)
     const Icon = item.icon
+    const isLocked = item.requiredFeature && !hasFeatureAccess(item.requiredFeature)
 
     const linkContent = (
       <Link
-        href={item.href}
+        href={isLocked ? '/settings/billing' : item.href}
         onClick={() => {
           // Close sidebar on mobile after navigation
           if (window.innerWidth < 768) {
@@ -116,12 +129,16 @@ export function Sidebar() {
           active
             ? 'bg-primary text-primary-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+          isLocked && 'opacity-60',
           sidebarCollapsed && 'justify-center px-2'
         )}
       >
         <Icon className="h-5 w-5 shrink-0" />
         {!sidebarCollapsed && <span>{item.title}</span>}
-        {!sidebarCollapsed && item.badge && item.badge > 0 && (
+        {!sidebarCollapsed && isLocked && (
+          <Lock className="ml-auto h-3.5 w-3.5 text-amber-500" />
+        )}
+        {!sidebarCollapsed && !isLocked && item.badge && item.badge > 0 && (
           <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary-foreground text-xs text-primary">
             {item.badge}
           </span>
@@ -134,7 +151,7 @@ export function Sidebar() {
         <Tooltip>
           <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
           <TooltipContent side="right">
-            <p>{item.title}</p>
+            <p>{item.title}{isLocked ? ' (Upgrade required)' : ''}</p>
           </TooltipContent>
         </Tooltip>
       )

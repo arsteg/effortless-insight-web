@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, AlertCircle, XCircle, Users, HardDrive, Building2, FileText, Zap, Info, CheckCircle, ArrowUp, ArrowDown, Minus } from 'lucide-react'
+import { AlertTriangle, AlertCircle, XCircle, Users, HardDrive, Building2, FileText, Zap, Info, CheckCircle, ArrowUp, ArrowDown, Minus, Calendar, IndianRupee } from 'lucide-react'
 
 import {
   Dialog,
@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import type { PlanChangeValidationResult, PlanChangeBlocker, LimitChange } from '@/types/billing'
+import type { PlanChangeValidationResult, PlanChangeBlocker, LimitChange, ProrationPreview } from '@/types/billing'
 
 export interface PlanChangeValidationModalProps {
   open: boolean
@@ -98,6 +98,91 @@ function LimitComparisonRow({ label, change, icon: Icon }: { label: string; chan
   )
 }
 
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+function formatBillingCycle(cycle: string): string {
+  return cycle === 'annually' ? 'Annual' : 'Monthly'
+}
+
+function ProrationPreviewSection({ proration }: { proration: ProrationPreview }) {
+  const colorClass = proration.isUpgrade
+    ? 'border-blue-500/50 bg-blue-50 dark:bg-blue-950/20'
+    : 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/20'
+
+  const textClass = proration.isUpgrade
+    ? 'text-blue-800 dark:text-blue-400'
+    : 'text-amber-800 dark:text-amber-400'
+
+  const descClass = proration.isUpgrade
+    ? 'text-blue-700 dark:text-blue-300'
+    : 'text-amber-700 dark:text-amber-300'
+
+  return (
+    <Alert className={colorClass}>
+      <IndianRupee className={`h-4 w-4 ${proration.isUpgrade ? 'text-blue-600' : 'text-amber-600'}`} />
+      <AlertTitle className={textClass}>
+        Billing Period {proration.isUpgrade ? 'Adjustment' : 'Extension'}
+      </AlertTitle>
+      <AlertDescription className={descClass}>
+        <div className="space-y-3 mt-2">
+          {/* Explanation */}
+          <p className="text-sm">
+            {proration.isUpgrade ? (
+              <>
+                Your remaining credit of <strong>{formatCurrency(proration.remainingValue)}</strong> ({proration.remainingDays} days at {formatCurrency(proration.currentDailyRate)}/day) will be applied to the new plan.
+              </>
+            ) : (
+              <>
+                Your remaining credit of <strong>{formatCurrency(proration.remainingValue)}</strong> ({proration.remainingDays} days at {formatCurrency(proration.currentDailyRate)}/day) will extend your billing period.
+              </>
+            )}
+          </p>
+
+          {/* Calculation details */}
+          <div className="grid grid-cols-2 gap-2 text-xs border-t border-current/20 pt-2">
+            <div>
+              <span className="opacity-75">Current plan:</span>
+              <p className="font-medium">{proration.currentPlanName} ({formatBillingCycle(proration.currentBillingCycle)})</p>
+              <p className="opacity-75">{formatCurrency(proration.currentDailyRate)}/day</p>
+            </div>
+            <div>
+              <span className="opacity-75">New plan:</span>
+              <p className="font-medium">{proration.newPlanName} ({formatBillingCycle(proration.newBillingCycle)})</p>
+              <p className="opacity-75">{formatCurrency(proration.newDailyRate)}/day</p>
+            </div>
+          </div>
+
+          {/* Date change */}
+          <div className="flex items-center gap-2 text-sm border-t border-current/20 pt-2">
+            <Calendar className="h-4 w-4" />
+            <span>
+              Billing period: {formatDate(proration.currentPeriodEnd)}
+              <ArrowUp className={`inline h-3 w-3 mx-1 ${proration.isUpgrade ? 'rotate-180' : ''}`} />
+              <strong>{formatDate(proration.newPeriodEnd)}</strong>
+              <span className="opacity-75 ml-1">({proration.newPeriodDays} days)</span>
+            </span>
+          </div>
+        </div>
+      </AlertDescription>
+    </Alert>
+  )
+}
+
 export function PlanChangeValidationModal({
   open,
   onOpenChange,
@@ -113,6 +198,7 @@ export function PlanChangeValidationModal({
   const hasActiveFeatureLoss = validation.activeFeaturesToLose && validation.activeFeaturesToLose.length > 0
   const hasGains = validation.featuresToGain && validation.featuresToGain.length > 0
   const hasLimitsComparison = validation.limitsComparison
+  const hasProrationPreview = validation.prorationPreview
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -205,6 +291,11 @@ export function PlanChangeValidationModal({
               </div>
               <Separator />
             </>
+          )}
+
+          {/* Proration Preview - shows how billing period will change */}
+          {hasProrationPreview && !hasBlockers && (
+            <ProrationPreviewSection proration={validation.prorationPreview!} />
           )}
 
           {/* Features to gain */}

@@ -74,6 +74,7 @@ export function ChangePlanModal({
     try {
       const result = await billingApi.validatePlanChange({
         newPlanCode: selectedPlan,
+        billingCycle: billingCycle,
         additionalSeats: 0,
       })
       setValidationResult(result)
