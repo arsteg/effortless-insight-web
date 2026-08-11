@@ -100,7 +100,7 @@ export function PlanCard({
       <CardFooter>
         {plan.contactSales ? (
           <Button className="w-full" variant="outline" asChild>
-            <a href="mailto:sales@effortlessinsight.com">Contact Sales</a>
+            <a href="mailto:info@arsteg.com">Contact Sales</a>
           </Button>
         ) : isCurrentPlan ? (
           <Button className="w-full" variant="secondary" disabled>

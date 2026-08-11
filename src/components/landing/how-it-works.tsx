@@ -1,161 +1,137 @@
-'use client'
-
-import { Upload, Cpu, FileCheck, Send, Link2 } from 'lucide-react'
-import { WorkflowDiagram } from './workflow-diagram'
+import Link from 'next/link'
+import { ArrowRight, ChevronDown, FileText, Gauge, ListChecks, FolderOpen, Scale } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 const steps = [
   {
-    icon: Link2,
-    title: 'Auto-Fetch or Upload',
-    description:
-      'Connect to GST Portal for automatic notice fetching, or upload manually via PDF, image, or mobile scan.',
-    duration: 'Automatic',
+    number: '01',
+    title: 'Connect once',
+    body: 'Verify your GSTIN with an OTP — the same one the portal sends you. We never see or store your portal password.',
+    time: '2 minutes',
   },
   {
-    icon: Cpu,
-    title: 'AI Analysis',
-    description:
-      'Our AI engine processes the notice with OCR, extracts key data, classifies the notice type, and calculates risk.',
-    duration: '~30 seconds',
+    number: '02',
+    title: 'We watch the portal',
+    body: 'New notices are fetched, read, and explained automatically. Deadlines go on your calendar and your WhatsApp.',
+    time: 'Runs by itself',
   },
   {
-    icon: FileCheck,
-    title: 'Review & Collaborate',
-    description:
-      'Review the AI-generated report, assign tasks to team members, request documents, and plan your response.',
-    duration: 'Your pace',
+    number: '03',
+    title: 'You respond with confidence',
+    body: 'Open the plain-English summary, review the drafted reply, loop in your CA if you want a second pair of eyes. Done.',
+    time: '~15 minutes per notice',
   },
-  {
-    icon: Send,
-    title: 'Respond & Track',
-    description:
-      'Submit your response with AI-drafted content, track status, and maintain compliance history.',
-    duration: 'Before deadline',
-  },
+]
+
+// The AI pipeline, in plain words — depth for the visitor who wants to know
+// what actually happens between sync and report. Deliberately no per-stage
+// timings: we don't publish speed numbers we haven't measured.
+const pipeline = [
+  { stage: 'Document read', desc: 'The notice PDF or scan is read, including tables and stamps' },
+  { stage: 'Key details extracted', desc: 'GSTIN, amounts, dates, notice number and cited sections identified' },
+  { stage: 'Notice classified', desc: 'Matched against 150+ notice types across 11 GST categories' },
+  { stage: 'Legal context matched', desc: 'Relevant GST rules, circulars and precedents pulled in' },
+  { stage: 'Analysis written', desc: 'Summary, risk assessment and action plan drafted in English and Hindi' },
+  { stage: 'Facts double-checked', desc: 'A verification pass checks every claim against the notice itself' },
+  { stage: 'Report ready', desc: 'Your plain-English report lands in the dashboard' },
+]
+
+const outputs = [
+  { icon: FileText, label: 'Executive summary', sub: 'English & Hindi' },
+  { icon: Gauge, label: 'Risk assessment', sub: 'Score 0–100, Low → Critical' },
+  { icon: ListChecks, label: 'Action items', sub: 'Prioritized, with due dates' },
+  { icon: FolderOpen, label: 'Required documents', sub: 'What to collect, per notice' },
+  { icon: Scale, label: 'Legal references', sub: 'Sections, rules & circulars' },
 ]
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-20 md:py-28 bg-gradient-to-b from-white to-primary-50/30">
+    <section id="how-it-works" className="scroll-mt-header bg-white py-14 md:py-20">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <span className="inline-block text-primary-600 font-semibold text-sm uppercase tracking-wider mb-3">
-            Simple Process
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            From Notice to Resolution in Four Steps
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Our streamlined workflow transforms complex GST compliance into a simple,
-            manageable process that anyone can follow.
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="inline-flex items-center rounded-full border border-primary-100 bg-primary-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-700">
+            How it works
           </p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
+            Set it up before your chai gets cold
+          </h2>
         </div>
 
-        {/* Workflow Diagram */}
-        <div className="mb-16">
-          <WorkflowDiagram steps={steps} />
-        </div>
-
-        {/* Detailed Breakdown */}
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2">
-            {/* Left: Processing Pipeline */}
-            <div className="p-8 md:p-10 bg-gradient-to-br from-primary-600 to-primary-700 text-white">
-              <h3 className="text-2xl font-bold mb-6">
-                AI Processing Pipeline
-              </h3>
-              <p className="text-primary-100 mb-8">
-                Behind the scenes, our 8-stage AI pipeline processes your notice
-                with enterprise-grade accuracy.
+        <div className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-3">
+          {steps.map((step) => (
+            <div
+              key={step.number}
+              className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-xl hover:shadow-primary-100/60"
+            >
+              <span
+                aria-hidden
+                className="absolute -right-4 -top-6 text-[5.5rem] font-extrabold leading-none text-primary-50"
+              >
+                {step.number}
+              </span>
+              <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-sm font-bold text-white shadow-md shadow-primary-200/70">
+                {step.number}
+              </span>
+              <h3 className="relative mt-4 text-lg font-semibold text-gray-950">{step.title}</h3>
+              <p className="relative mt-2 leading-relaxed text-gray-600">{step.body}</p>
+              <p className="relative mt-4 inline-block rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+                {step.time}
               </p>
-
-              <div className="space-y-4">
-                {[
-                  { stage: 'Preprocessing', time: '~5s', desc: 'Format detection, quality check' },
-                  { stage: 'OCR Processing', time: '~15s', desc: 'Text and table extraction' },
-                  { stage: 'Entity Extraction', time: '~5s', desc: 'GSTIN, dates, amounts, sections' },
-                  { stage: 'Classification', time: '~3s', desc: 'Notice type and category' },
-                  { stage: 'RAG Retrieval', time: '~5s', desc: 'Legal context and precedents' },
-                  { stage: 'LLM Analysis', time: '~20s', desc: 'Summary and recommendations' },
-                  { stage: 'Verification', time: '~5s', desc: 'Fact-checking and validation' },
-                  { stage: 'Report Generation', time: '~2s', desc: 'Final report assembly' },
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{item.stage}</span>
-                        <span className="text-primary-200 text-sm">{item.time}</span>
-                      </div>
-                      <span className="text-primary-200 text-sm">{item.desc}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-white/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-semibold">Total Processing Time</span>
-                  <span className="text-2xl font-bold">&lt;60 seconds</span>
-                </div>
-              </div>
             </div>
+          ))}
+        </div>
 
-            {/* Right: Output Preview */}
-            <div className="p-8 md:p-10">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                What You Get
-              </h3>
-
-              <div className="space-y-6">
-                {[
-                  {
-                    title: 'Executive Summary',
-                    desc: 'Plain English explanation of what the notice is about and what it means for you.',
-                    tag: 'English & Hindi',
-                  },
-                  {
-                    title: 'Risk Assessment',
-                    desc: 'Clear risk score (0-100) with breakdown of tax amount, penalties, and deadline urgency.',
-                    tag: 'AI-Powered',
-                  },
-                  {
-                    title: 'Action Items',
-                    desc: 'Prioritized checklist of what you need to do, with suggested due dates and assignees.',
-                    tag: 'Ready to Act',
-                  },
-                  {
-                    title: 'Required Documents',
-                    desc: 'List of documents you need to gather for your response.',
-                    tag: 'Checklist',
-                  },
-                  {
-                    title: 'Legal References',
-                    desc: 'Relevant GST sections, rules, and circulars cited in the notice.',
-                    tag: 'Context',
-                  },
-                ].map((item, index) => (
-                  <div key={index} className="flex gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
-                      <div className="w-2 h-2 rounded-full bg-primary-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-gray-900">{item.title}</h4>
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                          {item.tag}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
+        {/* What you get from every analysis */}
+        <div className="mx-auto mt-10 max-w-5xl">
+          <p className="text-center text-sm font-semibold text-gray-900">
+            Every analyzed notice comes back with
+          </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {outputs.map((o) => (
+              <div key={o.label} className="rounded-2xl border border-gray-200 bg-white p-5 text-center">
+                <o.icon className="mx-auto h-5 w-5 text-primary-600" aria-hidden />
+                <p className="mt-2.5 text-sm font-semibold text-gray-900">{o.label}</p>
+                <p className="mt-1 text-xs text-gray-500">{o.sub}</p>
               </div>
-            </div>
+            ))}
           </div>
+        </div>
+
+        {/* Level 2: the sixty-second pipeline */}
+        <details className="group mx-auto mt-10 max-w-3xl rounded-2xl border border-gray-200 bg-white [&_svg.chevron]:open:rotate-180">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-left font-semibold text-gray-900 [&::-webkit-details-marker]:hidden">
+            What actually happens during the analysis?
+            <ChevronDown className="chevron h-5 w-5 flex-shrink-0 text-gray-400 transition-transform" aria-hidden />
+          </summary>
+          <div className="border-t border-gray-100 px-6 py-5">
+            <ol className="space-y-3">
+              {pipeline.map((p, i) => (
+                <li key={p.stage} className="flex items-start gap-4">
+                  <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 text-xs font-bold text-primary-700">
+                    {i + 1}
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">{p.stage}</p>
+                    <p className="text-sm text-gray-600">{p.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-4 border-t border-gray-100 pt-4 text-sm font-medium text-gray-700">
+              All of it automatic, from portal to plain English — with a
+              verification pass so the analysis sticks to what the notice
+              actually says.
+            </p>
+          </div>
+        </details>
+
+        <div className="mt-12 text-center">
+          <Button size="lg" asChild className="px-8 py-6 text-base">
+            <Link href="/register">
+              Connect your first GSTIN free
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>

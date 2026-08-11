@@ -6,6 +6,7 @@ import { Providers } from '@/components/providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://effortlessinsight.in'),
   title: 'EffortlessInsight - GST Notice Management',
   description: 'AI-powered GST Notice Operating System for Indian businesses',
   manifest: '/manifest.json',
@@ -20,11 +21,11 @@ export const metadata: Metadata = {
   },
 }
 
+// No maximumScale: pinch-zoom must stay available for low-vision users
 export const viewport: Viewport = {
   themeColor: '#0ea5e9',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
 }
 
 export default function RootLayout({

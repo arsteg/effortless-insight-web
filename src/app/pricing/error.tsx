@@ -66,7 +66,7 @@ export default function PricingError({
             <p className="text-sm text-gray-600 text-center">
               Still having issues?{' '}
               <a
-                href="mailto:support@effortlessinsight.com"
+                href="mailto:info@arsteg.com"
                 className="text-primary font-medium hover:underline"
               >
                 Contact Support

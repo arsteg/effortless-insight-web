@@ -152,7 +152,7 @@ function SelectPlanContent() {
         <div className="text-center mt-12">
           <p className="text-muted-foreground">
             Have questions?{' '}
-            <a href="mailto:support@effortlessinsight.com" className="text-primary hover:underline">
+            <a href="mailto:info@arsteg.com" className="text-primary hover:underline">
               Contact our support team
             </a>
           </p>

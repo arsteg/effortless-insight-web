@@ -8,13 +8,13 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 const navLinks = [
-  { href: '#features', label: 'Features' },
-  { href: '#ai-assistant', label: 'AI Assistant', isNew: true },
-  { href: '#gstn-integration', label: 'GST Portal' },
-  { href: '#whatsapp-bot', label: 'WhatsApp Bot' },
-  { href: '#how-it-works', label: 'How It Works' },
-  { href: '#faq', label: 'FAQ' },
+  { href: '/#tour', label: 'Product tour' },
+  { href: '/#platform', label: 'Platform' },
+  { href: '/#how-it-works', label: 'How it works' },
+  { href: '/#solutions', label: 'Solutions' },
+  { href: '/#security', label: 'Security' },
   { href: '/pricing', label: 'Pricing' },
+  { href: '/#faq', label: 'FAQ' },
 ]
 
 export function LandingHeader() {
@@ -22,10 +22,9 @@ export function LandingHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-    window.addEventListener('scroll', handleScroll)
+    const handleScroll = () => setIsScrolled(window.scrollY > 20)
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -33,13 +32,11 @@ export function LandingHeader() {
     <header
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        isScrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-sm py-3'
-          : 'bg-transparent py-5'
+        isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'
       )}
     >
       <div className="container mx-auto px-4">
-        <nav className="flex items-center justify-between">
+        <nav className="flex items-center justify-between" aria-label="Main">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <Image
@@ -47,75 +44,64 @@ export function LandingHeader() {
               alt="EffortlessInsight"
               width={280}
               height={56}
-              className="h-10 w-auto md:h-12"
+              className="h-9 w-auto md:h-11"
               priority
             />
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden items-center gap-7 lg:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="relative text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
+                className="text-sm font-medium text-gray-700 transition-colors hover:text-primary-600"
               >
                 {link.label}
-                {'isNew' in link && link.isNew && (
-                  <span className="absolute -top-2 -right-3 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                    NEW
-                  </span>
-                )}
               </Link>
             ))}
           </div>
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Sign In</Link>
+          {/* CTA — visible on every screen size */}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" asChild className="hidden md:inline-flex">
+              <Link href="/login">Sign in</Link>
             </Button>
-            <Button asChild className="shadow-lg shadow-primary-200">
-              <Link href="/register">Start Free Trial</Link>
+            <Button asChild size="sm" className="md:h-10 md:px-5">
+              <Link href="/register">Start free trial</Link>
             </Button>
+            <button
+              className="p-2 text-gray-700 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 text-gray-700"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </button>
         </nav>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden mt-4 pb-4 border-t border-gray-100 pt-4 animate-in">
+          <div className="mt-4 border-t border-gray-100 bg-white pb-4 pt-4 lg:hidden">
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-base font-medium text-gray-700 hover:text-primary-600 transition-colors"
+                  className="text-base font-medium text-gray-700 transition-colors hover:text-primary-600"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="flex flex-col gap-2 mt-4">
-                <Button variant="outline" asChild className="w-full">
-                  <Link href="/login">Sign In</Link>
-                </Button>
-                <Button asChild className="w-full">
-                  <Link href="/register">Start Free Trial</Link>
-                </Button>
-              </div>
+              <Link
+                href="/login"
+                className="text-base font-medium text-gray-700"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Sign in
+              </Link>
             </div>
           </div>
         )}

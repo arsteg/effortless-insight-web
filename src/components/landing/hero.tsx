@@ -1,62 +1,66 @@
-'use client'
-
 import Link from 'next/link'
-import { ArrowRight, Play, Shield, Zap, Clock, MessageCircle, Lock, Fingerprint } from 'lucide-react'
+import { ArrowRight, ShieldCheck, Fingerprint, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { AnimatedCounter } from './animated-counter'
+
+/**
+ * Hero: answers "what is this, who is it for, why should I care" in one glance.
+ * The visual shows the product's core transformation — a scary notice turned
+ * into a plain-English answer. A slim capability strip underneath carries the
+ * platform's defensible numbers.
+ */
+
+const capabilities = [
+  { value: 'Minutes', label: 'From notice to full analysis' },
+  { value: '150+', label: 'Notice types covered' },
+  { value: '11', label: 'GST categories' },
+  { value: 'EN + HI', label: 'English & Hindi' },
+]
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-primary-50/30" />
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-primary-100/50 to-transparent" />
+    <section className="relative overflow-hidden bg-white pt-28 pb-14 md:pt-36 md:pb-20">
+      {/* Soft color field: gradient wash + two blurred accent blobs */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-[640px] bg-gradient-to-b from-primary-50/80 via-sky-50/40 to-transparent"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full bg-primary-200/40 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-24 -right-40 h-[480px] w-[480px] rounded-full bg-sky-200/40 blur-3xl"
+      />
 
-      {/* Animated Background Shapes */}
-      <div className="absolute top-1/4 left-10 w-64 h-64 bg-primary-200/30 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 right-10 w-96 h-96 bg-primary-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Content */}
-          <div className="text-center lg:text-left">
-            {/* Badges */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-6">
-              <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                Secure GST Portal Sync
-              </div>
-              <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                WhatsApp Alerts
-              </div>
-            </div>
-
-            {/* Headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Transform GST Notice
-              <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
-                {' '}
-                Chaos into Clarity
-              </span>
-            </h1>
-
-            {/* Subheadline */}
-            <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-              Securely sync notices from the GST Portal via licensed GSP infrastructure.
-              Get instant WhatsApp alerts for deadlines.
-              Our AI transforms complex notices into actionable insights in under 60 seconds.
+      <div className="container relative mx-auto px-4">
+        <div className="grid items-center gap-16 lg:grid-cols-2">
+          {/* Copy */}
+          <div className="max-w-xl">
+            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary-200/70 bg-white/80 px-4 py-1.5 text-sm font-medium text-primary-700 shadow-sm backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-primary-500" aria-hidden />
+              The GST Notice Operating System for Indian businesses
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start mb-10">
+            <h1 className="text-[2.75rem] font-extrabold leading-[1.06] tracking-tight text-gray-950 md:text-6xl lg:text-[4.25rem]">
+              A GST notice shouldn&apos;t
+              <span className="text-gradient block"> ruin your week.</span>
+            </h1>
+
+            <p className="mt-6 text-lg leading-relaxed text-gray-600 md:text-xl">
+              EffortlessInsight finds every notice on the GST portal, explains it
+              in plain English, reminds you before every deadline, and drafts
+              your reply — so a scary envelope becomes a fifteen-minute task.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Button
                 size="lg"
                 asChild
-                className="w-full sm:w-auto text-lg px-8 py-6 shadow-xl shadow-primary-200 hover:shadow-2xl hover:shadow-primary-300 transition-all"
+                className="bg-gradient-to-r from-primary-600 to-primary-500 px-8 py-6 text-base shadow-lg shadow-primary-300/60 transition-transform hover:scale-[1.02] hover:from-primary-600 hover:to-primary-600"
               >
                 <Link href="/register">
-                  Start Free 14-Day Trial
+                  Start free 14-day trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -64,146 +68,104 @@ export function Hero() {
                 size="lg"
                 variant="outline"
                 asChild
-                className="w-full sm:w-auto text-lg px-8 py-6 group"
+                className="border-gray-200 bg-white/70 px-6 py-6 text-base text-gray-800 backdrop-blur hover:bg-white"
               >
-                <Link href="#how-it-works">
-                  <Play className="mr-2 h-5 w-5 group-hover:text-primary-600 transition-colors" />
-                  See How It Works
-                </Link>
+                <Link href="#tour">Take the product tour</Link>
               </Button>
             </div>
+            <p className="mt-3 text-sm text-gray-500">
+              No credit card. No sales call. Cancel anytime.
+            </p>
 
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-green-500" />
-                <span>GSP Licensed</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Fingerprint className="h-5 w-5 text-primary-500" />
-                <span>OTP Verified</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-green-500" />
-                <span>No Password Storage</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-emerald-500" />
-                <span>WhatsApp Alerts</span>
-              </div>
+            {/* Trust strip — one line, three facts */}
+            <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-green-600" /> Authorized portal access
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Fingerprint className="h-4 w-4 text-primary-600" /> OTP-verified, no passwords stored
+              </span>
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-4 w-4 text-gray-400" /> Data stored in India
+              </span>
             </div>
           </div>
 
-          {/* Right: Visual/Stats */}
-          <div className="relative">
-            {/* Main Visual Card */}
-            <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
-              {/* Floating badge */}
-              <div className="absolute -top-4 -right-4 bg-gradient-to-br from-green-400 to-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
-                AI-Powered
+          {/* Visual: the product's core moment — notice understood */}
+          <div className="relative mx-auto w-full max-w-lg">
+            {/* Tilted backdrop card for depth */}
+            <div
+              aria-hidden
+              className="absolute inset-0 -rotate-2 rounded-3xl bg-gradient-to-br from-primary-100 to-sky-100"
+            />
+            <div className="relative rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl shadow-primary-200/40 ring-1 ring-gray-100">
+              {/* Notice header */}
+              <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-sm font-bold text-red-600">
+                  DRC
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900">DRC-01 · Tax Demand Notice</p>
+                  <p className="text-sm text-gray-500">Received today, 9:14 AM</p>
+                </div>
+                <span className="ml-auto rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+                  High priority
+                </span>
               </div>
 
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-6 mb-8">
-                <div className="text-center p-4 bg-primary-50 rounded-xl">
-                  <div className="text-3xl md:text-4xl font-bold text-primary-600 mb-1">
-                    <AnimatedCounter end={60} suffix="s" prefix="<" />
-                  </div>
-                  <div className="text-sm text-gray-600">Processing Time</div>
+              {/* Plain-English explanation */}
+              <div className="space-y-4 pt-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    What this means
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-700">
+                    The department believes ₹2,45,000 of input tax credit was
+                    claimed incorrectly in FY 2024-25. You can contest this
+                    with purchase invoices.
+                  </p>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-xl">
-                  <div className="text-3xl md:text-4xl font-bold text-green-600 mb-1">
-                    <AnimatedCounter end={95} suffix="%" />
-                  </div>
-                  <div className="text-sm text-gray-600">Accuracy Rate</div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    What to do
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-700">
+                    Reply with supporting invoices before the deadline. A draft
+                    response is ready for your CA to review.
+                  </p>
                 </div>
-                <div className="text-center p-4 bg-orange-50 rounded-xl">
-                  <div className="text-3xl md:text-4xl font-bold text-orange-600 mb-1">
-                    <AnimatedCounter end={50} suffix="+" />
-                  </div>
-                  <div className="text-sm text-gray-600">Notice Types</div>
+                <div className="flex items-center justify-between rounded-xl bg-orange-50 px-4 py-3">
+                  <span className="text-sm font-medium text-orange-900">Respond by 24 August</span>
+                  <span className="text-sm font-semibold text-orange-700">15 days left</span>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-xl">
-                  <div className="text-3xl md:text-4xl font-bold text-purple-600 mb-1">
-                    <AnimatedCounter end={98} suffix="%" />
-                  </div>
-                  <div className="text-sm text-gray-600">Deadline Detection</div>
-                </div>
-              </div>
-
-              {/* Sample Analysis Preview */}
-              <div className="bg-gray-50 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <span className="text-red-600 font-bold text-sm">DRC</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">DRC-01 Notice Analyzed</div>
-                    <div className="text-sm text-gray-500">Tax Demand Notice</div>
-                  </div>
-                  <div className="ml-auto px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                    High Risk
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">Tax Amount</span>
-                    <span className="font-semibold text-gray-900">₹2,45,000</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">Response Deadline</span>
-                    <span className="font-semibold text-orange-600">15 days remaining</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">AI Confidence</span>
-                    <span className="font-semibold text-green-600">94%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Trust micro-signals */}
-              <div className="mt-4 flex items-center justify-center gap-4 text-xs text-gray-400">
-                <span className="flex items-center gap-1">
-                  <Lock className="h-3 w-3" /> Encrypted
-                </span>
-                <span className="flex items-center gap-1">
-                  <Shield className="h-3 w-3" /> India Hosted
-                </span>
-                <span className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" /> Audit Trail
-                </span>
               </div>
             </div>
 
-            {/* Floating Elements */}
-            <div className="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-lg p-4 border border-gray-100 animate-bounce" style={{ animationDuration: '3s' }}>
+            {/* WhatsApp reminder float */}
+            <div className="animate-float absolute -bottom-16 -left-4 hidden rounded-2xl border border-gray-100 bg-white p-3.5 shadow-xl shadow-gray-200/70 ring-1 ring-gray-100 sm:block">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
+                  <svg className="h-5 w-5 text-emerald-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.9-1.4A10 10 0 1 0 12 2Zm5.2 14.1c-.2.6-1.2 1.1-1.7 1.2-.5 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c0 .2.1.3 0 .5l-.3.5-.5.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1.1 2.2 1.4 2.5 1.5.3.1.5.1.7-.1l1-1.1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.6.3 0 .1 0 .7-.2 1.4Z" />
                   </svg>
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-gray-900">Secure Sync Complete</div>
-                  <div className="text-xs text-gray-500">3 notices retrieved via GSP</div>
-                </div>
-              </div>
-            </div>
-
-            {/* WhatsApp Notification Float */}
-            <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-4 border border-gray-100 animate-bounce hidden lg:block" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <MessageCircle className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-gray-900">WhatsApp Alert</div>
-                  <div className="text-xs text-gray-500">Deadline in 3 days</div>
+                  <p className="text-sm font-semibold text-gray-900">WhatsApp reminder</p>
+                  <p className="text-xs text-gray-500">&ldquo;ASMT-10 reply due in 3 days&rdquo;</p>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Capability strip */}
+        <div className="mx-auto mt-14 grid max-w-4xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-gray-100 bg-gray-100 shadow-lg shadow-gray-200/50 sm:mt-24 md:grid-cols-4">
+          {capabilities.map((c) => (
+            <div key={c.label} className="bg-white px-6 py-6 text-center">
+              <p className="text-gradient text-3xl font-extrabold">{c.value}</p>
+              <p className="mt-1.5 text-sm font-medium text-gray-600">{c.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

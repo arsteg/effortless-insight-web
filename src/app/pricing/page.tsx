@@ -162,15 +162,15 @@ export default function PricingPage() {
           />
           <FAQItem
             question="Is there a discount for annual billing?"
-            answer="Yes! When you choose annual billing, you save 20% compared to monthly billing. That's like getting 2+ months free!"
+            answer={`Yes — annual billing gives you 2 months free${averageAnnualDiscount ? ` (about ${averageAnnualDiscount}% less than paying monthly)` : ''}. The exact yearly price is shown on each plan card above.`}
           />
           <FAQItem
-            question="What happens when I exceed my plan limits?"
-            answer="We'll notify you when you're approaching your limits. You can upgrade your plan anytime to get more capacity. We never cut off access abruptly."
+            question="What happens when I reach my plan's notice limit?"
+            answer="New notices wait until you upgrade or your next monthly cycle begins — everything already in your account (notices, deadlines, documents, history) stays fully accessible. Upgrades take effect immediately."
           />
           <FAQItem
             question="Do you offer refunds?"
-            answer="We offer a 7-day money-back guarantee on all paid plans. If you're not satisfied, contact us within 7 days of your first payment for a full refund."
+            answer="Instead of a money-back scheme, we let you try everything free for 14 days before paying — no card needed. After that you can cancel anytime and your plan simply doesn't renew. Duplicate charges and billing errors are always refunded in full; see our Refund Policy for details."
           />
         </div>
       </section>
@@ -203,6 +203,9 @@ export default function PricingPage() {
               </Link>
               <Link href="/terms" className="text-sm text-gray-500 hover:text-gray-700">
                 Terms of Service
+              </Link>
+              <Link href="/refund" className="text-sm text-gray-500 hover:text-gray-700">
+                Refund Policy
               </Link>
               <Link href="/contact" className="text-sm text-gray-500 hover:text-gray-700">
                 Contact Us
@@ -310,7 +313,7 @@ function PricingCard({
       <CardFooter>
         {plan.contactSales ? (
           <Button className="w-full" variant="outline" asChild>
-            <a href="mailto:sales@effortlessinsight.com">Contact Sales</a>
+            <a href="mailto:info@arsteg.com">Contact Sales</a>
           </Button>
         ) : (
           <Button
@@ -358,10 +361,12 @@ function EmptyPlansState() {
             </div>
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            Plans Coming Soon
+            Pricing is taking a moment to load
           </h3>
           <p className="text-gray-600 mb-6">
-            We&apos;re setting up our pricing plans. Please check back shortly or contact us for more information.
+            Our plan catalog couldn&apos;t be reached just now. Retry in a few
+            seconds, or write to us and we&apos;ll send the current plans and
+            prices directly.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
@@ -371,7 +376,7 @@ function EmptyPlansState() {
               Retry
             </Button>
             <Button asChild>
-              <a href="mailto:support@effortlessinsight.com">Contact Support</a>
+              <a href="mailto:info@arsteg.com">Contact Support</a>
             </Button>
           </div>
         </CardContent>
