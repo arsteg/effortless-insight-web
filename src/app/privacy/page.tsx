@@ -57,8 +57,8 @@ export default function PrivacyPage() {
           ],
           bullets: [
             'Domains accessed — The extension operates only on services.gst.gov.in and www.gst.gov.in (to detect login and capture notice data), api.effortlessinsight.in (to sync notices), and effortlessinsight.in (for session sharing). No other websites are accessed.',
-            'Data stored locally — Authentication tokens, your user profile and organization name, notification preferences, offline sync queue, and due date reminder timestamps are stored locally in your browser using Chrome\'s storage API. This data is cleared when you sign out or uninstall the extension.',
-            'Technical information — When syncing, the extension sends browser type and version, operating system, extension version, and sync timestamps to help diagnose issues and ensure compatibility.',
+            'Data stored locally — Authentication tokens, your user profile and organization name, notification preferences, offline sync queue, due date reminder timestamps, extension configuration cache, last sync timestamp, and API environment selection are stored locally in your browser using Chrome\'s storage API. This data is cleared when you sign out or uninstall the extension.',
+            'Technical information — When syncing, the extension sends browser type and version, operating system, browser language, extension version, and sync timestamps to help diagnose issues and ensure compatibility.',
             'Desktop notifications — The extension displays notifications for sync status, due date reminders, and overdue alerts. You can configure these in the extension settings.',
             'No passwords — The extension never accesses, stores or transmits your GST portal password. It uses your existing browser session cookies for portal access.',
             'Data transmission — All data captured by the extension is transmitted over encrypted HTTPS connections and is subject to the same storage, retention and access controls described in this policy.',
