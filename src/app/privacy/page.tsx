@@ -4,19 +4,20 @@ import { LegalPage } from '@/components/landing/legal-page'
 export const metadata: Metadata = {
   title: 'Privacy Policy | EffortlessInsight',
   description:
-    'How EffortlessInsight collects, uses, protects and retains your data — including GST portal data, stored in India and never sold.',
+    'How EffortlessInsight and the GST Notice Guard browser extension collect, use, protect and retain your data — including GST portal data, stored in India and never sold.',
 }
 
 // NOTE(legal): This policy was drafted to accurately reflect the product's
 // actual behavior (OTP-based portal access, no password storage, AES-256 +
-// TLS, Indian data residency, 8-year retention). Have counsel review before
-// any claim here changes.
+// TLS, Indian data residency, 8-year retention) and the GST Notice Guard
+// Chrome extension (local storage, host permissions, notifications).
+// Have counsel review before any claim here changes.
 export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      updated="11 August 2026"
-      intro="EffortlessInsight helps Indian businesses, Chartered Accountants and finance teams manage GST notices. Doing that requires access to sensitive tax data, so we hold ourselves to a simple standard: collect only what the service needs, protect it seriously, keep it in India, and never sell it. This policy explains exactly what we collect and why."
+      updated="14 August 2026"
+      intro="EffortlessInsight helps Indian businesses, Chartered Accountants and finance teams manage GST notices through our web application and GST Notice Guard browser extension. Doing that requires access to sensitive tax data, so we hold ourselves to a simple standard: collect only what the service needs, protect it seriously, keep it in India, and never sell it. This policy explains exactly what we collect and why."
       sections={[
         {
           heading: 'What we collect',
@@ -47,6 +48,20 @@ export default function PrivacyPage() {
           heading: 'AI processing',
           paragraphs: [
             'Notice text is processed by AI models to produce summaries, risk assessments and draft replies. Where third-party AI model providers are used, data is sent under agreements that prohibit using your data to train their models. AI output is assistance, not professional tax advice, and is always presented alongside the original notice.',
+          ],
+        },
+        {
+          heading: 'Browser extension (GST Notice Guard)',
+          paragraphs: [
+            'We offer a Chrome browser extension called "GST Notice Guard" that automates GST notice capture from the GST portal. This section describes data practices specific to the extension.',
+          ],
+          bullets: [
+            'Domains accessed — The extension operates only on services.gst.gov.in and www.gst.gov.in (to detect login and capture notice data), api.effortlessinsight.in (to sync notices), and effortlessinsight.in (for session sharing). No other websites are accessed.',
+            'Data stored locally — Authentication tokens, your user profile and organization name, notification preferences, offline sync queue, and due date reminder timestamps are stored locally in your browser using Chrome\'s storage API. This data is cleared when you sign out or uninstall the extension.',
+            'Technical information — When syncing, the extension sends browser type and version, operating system, extension version, and sync timestamps to help diagnose issues and ensure compatibility.',
+            'Desktop notifications — The extension displays notifications for sync status, due date reminders, and overdue alerts. You can configure these in the extension settings.',
+            'No passwords — The extension never accesses, stores or transmits your GST portal password. It uses your existing browser session cookies for portal access.',
+            'Data transmission — All data captured by the extension is transmitted over encrypted HTTPS connections and is subject to the same storage, retention and access controls described in this policy.',
           ],
         },
         {
