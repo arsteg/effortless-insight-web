@@ -28,11 +28,15 @@ function SelectPlanContent() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
 
   const { data: plans, isLoading: isLoadingPlans } = usePlans()
-  const { data: subscription } = useCurrentSubscription()
+  const { data: subscription, isLoading: isLoadingSubscription } = useCurrentSubscription()
   const startTrial = useStartTrial()
 
   // Check if user has already used a trial (from subscription data)
   const hasUsedTrial = subscription?.hasUsedTrial ?? false
+
+  // Check if this is an expired trial - user should only see their trial plan
+  const isExpiredTrial = hasUsedTrial && subscription?.status === 'expired'
+  const trialPlanCode = subscription?.planCode
 
   const handleSelectPlan = async (plan: Plan) => {
     setSelectedPlan(plan.code)
@@ -71,7 +75,7 @@ function SelectPlanContent() {
     }
   }
 
-  if (isLoadingPlans) {
+  if (isLoadingPlans || isLoadingSubscription) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -80,7 +84,13 @@ function SelectPlanContent() {
   }
 
   // Filter out enterprise/contact sales plans for self-service
-  const availablePlans = plans?.filter((p) => !p.contactSales) || []
+  let availablePlans = plans?.filter((p) => !p.contactSales) || []
+
+  // If trial expired, only show the plan the user was trialing
+  // This ensures they subscribe to the same plan to restore their features
+  if (isExpiredTrial && trialPlanCode) {
+    availablePlans = availablePlans.filter((p) => p.code === trialPlanCode)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
@@ -89,17 +99,27 @@ function SelectPlanContent() {
         <div className="text-center mb-12">
           <Badge className="mb-4" variant="secondary">
             <Rocket className="mr-1 h-3 w-3" />
-            Welcome to EffortlessInsight
+            {isExpiredTrial ? 'Trial Expired' : 'Welcome to EffortlessInsight'}
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight mb-4">
-            Choose the right plan for{' '}
-            <span className="text-primary">your business</span>
+            {isExpiredTrial ? (
+              <>
+                Continue with your{' '}
+                <span className="text-primary">{subscription?.planName}</span> plan
+              </>
+            ) : (
+              <>
+                Choose the right plan for{' '}
+                <span className="text-primary">your business</span>
+              </>
+            )}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Start with a free trial and upgrade when you&apos;re ready. All plans include our core
-            GST notice management features.
+            {isExpiredTrial
+              ? 'Your trial has ended. Subscribe now to continue using all the features you had access to during your trial.'
+              : 'Start with a free trial and upgrade when you\'re ready. All plans include our core GST notice management features.'}
           </p>
-          {user?.name && (
+          {user?.name && !isExpiredTrial && (
             <p className="mt-2 text-sm text-muted-foreground">
               Hi <strong>{user.name}</strong>, let&apos;s get you started!
             </p>
@@ -112,7 +132,14 @@ function SelectPlanContent() {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div
+          className={cn(
+            'grid gap-6 mb-12',
+            isExpiredTrial
+              ? 'max-w-md mx-auto' // Single plan centered for expired trial
+              : 'md:grid-cols-2 lg:grid-cols-4'
+          )}
+        >
           {availablePlans.map((plan) => (
             <SelectablePlanCard
               key={plan.code}
@@ -121,6 +148,7 @@ function SelectPlanContent() {
               isSelected={selectedPlan === plan.code}
               isLoading={selectedPlan === plan.code && startTrial.isPending}
               hasUsedTrial={hasUsedTrial}
+              isExpiredTrial={isExpiredTrial}
               onSelect={() => handleSelectPlan(plan)}
             />
           ))}
@@ -175,6 +203,7 @@ interface SelectablePlanCardProps {
   isSelected: boolean
   isLoading: boolean
   hasUsedTrial: boolean
+  isExpiredTrial: boolean
   onSelect: () => void
 }
 
@@ -184,6 +213,7 @@ function SelectablePlanCard({
   isSelected,
   isLoading,
   hasUsedTrial,
+  isExpiredTrial,
   onSelect,
 }: SelectablePlanCardProps) {
   const price = billingCycle === 'annually' ? plan.pricing.annually : plan.pricing.monthly
@@ -194,7 +224,9 @@ function SelectablePlanCard({
 
   // Determine button text based on trial eligibility
   const getButtonText = () => {
-    if (isLoading) return 'Starting...'
+    if (isLoading) return 'Processing...'
+    // Expired trial - show clear subscribe action
+    if (isExpiredTrial) return 'Subscribe Now'
     // Only show trial button if plan has trial AND user hasn't used trial yet
     if (hasFreeTrial && !hasUsedTrial) return `Start ${plan.trialDays}-Day Free Trial`
     if (isFreePlan) return 'Get Started Free'
