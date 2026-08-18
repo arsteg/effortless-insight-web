@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BillingToggle } from '@/components/features/billing'
-import { usePlans, useStartTrial } from '@/hooks/use-billing'
+import { usePlans, useStartTrial, useCurrentSubscription } from '@/hooks/use-billing'
 import { useAuthStore } from '@/stores'
 import { formatAmount } from '@/lib/api/billing'
 import { cn } from '@/lib/utils'
@@ -28,7 +28,11 @@ function SelectPlanContent() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
 
   const { data: plans, isLoading: isLoadingPlans } = usePlans()
+  const { data: subscription } = useCurrentSubscription()
   const startTrial = useStartTrial()
+
+  // Check if user has already used a trial (from subscription data)
+  const hasUsedTrial = subscription?.hasUsedTrial ?? false
 
   const handleSelectPlan = async (plan: Plan) => {
     setSelectedPlan(plan.code)
@@ -36,8 +40,10 @@ function SelectPlanContent() {
     // Plan selection is stored in BillingSubscription table when trial starts
     // No need for localStorage - subscription data contains planCode and billingCycle
 
-    // If plan has trial days, start trial
-    if (plan.trialDays > 0) {
+    const isFreePlan = plan.pricing.monthly === 0 || plan.pricing.annually === 0
+
+    // If plan has trial days AND user hasn't used trial yet, start trial
+    if (plan.trialDays > 0 && !hasUsedTrial) {
       try {
         await startTrial.mutateAsync({
           planCode: plan.code,
@@ -48,8 +54,8 @@ function SelectPlanContent() {
       } catch {
         setSelectedPlan(null)
       }
-    } else if (plan.pricing.monthly === 0 || plan.pricing.annually === 0) {
-      // Free plan - start "trial" (which is essentially free forever)
+    } else if (isFreePlan) {
+      // Free plan - activate immediately
       try {
         await startTrial.mutateAsync({
           planCode: plan.code,
@@ -60,7 +66,7 @@ function SelectPlanContent() {
         setSelectedPlan(null)
       }
     } else {
-      // Paid plan without trial - go to checkout
+      // Paid plan (either no trial days OR user already used trial) - go to checkout
       router.push(`/checkout?plan=${plan.code}&billing=${billingCycle}`)
     }
   }
@@ -114,6 +120,7 @@ function SelectPlanContent() {
               billingCycle={billingCycle}
               isSelected={selectedPlan === plan.code}
               isLoading={selectedPlan === plan.code && startTrial.isPending}
+              hasUsedTrial={hasUsedTrial}
               onSelect={() => handleSelectPlan(plan)}
             />
           ))}
@@ -167,6 +174,7 @@ interface SelectablePlanCardProps {
   billingCycle: BillingCycle
   isSelected: boolean
   isLoading: boolean
+  hasUsedTrial: boolean
   onSelect: () => void
 }
 
@@ -175,6 +183,7 @@ function SelectablePlanCard({
   billingCycle,
   isSelected,
   isLoading,
+  hasUsedTrial,
   onSelect,
 }: SelectablePlanCardProps) {
   const price = billingCycle === 'annually' ? plan.pricing.annually : plan.pricing.monthly
@@ -183,10 +192,11 @@ function SelectablePlanCard({
 
   const features = getFeaturesToDisplay(plan)
 
-  // Determine button text
+  // Determine button text based on trial eligibility
   const getButtonText = () => {
     if (isLoading) return 'Starting...'
-    if (hasFreeTrial) return `Start ${plan.trialDays}-Day Free Trial`
+    // Only show trial button if plan has trial AND user hasn't used trial yet
+    if (hasFreeTrial && !hasUsedTrial) return `Start ${plan.trialDays}-Day Free Trial`
     if (isFreePlan) return 'Get Started Free'
     return 'Subscribe Now'
   }
@@ -231,7 +241,7 @@ function SelectablePlanCard({
               Save {plan.pricing.annualDiscount}% annually
             </Badge>
           )}
-          {hasFreeTrial && !isFreePlan && (
+          {hasFreeTrial && !isFreePlan && !hasUsedTrial && (
             <p className="text-sm text-green-600 mt-2 font-medium">
               {plan.trialDays}-day free trial included
             </p>

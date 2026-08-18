@@ -79,6 +79,7 @@ export interface Subscription {
   paymentMethod?: PaymentMethodSummary
   razorpaySubscriptionId?: string
   scheduledChange?: ScheduledChange
+  hasUsedTrial: boolean
 }
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'
