@@ -35,6 +35,11 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         return
       }
 
+      // Allow invitation pages for authenticated users (they need to accept/decline)
+      if (pathname.startsWith('/invitations/')) {
+        return
+      }
+
       // If on other auth pages (login, register, etc.) and authenticated
       if (pathname !== '/onboarding') {
         // Redirect to onboarding if no organization, otherwise to dashboard
@@ -47,10 +52,13 @@ export function AuthLayout({ children }: AuthLayoutProps) {
     }
   }, [isInitialized, isAuthenticated, user, pathname, router])
 
-  // Don't render auth pages (except onboarding) if authenticated with organization
+  // Don't render auth pages (except onboarding and invitations) if authenticated with organization
   if (isInitialized && isAuthenticated && user) {
     const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
-    if (pathname !== '/onboarding' && hasOrganization) {
+    // Allow invitation pages for authenticated users
+    if (pathname.startsWith('/invitations/')) {
+      // Continue rendering - user needs to accept/decline invitation
+    } else if (pathname !== '/onboarding' && hasOrganization) {
       return null
     }
     // Allow onboarding page for authenticated users without organization

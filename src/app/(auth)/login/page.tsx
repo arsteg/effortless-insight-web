@@ -229,7 +229,10 @@ function LoginForm() {
       <CardFooter className="flex flex-col space-y-4">
         <div className="text-sm text-center text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-primary hover:underline">
+          <Link
+            href={redirectTo !== '/dashboard' ? `/register?redirect=${encodeURIComponent(redirectTo)}` : '/register'}
+            className="text-primary hover:underline"
+          >
             Create an account
           </Link>
         </div>

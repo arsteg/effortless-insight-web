@@ -195,3 +195,13 @@ export interface InvitationListResponse {
   invitations: Invitation[]
   total: number
 }
+
+// Accept invitation response
+export interface AcceptInvitationResponse {
+  message: string
+  organization: {
+    id: string
+    name: string
+    role: OrganizationRole
+  }
+}

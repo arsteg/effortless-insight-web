@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertCircle, Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react'
@@ -33,9 +33,37 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { OAuthButtons } from '@/components/auth'
+import { Skeleton } from '@/components/ui/skeleton'
+
+function RegisterLoading() {
+  return (
+    <Card>
+      <CardHeader className="space-y-1">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-72" />
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </CardContent>
+    </Card>
+  )
+}
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<RegisterLoading />}>
+      <RegisterForm />
+    </Suspense>
+  )
+}
+
+function RegisterForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect')
   const { toast } = useToast()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -156,7 +184,9 @@ export default function RegisterPage() {
           </p>
           <div className="pt-4">
             <Button variant="outline" asChild>
-              <Link href="/login">Back to login</Link>
+              <Link href={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'}>
+                Back to login
+              </Link>
             </Button>
           </div>
         </CardContent>
@@ -387,7 +417,10 @@ export default function RegisterPage() {
       <CardFooter className="flex flex-col space-y-4">
         <div className="text-sm text-center text-muted-foreground">
           Already have an account?{' '}
-          <Link href="/login" className="text-primary hover:underline">
+          <Link
+            href={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'}
+            className="text-primary hover:underline"
+          >
             Sign in
           </Link>
         </div>
