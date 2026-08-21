@@ -103,6 +103,31 @@ class NotificationService {
         })
       })
 
+      // The API's InAppNotificationService actually sends "notification" with an
+      // envelope ({ type, payload }) and "badgeUpdate" ({ unreadCount }) — the
+      // handlers above cover an older contract and never fire for new
+      // notifications. Handle the real protocol here.
+      this.connection.on('notification', (message: { type?: string; payload?: Record<string, unknown> }) => {
+        const p = (message?.payload ?? message) as Record<string, unknown> | undefined
+        if (!p?.id) return
+        const notification = {
+          ...(p as unknown as Notification),
+          isRead: Boolean(p.isRead ?? p.read ?? false),
+        }
+        this.notifySubscribers({
+          type: 'new',
+          notification,
+          unreadCount: -1, // Will be updated by the component
+        })
+      })
+
+      this.connection.on('badgeUpdate', (data: { unreadCount: number }) => {
+        this.notifySubscribers({
+          type: 'new',
+          unreadCount: data.unreadCount,
+        })
+      })
+
       // Connection state change handlers
       this.connection.onreconnecting(() => {
         this.reconnectAttempts++
