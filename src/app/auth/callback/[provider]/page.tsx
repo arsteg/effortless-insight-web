@@ -78,7 +78,7 @@ function OAuthCallbackHandler() {
             return
           }
 
-          // Web flow - fetch user profile and redirect to dashboard
+          // Web flow - fetch user profile and redirect
           const user = await authApi.getMe()
           setUser(user)
 
@@ -88,7 +88,16 @@ function OAuthCallbackHandler() {
             variant: 'success',
           })
 
-          router.push('/dashboard')
+          // Check for stored redirect URL from OAuth flow
+          const storedRedirect = sessionStorage.getItem('oauth_redirect')
+          sessionStorage.removeItem('oauth_redirect')
+
+          // Validate redirect URL - only allow relative paths to prevent open redirect
+          const finalRedirect = storedRedirect && storedRedirect.startsWith('/')
+            ? storedRedirect
+            : '/dashboard'
+
+          router.push(finalRedirect)
         }
       } catch (err: unknown) {
         console.error('OAuth callback error:', err)

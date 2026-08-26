@@ -26,7 +26,7 @@ interface ErrorInfo {
 export default function AcceptInvitationPage() {
   const params = useParams()
   const router = useRouter()
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore()
+  const { isAuthenticated, isLoading: authLoading, isInitialized } = useAuthStore()
 
   const [state, setState] = useState<InvitationState>('loading')
   const [error, setError] = useState<ErrorInfo | null>(null)
@@ -34,9 +34,10 @@ export default function AcceptInvitationPage() {
 
   const token = params.token as string
 
-  // Wait for auth to load, then check if user is authenticated
+  // Wait for auth to initialize, then check if user is authenticated
   useEffect(() => {
-    if (authLoading) return
+    // Wait for auth store to be initialized (hydrated from localStorage)
+    if (!isInitialized || authLoading) return
 
     if (!isAuthenticated) {
       // Store the invitation URL to redirect back after login
@@ -47,7 +48,7 @@ export default function AcceptInvitationPage() {
 
     // User is authenticated, show the accept/decline UI
     setState('ready')
-  }, [authLoading, isAuthenticated, router])
+  }, [authLoading, isAuthenticated, isInitialized, router])
 
   const handleAccept = async () => {
     setState('accepting')
@@ -89,8 +90,8 @@ export default function AcceptInvitationPage() {
     }
   }
 
-  // Loading state (auth loading or initial state)
-  if (state === 'loading' || authLoading) {
+  // Loading state (auth loading, not initialized, or initial state)
+  if (state === 'loading' || authLoading || !isInitialized) {
     return (
       <Card>
         <CardHeader className="space-y-1 text-center">

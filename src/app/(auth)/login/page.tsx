@@ -224,7 +224,7 @@ function LoginForm() {
           </form>
         </Form>
 
-        <OAuthButtons mode="login" disabled={isLoading} />
+        <OAuthButtons mode="login" disabled={isLoading} redirectTo={redirectTo} />
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
         <div className="text-sm text-center text-muted-foreground">

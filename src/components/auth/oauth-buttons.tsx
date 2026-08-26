@@ -39,9 +39,10 @@ interface OAuthButtonsProps {
   mode?: 'login' | 'register'
   disabled?: boolean
   className?: string
+  redirectTo?: string
 }
 
-export function OAuthButtons({ mode = 'login', disabled = false, className }: OAuthButtonsProps) {
+export function OAuthButtons({ mode = 'login', disabled = false, className, redirectTo }: OAuthButtonsProps) {
   const [providers, setProviders] = useState<OAuthProviderInfo[]>([])
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -64,6 +65,13 @@ export function OAuthButtons({ mode = 'login', disabled = false, className }: OA
   const handleOAuthLogin = async (providerId: string) => {
     setLoadingProvider(providerId)
     try {
+      // Store redirect URL in sessionStorage for callback page to use
+      if (redirectTo) {
+        sessionStorage.setItem('oauth_redirect', redirectTo)
+      } else {
+        sessionStorage.removeItem('oauth_redirect')
+      }
+
       const response = await authApi.getOAuthLoginUrl(providerId)
       // Redirect to provider's login page
       window.location.assign(response.loginUrl)
