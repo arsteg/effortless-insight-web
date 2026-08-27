@@ -20,11 +20,24 @@ import type {
 
 export interface TwoFactorSetupResponse {
   secret: string
-  qrCodeUri: string
+  qrCodeDataUrl: string
 }
 
 export interface TwoFactorVerifySetupResponse {
   recoveryCodes: string[]
+}
+
+export interface TwoFactorLoginRequest {
+  partialToken: string
+  code: string
+}
+
+export interface TwoFactorLoginResponse {
+  accessToken: string
+  refreshToken: string
+  tokenType: string
+  expiresIn: number
+  backupCodeUsed: boolean
 }
 
 // OAuth types
@@ -174,6 +187,16 @@ export const authApi = {
 
   async disable2fa(password: string): Promise<void> {
     await apiClient.delete('/auth/2fa', { data: { password } })
+  },
+
+  async login2fa(partialToken: string, code: string): Promise<TwoFactorLoginResponse> {
+    const response = await apiClient.post<ApiResponse<TwoFactorLoginResponse>>(
+      '/auth/2fa/login',
+      { partialToken, code }
+    )
+    const result = response.data.data
+    setTokens(result.accessToken, result.refreshToken)
+    return result
   },
 
   // OAuth

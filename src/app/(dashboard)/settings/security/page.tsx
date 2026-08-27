@@ -438,7 +438,7 @@ export default function SecuritySettingsPage() {
               <div className="flex flex-col items-center gap-4 p-4 rounded-lg border bg-muted/50">
                 {/* eslint-disable-next-line @next/next/no-img-element -- data-URI QR code; next/image adds no optimization for inline data */}
                 <img
-                  src={setup2faMutation.data.qrCodeUri}
+                  src={setup2faMutation.data.qrCodeDataUrl}
                   alt="2FA QR Code"
                   className="h-48 w-48"
                 />

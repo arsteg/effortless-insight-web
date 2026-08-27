@@ -59,10 +59,11 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login } = useAuthStore()
+  const { login, twoFactor, completeTwoFactorLogin, clearTwoFactor } = useAuthStore()
   const { toast } = useToast()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [twoFactorCode, setTwoFactorCode] = useState('')
 
   const redirectTo = searchParams.get('redirect') || '/dashboard'
 
@@ -87,13 +88,16 @@ function LoginForm() {
         },
       })
 
-      toast({
-        title: 'Welcome back!',
-        description: 'You have successfully logged in.',
-        variant: 'success',
-      })
-
-      router.push(redirectTo)
+      // If 2FA is required, the login function returns without error
+      // but sets twoFactor.required = true, so we don't redirect
+      if (!useAuthStore.getState().twoFactor.required) {
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully logged in.',
+          variant: 'success',
+        })
+        router.push(redirectTo)
+      }
     } catch (error: unknown) {
       const message =
         error && typeof error === 'object' && 'message' in error
@@ -108,6 +112,97 @@ function LoginForm() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const onSubmit2fa = async () => {
+    if (twoFactorCode.length !== 6) return
+
+    setIsLoading(true)
+    try {
+      await completeTwoFactorLogin(twoFactorCode)
+
+      toast({
+        title: 'Welcome back!',
+        description: 'You have successfully logged in.',
+        variant: 'success',
+      })
+
+      router.push(redirectTo)
+    } catch (error: unknown) {
+      const message =
+        error && typeof error === 'object' && 'message' in error
+          ? (error as { message: string }).message
+          : 'Invalid verification code. Please try again.'
+
+      toast({
+        title: 'Verification failed',
+        description: message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleBackToLogin = () => {
+    clearTwoFactor()
+    setTwoFactorCode('')
+  }
+
+  // Show 2FA verification form if required
+  if (twoFactor.required) {
+    return (
+      <Card>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">Two-Factor Authentication</CardTitle>
+          <CardDescription>
+            Enter the verification code from your authenticator app
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Input
+              type="text"
+              inputMode="numeric"
+              placeholder="000000"
+              value={twoFactorCode}
+              onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              maxLength={6}
+              className="text-center text-lg font-mono tracking-widest"
+              disabled={isLoading}
+              autoFocus
+            />
+            <p className="text-sm text-muted-foreground text-center">
+              Enter the 6-digit code from your authenticator app
+            </p>
+          </div>
+
+          <Button
+            onClick={onSubmit2fa}
+            className="w-full"
+            disabled={isLoading || twoFactorCode.length !== 6}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              'Verify'
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full"
+            onClick={handleBackToLogin}
+            disabled={isLoading}
+          >
+            Back to login
+          </Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

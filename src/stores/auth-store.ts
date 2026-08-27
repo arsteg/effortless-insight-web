@@ -29,19 +29,34 @@ async function deactivatePushTokenOnLogout(): Promise<void> {
   }
 }
 
+interface TwoFactorState {
+  required: boolean
+  partialToken: string | null
+  methods: string[]
+}
+
 interface AuthState {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
   isInitialized: boolean
+  twoFactor: TwoFactorState
 
   // Actions
   initialize: () => Promise<void>
   login: (credentials: LoginRequest) => Promise<void>
+  completeTwoFactorLogin: (code: string) => Promise<void>
+  clearTwoFactor: () => void
   register: (data: RegisterRequest) => Promise<void>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
   setUser: (user: User | null) => void
+}
+
+const initialTwoFactorState: TwoFactorState = {
+  required: false,
+  partialToken: null,
+  methods: [],
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -51,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       isInitialized: false,
+      twoFactor: initialTwoFactorState,
 
       initialize: async () => {
         const token = getAccessToken()
@@ -91,25 +107,61 @@ export const useAuthStore = create<AuthState>()(
       },
 
       login: async (credentials: LoginRequest) => {
-        set({ isLoading: true })
+        set({ isLoading: true, twoFactor: initialTwoFactorState })
         try {
           const result = await authApi.login(credentials)
 
           // Check if 2FA is required
           if ('requires2fa' in result) {
-            set({ isLoading: false })
-            throw new Error('2FA_REQUIRED')
+            set({
+              isLoading: false,
+              twoFactor: {
+                required: true,
+                partialToken: result.partialToken,
+                methods: result.methods,
+              },
+            })
+            return
           }
 
           set({
             user: result.user,
             isAuthenticated: true,
             isLoading: false,
+            twoFactor: initialTwoFactorState,
+          })
+        } catch (error) {
+          set({ isLoading: false, twoFactor: initialTwoFactorState })
+          throw error
+        }
+      },
+
+      completeTwoFactorLogin: async (code: string) => {
+        const { twoFactor } = get()
+        if (!twoFactor.partialToken) {
+          throw new Error('No 2FA session found')
+        }
+
+        set({ isLoading: true })
+        try {
+          await authApi.login2fa(twoFactor.partialToken, code)
+          // Get user after successful 2FA login
+          const user = await authApi.getMe()
+
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+            twoFactor: initialTwoFactorState,
           })
         } catch (error) {
           set({ isLoading: false })
           throw error
         }
+      },
+
+      clearTwoFactor: () => {
+        set({ twoFactor: initialTwoFactorState })
       },
 
       register: async (data: RegisterRequest) => {
@@ -140,6 +192,7 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             isAuthenticated: false,
             isLoading: false,
+            twoFactor: initialTwoFactorState,
           })
         }
       },
