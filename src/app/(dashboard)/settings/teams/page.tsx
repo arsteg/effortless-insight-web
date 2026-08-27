@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Loader2, Pencil, Plus, Trash2, Users, X } from 'lucide-react'
+import { ArrowLeft, EyeOff, Loader2, Pencil, Plus, Trash2, Users, X } from 'lucide-react'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -57,6 +58,7 @@ import {
   useUpdateTeam,
   useDeleteTeam,
 } from '@/hooks/use-collaboration'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { Team } from '@/types/collaboration'
 
 const teamSchema = z.object({
@@ -77,9 +79,13 @@ function getInitials(name: string): string {
 
 export default function TeamsSettingsPage() {
   const { toast } = useToast()
+  const { isAdmin } = usePermissions()
   const [showForm, setShowForm] = useState(false)
   const [editingTeam, setEditingTeam] = useState<Team | null>(null)
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null)
+
+  // Non-admins have read-only access
+  const canEdit = isAdmin
 
   const { data: teams, isLoading } = useTeams()
   const createMutation = useCreateTeam()
@@ -123,11 +129,23 @@ export default function TeamsSettingsPage() {
             Group members into teams so whole teams can be assigned to tasks at once.
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-1 h-4 w-4" />
-          New Team
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="mr-1 h-4 w-4" />
+            New Team
+          </Button>
+        )}
       </div>
+
+      {/* Read-only banner for non-admins */}
+      {!canEdit && (
+        <Alert>
+          <EyeOff className="h-4 w-4" />
+          <AlertDescription>
+            You have view-only access to team settings. Contact your administrator to make changes.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Team list */}
       {isLoading ? (
@@ -154,10 +172,12 @@ export default function TeamsSettingsPage() {
                 Create teams like &quot;Compliance&quot; or &quot;Litigation&quot; and assign them
                 to tasks — every team member automatically becomes an assignee.
               </p>
-              <Button className="mt-4" onClick={() => setShowForm(true)}>
-                <Plus className="mr-1 h-4 w-4" />
-                Create your first team
-              </Button>
+              {canEdit && (
+                <Button className="mt-4" onClick={() => setShowForm(true)}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Create your first team
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -167,6 +187,7 @@ export default function TeamsSettingsPage() {
             <TeamCard
               key={team.id}
               team={team}
+              canEdit={canEdit}
               onEdit={() => setEditingTeam(team)}
               onDelete={() => setDeletingTeam(team)}
             />
@@ -271,10 +292,12 @@ export default function TeamsSettingsPage() {
 
 function TeamCard({
   team,
+  canEdit,
   onEdit,
   onDelete,
 }: {
   team: Team
+  canEdit: boolean
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -294,21 +317,23 @@ function TeamCard({
               <CardDescription className="mt-1 line-clamp-2">{team.description}</CardDescription>
             )}
           </div>
-          <div className="flex shrink-0 gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
-              <Pencil className="h-4 w-4" />
-              <span className="sr-only">Edit team</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-              onClick={onDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">Delete team</span>
-            </Button>
-          </div>
+          {canEdit && (
+            <div className="flex shrink-0 gap-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+                <Pencil className="h-4 w-4" />
+                <span className="sr-only">Edit team</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={onDelete}
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="sr-only">Delete team</span>
+              </Button>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>

@@ -41,6 +41,7 @@ import {
 } from '@/hooks/use-attachments'
 import { useWorkflowPanel } from '@/hooks/use-workflow'
 import { useMembers } from '@/hooks/use-team'
+import { usePermissions } from '@/hooks/use-permissions'
 import { noticesApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import type { NoticeActivity } from '@/components/features/notices/activity-timeline'
@@ -55,6 +56,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const router = useRouter()
   const { toast } = useToast()
   const { id: noticeId } = use(params)
+  const { canEditNotices, canDeleteNotices } = usePermissions()
 
   // State
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -156,9 +158,9 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
       <NoticeHeader
         notice={notice}
         isLoading={isLoadingNotice}
-        onEdit={notice ? () => setShowEditDialog(true) : undefined}
+        onEdit={notice && canEditNotices ? () => setShowEditDialog(true) : undefined}
         onDownload={notice?.fileUrl ? handleDownloadNotice : undefined}
-        onDelete={() => setShowDeleteDialog(true)}
+        onDelete={canDeleteNotices ? () => setShowDeleteDialog(true) : undefined}
       />
 
       {/* Main Content with Workflow Panel */}
@@ -301,8 +303,8 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </div>
       </div>
 
-      {/* Edit Notice Dialog */}
-      {notice && (
+      {/* Edit Notice Dialog - only render if user has edit permissions */}
+      {notice && canEditNotices && (
         <EditNoticeDialog
           notice={notice}
           open={showEditDialog}
@@ -310,7 +312,8 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog - only render if user has delete permissions */}
+      {canDeleteNotices && (
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
@@ -345,6 +348,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      )}
     </div>
   )
 }

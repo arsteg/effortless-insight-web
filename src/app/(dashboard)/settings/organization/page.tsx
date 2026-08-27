@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Building2, Loader2, MapPin, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Building2, EyeOff, Loader2, MapPin, Plus, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -38,6 +39,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useOrganization, useUpdateOrganization, useAddGstin, useRemoveGstin, useValidateGstin } from '@/hooks/use-settings'
+import { usePermissions } from '@/hooks/use-permissions'
 
 const organizationFormSchema = z.object({
   name: z.string().min(2, 'Organization name must be at least 2 characters'),
@@ -81,8 +83,12 @@ export default function OrganizationSettingsPage() {
   const addGstinMutation = useAddGstin()
   const removeGstinMutation = useRemoveGstin()
   const validateGstinMutation = useValidateGstin()
+  const { isAdmin } = usePermissions()
 
   const [showAddGstinDialog, setShowAddGstinDialog] = useState(false)
+
+  // Non-admins have read-only access
+  const canEdit = isAdmin
 
   const form = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationFormSchema),
@@ -175,6 +181,16 @@ export default function OrganizationSettingsPage() {
         </div>
       </div>
 
+      {/* Read-only banner for non-admins */}
+      {!canEdit && (
+        <Alert>
+          <EyeOff className="h-4 w-4" />
+          <AlertDescription>
+            You have view-only access to organization settings. Contact your administrator to make changes.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Organization Details Form */}
       <Card>
         <CardHeader>
@@ -197,7 +213,7 @@ export default function OrganizationSettingsPage() {
                     <FormItem>
                       <FormLabel>Organization Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="My Company" {...field} />
+                        <Input placeholder="My Company" disabled={!canEdit} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -211,7 +227,7 @@ export default function OrganizationSettingsPage() {
                     <FormItem>
                       <FormLabel>Legal Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="My Company Pvt. Ltd." {...field} />
+                        <Input placeholder="My Company Pvt. Ltd." disabled={!canEdit} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -225,7 +241,7 @@ export default function OrganizationSettingsPage() {
                     <FormItem>
                       <FormLabel>Display Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Optional display name" {...field} />
+                        <Input placeholder="Optional display name" disabled={!canEdit} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -238,7 +254,7 @@ export default function OrganizationSettingsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Industry</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!canEdit}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select industry" />
@@ -268,7 +284,7 @@ export default function OrganizationSettingsPage() {
                     <FormItem>
                       <FormLabel>Business Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="info@company.com" {...field} />
+                        <Input type="email" placeholder="info@company.com" disabled={!canEdit} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -282,7 +298,7 @@ export default function OrganizationSettingsPage() {
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
                       <FormControl>
-                        <Input placeholder="+91 11 1234 5678" {...field} />
+                        <Input placeholder="+91 11 1234 5678" disabled={!canEdit} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -296,7 +312,7 @@ export default function OrganizationSettingsPage() {
                     <FormItem>
                       <FormLabel>Website</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://www.company.com" {...field} />
+                        <Input placeholder="https://www.company.com" disabled={!canEdit} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -310,7 +326,7 @@ export default function OrganizationSettingsPage() {
                     <FormItem>
                       <FormLabel>PAN</FormLabel>
                       <FormControl>
-                        <Input placeholder="AAAAA0000A" {...field} />
+                        <Input placeholder="AAAAA0000A" disabled={!canEdit} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -318,16 +334,18 @@ export default function OrganizationSettingsPage() {
                 />
               </div>
 
-              <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </Button>
+              {canEdit && (
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </Button>
+              )}
             </form>
           </Form>
         </CardContent>
@@ -343,10 +361,12 @@ export default function OrganizationSettingsPage() {
                 GST identification numbers linked to this organization.
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setShowAddGstinDialog(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add GSTIN
-            </Button>
+            {canEdit && (
+              <Button variant="outline" size="sm" onClick={() => setShowAddGstinDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add GSTIN
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -379,7 +399,7 @@ export default function OrganizationSettingsPage() {
                     >
                       {gstin.status}
                     </Badge>
-                    {!gstin.isPrimary && (
+                    {canEdit && !gstin.isPrimary && (
                       <Button
                         variant="ghost"
                         size="icon"

@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   ClipboardList,
   Clock,
+  EyeOff,
   Loader2,
   Plus,
   Tag,
@@ -16,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -58,6 +60,7 @@ import {
   useCreateTaskTemplate,
   useDeleteTaskTemplate,
 } from '@/hooks/use-collaboration'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { TaskTemplate, TaskPriority } from '@/types/collaboration'
 import { cn } from '@/lib/utils'
 
@@ -95,8 +98,12 @@ type TemplateFormData = z.infer<typeof templateSchema>
 
 export default function TaskTemplatesPage() {
   const { toast } = useToast()
+  const { isViewer } = usePermissions()
   const [showForm, setShowForm] = useState(false)
   const [deletingTemplate, setDeletingTemplate] = useState<TaskTemplate | null>(null)
+
+  // Viewers have read-only access
+  const canEdit = !isViewer
 
   const { data: templates, isLoading } = useTaskTemplates()
   const createMutation = useCreateTaskTemplate()
@@ -138,11 +145,23 @@ export default function TaskTemplatesPage() {
             Reusable task definitions your team can apply when creating tasks on a notice.
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-1 h-4 w-4" />
-          New Template
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="mr-1 h-4 w-4" />
+            New Template
+          </Button>
+        )}
       </div>
+
+      {/* Read-only banner for viewers */}
+      {!canEdit && (
+        <Alert>
+          <EyeOff className="h-4 w-4" />
+          <AlertDescription>
+            You have view-only access to task templates. Contact your administrator to make changes.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Template list */}
       {isLoading ? (
@@ -171,10 +190,12 @@ export default function TaskTemplatesPage() {
                 labels — handy for recurring work like &quot;Draft reply&quot; or &quot;Reconcile
                 ITC&quot; on common notice types.
               </p>
-              <Button className="mt-4" onClick={() => setShowForm(true)}>
-                <Plus className="mr-1 h-4 w-4" />
-                Create your first template
-              </Button>
+              {canEdit && (
+                <Button className="mt-4" onClick={() => setShowForm(true)}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Create your first template
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -184,6 +205,7 @@ export default function TaskTemplatesPage() {
             <TemplateCard
               key={template.id}
               template={template}
+              canEdit={canEdit}
               onDelete={() => setDeletingTemplate(template)}
             />
           ))}
@@ -274,9 +296,11 @@ export default function TaskTemplatesPage() {
 
 function TemplateCard({
   template,
+  canEdit,
   onDelete,
 }: {
   template: TaskTemplate
+  canEdit: boolean
   onDelete: () => void
 }) {
   const priority = PRIORITY_OPTIONS.find((p) => p.value === template.defaultPriority)
@@ -297,15 +321,17 @@ function TemplateCard({
               </CardDescription>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
-            onClick={onDelete}
-          >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Delete template</span>
-          </Button>
+          {canEdit && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Delete template</span>
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">

@@ -10,7 +10,9 @@ import {
   History,
   UserPlus,
   Settings2,
+  ShieldAlert,
 } from 'lucide-react';
+import { usePermissions } from '@/hooks/use-permissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -77,12 +79,13 @@ export function WorkflowPanel({
   const [transitionDialogOpen, setTransitionDialogOpen] = useState(false);
   const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
   const [historyExpanded, setHistoryExpanded] = useState(false);
+  const { canTransitionWorkflow } = usePermissions();
 
   if (isLoading) {
     return <WorkflowPanelSkeleton className={className} />;
   }
 
-  // No workflow instance - show start workflow button
+  // No workflow instance - show start workflow button or access restricted message
   if (!workflowInstance) {
     return (
       <Card className={className}>
@@ -97,10 +100,17 @@ export function WorkflowPanel({
             <p className="text-muted-foreground mb-4">
               No workflow has been started for this notice.
             </p>
-            {onStartWorkflow && (
-              <Button onClick={onStartWorkflow} disabled={isTransitioning}>
-                Start Workflow
-              </Button>
+            {canTransitionWorkflow ? (
+              onStartWorkflow && (
+                <Button onClick={onStartWorkflow} disabled={isTransitioning}>
+                  Start Workflow
+                </Button>
+              )
+            ) : (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <ShieldAlert className="h-4 w-4" />
+                <span>View-only access. Contact your administrator to start workflows.</span>
+              </div>
             )}
           </div>
         </CardContent>

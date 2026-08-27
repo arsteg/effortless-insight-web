@@ -29,6 +29,7 @@ import { StatusDropdown } from './status-dropdown'
 import { PriorityBadge } from './priority-badge'
 import { RiskBadge } from './risk-badge'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { NoticeDetail } from '@/types'
 
 interface NoticeHeaderProps {
@@ -52,6 +53,8 @@ export function NoticeHeader({
   onArchive,
   onDelete,
 }: NoticeHeaderProps) {
+  const { canEditNotices, canDeleteNotices, canAssignNotices } = usePermissions()
+
   if (isLoading) {
     return <NoticeHeaderSkeleton />
   }
@@ -85,7 +88,7 @@ export function NoticeHeader({
           Back to Notices
         </Link>
         <div className="flex items-center gap-2">
-          {onEdit && (
+          {onEdit && canEditNotices && (
             <Button variant="outline" size="sm" onClick={onEdit}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
@@ -97,37 +100,42 @@ export function NoticeHeader({
               Download
             </Button>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {onAssign && (
-                <DropdownMenuItem onClick={onAssign}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Assign
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              {onArchive && (
-                <DropdownMenuItem onClick={onArchive}>
-                  <Archive className="mr-2 h-4 w-4" />
-                  Archive
-                </DropdownMenuItem>
-              )}
-              {onDelete && (
-                <DropdownMenuItem
-                  onClick={onDelete}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Only show dropdown menu if user has any permissions for the actions */}
+          {(canAssignNotices || canEditNotices || canDeleteNotices) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onAssign && canAssignNotices && (
+                  <DropdownMenuItem onClick={onAssign}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Assign
+                  </DropdownMenuItem>
+                )}
+                {canAssignNotices && (canEditNotices || canDeleteNotices) && (
+                  <DropdownMenuSeparator />
+                )}
+                {onArchive && canEditNotices && (
+                  <DropdownMenuItem onClick={onArchive}>
+                    <Archive className="mr-2 h-4 w-4" />
+                    Archive
+                  </DropdownMenuItem>
+                )}
+                {onDelete && canDeleteNotices && (
+                  <DropdownMenuItem
+                    onClick={onDelete}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 

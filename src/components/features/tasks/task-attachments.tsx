@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/hooks/use-toast'
+import { usePermissions } from '@/hooks/use-permissions'
 import {
   useTaskAttachments,
   useUploadTaskAttachment,
@@ -30,6 +31,7 @@ interface TaskAttachmentsProps {
 
 export function TaskAttachments({ taskId, className }: TaskAttachmentsProps) {
   const { toast } = useToast()
+  const { canEditTasks, canDeleteTasks } = usePermissions()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: attachments, isLoading } = useTaskAttachments(taskId)
@@ -129,30 +131,34 @@ export function TaskAttachments({ taskId, className }: TaskAttachmentsProps) {
               <span className="text-sm font-normal text-muted-foreground">({items.length})</span>
             )}
           </CardTitle>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadMutation.isPending}
-          >
-            {uploadMutation.isPending ? (
-              <>
-                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="mr-1 h-4 w-4" />
-                Upload
-              </>
-            )}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={handleFileSelected}
-          />
+          {canEditTasks && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadMutation.isPending}
+              >
+                {uploadMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-1 h-4 w-4" />
+                    Upload
+                  </>
+                )}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileSelected}
+              />
+            </>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -198,16 +204,18 @@ export function TaskAttachments({ taskId, className }: TaskAttachmentsProps) {
                     <Download className="h-3.5 w-3.5" />
                     <span className="sr-only">Download</span>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 hover:text-destructive"
-                    onClick={() => handleDelete(attachment.id, attachment.fileName)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
+                  {canDeleteTasks && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 hover:text-destructive"
+                      onClick={() => handleDelete(attachment.id, attachment.fileName)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

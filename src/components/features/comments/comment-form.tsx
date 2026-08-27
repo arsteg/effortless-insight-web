@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Send, Loader2, Lock, AtSign, Smile } from 'lucide-react'
+import { Send, Loader2, Lock, AtSign, Smile, EyeOff } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -19,6 +19,7 @@ import {
   parseMentions,
 } from './mention-autocomplete'
 import { ALLOWED_REACTIONS } from '@/types/collaboration'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { CommentVisibility } from '@/types/collaboration'
 
 interface MentionUser {
@@ -56,11 +57,24 @@ export function CommentForm({
   isEditing = false,
   className,
 }: CommentFormProps) {
+  const { canComment } = usePermissions()
   const [content, setContent] = useState(initialContent)
   const [visibility, setVisibility] = useState<CommentVisibility>(defaultVisibility)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const mention = useMentionAutocomplete(availableUsers)
+
+  // Show read-only message for viewers
+  if (!canComment) {
+    return (
+      <div className={cn('rounded-lg border bg-muted/50 px-4 py-3', className)}>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <EyeOff className="h-4 w-4" />
+          <span>You have view-only access. Contact your administrator to enable commenting.</span>
+        </div>
+      </div>
+    )
+  }
 
   // Reset content when initialContent changes (for edit mode)
   useEffect(() => {

@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -35,15 +36,20 @@ import {
   useSetDefaultPaymentMethod,
   useDeletePaymentMethod,
 } from '@/hooks/use-billing'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { BillingCycle } from '@/types/billing'
 
 export default function BillingSettingsPage() {
   const router = useRouter()
+  const { isOwner } = usePermissions()
   const [showChangePlanModal, setShowChangePlanModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showPauseModal, setShowPauseModal] = useState(false)
   const [showAddSeatsModal, setShowAddSeatsModal] = useState(false)
   const [invoicePage, setInvoicePage] = useState(1)
+
+  // Non-owners have read-only access to billing
+  const canEdit = isOwner
 
   // Queries
   const { data: subscription, isLoading: isLoadingSubscription } = useCurrentSubscription()
@@ -231,17 +237,27 @@ export default function BillingSettingsPage() {
         </div>
       </div>
 
+      {/* Read-only banner for non-owners */}
+      {!canEdit && (
+        <Alert>
+          <EyeOff className="h-4 w-4" />
+          <AlertDescription>
+            You have view-only access to billing settings. Only the organization owner can make changes.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Current Plan */}
       <CurrentPlanCard
         subscription={subscription}
         isLoading={isLoadingSubscription}
-        onUpgrade={handleUpgrade}
-        onAddSeats={handleAddSeats}
-        canAddSeats={canAddSeats}
-        onCancel={handleCancel}
-        onPause={handlePause}
-        onResume={handleResume}
-        onReactivate={handleReactivate}
+        onUpgrade={canEdit ? handleUpgrade : undefined}
+        onAddSeats={canEdit ? handleAddSeats : undefined}
+        canAddSeats={canEdit && canAddSeats}
+        onCancel={canEdit ? handleCancel : undefined}
+        onPause={canEdit ? handlePause : undefined}
+        onResume={canEdit ? handleResume : undefined}
+        onReactivate={canEdit ? handleReactivate : undefined}
       />
 
       {/* Usage */}
@@ -251,8 +267,8 @@ export default function BillingSettingsPage() {
       <PaymentMethods
         paymentMethods={paymentMethods}
         isLoading={isLoadingPaymentMethods}
-        onSetDefault={(id) => setDefaultPaymentMethod.mutate(id)}
-        onDelete={(id) => deletePaymentMethod.mutate(id)}
+        onSetDefault={canEdit ? (id) => setDefaultPaymentMethod.mutate(id) : undefined}
+        onDelete={canEdit ? (id) => deletePaymentMethod.mutate(id) : undefined}
         isSettingDefault={setDefaultPaymentMethod.isPending}
         isDeleting={deletePaymentMethod.isPending}
       />

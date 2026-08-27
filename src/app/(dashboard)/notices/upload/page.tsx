@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, HelpCircle, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { ArrowLeft, HelpCircle, CheckCircle, XCircle, Loader2, ShieldAlert } from 'lucide-react'
 
 import {
   Card,
@@ -23,11 +23,50 @@ import {
   DuplicateWarning,
 } from '@/components/features/upload'
 import { useUploadMultipleNotices } from '@/hooks/use-upload'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { DuplicateWarning as DuplicateWarningType } from '@/types'
 
 type UploadStep = 'select' | 'confirm-duplicate' | 'uploading' | 'complete' | 'error'
 
 export default function UploadNoticePage() {
+  const { canUploadNotices } = usePermissions()
+
+  // Block viewers from accessing this page
+  if (!canUploadNotices) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Link
+            href="/notices"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back to Notices
+          </Link>
+          <h1 className="text-3xl font-bold tracking-tight">Upload Notices</h1>
+        </div>
+
+        <Card className="max-w-md">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="rounded-full bg-muted p-3">
+                <ShieldAlert className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Access Restricted</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  You don&apos;t have permission to upload notices. Please contact your organization administrator if you need upload access.
+                </p>
+              </div>
+              <Link href="/notices" className={buttonVariants({ variant: 'default' })}>
+                View Notices
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
   const [step, setStep] = useState<UploadStep>('select')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [duplicateWarning, setDuplicateWarning] = useState<DuplicateWarningType | null>(null)

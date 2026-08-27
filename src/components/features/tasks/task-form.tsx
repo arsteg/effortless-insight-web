@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, X, Plus, Clock, Users, Tag, FileText } from 'lucide-react'
+import { Loader2, X, Plus, Clock, Users, Tag, FileText, EyeOff } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +42,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { useTaskTemplates, useTeams } from '@/hooks/use-collaboration'
+import { usePermissions } from '@/hooks/use-permissions'
 import type {
   Task,
   TaskDetail,
@@ -121,6 +122,7 @@ export function TaskForm({
   onCancel,
   isLoading = false,
 }: TaskFormProps) {
+  const { canCreateTasks, canEditTasks } = usePermissions()
   const isEditing = !!task
   const [labelInput, setLabelInput] = useState('')
   const [assigneePopoverOpen, setAssigneePopoverOpen] = useState(false)
@@ -128,6 +130,30 @@ export function TaskForm({
 
   const { data: templates } = useTaskTemplates(noticeType)
   const { data: teams } = useTeams()
+
+  // Check permissions based on whether we're creating or editing
+  const hasPermission = isEditing ? canEditTasks : canCreateTasks
+
+  // Show read-only message for viewers
+  if (!hasPermission) {
+    return (
+      <div className="rounded-lg border bg-muted/50 px-4 py-6">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <EyeOff className="h-8 w-8 text-muted-foreground" />
+          <div>
+            <p className="font-medium">View-only Access</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              You don&apos;t have permission to {isEditing ? 'edit tasks' : 'create tasks'}.
+              Contact your administrator for access.
+            </p>
+          </div>
+          <Button variant="outline" onClick={onCancel}>
+            Close
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
