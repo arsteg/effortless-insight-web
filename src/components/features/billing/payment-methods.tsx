@@ -27,8 +27,8 @@ import type { PaymentMethod } from '@/types/billing'
 interface PaymentMethodsProps {
   paymentMethods?: PaymentMethod[]
   isLoading?: boolean
-  onSetDefault: (id: string) => void
-  onDelete: (id: string) => void
+  onSetDefault?: (id: string) => void
+  onDelete?: (id: string) => void
   isSettingDefault?: boolean
   isDeleting?: boolean
 }
@@ -71,11 +71,14 @@ export function PaymentMethods({
   }
 
   const handleDelete = () => {
-    if (deleteId) {
+    if (deleteId && onDelete) {
       onDelete(deleteId)
       setDeleteId(null)
     }
   }
+
+  // Check if any actions are available
+  const hasActions = !!onSetDefault || !!onDelete
 
   return (
     <>
@@ -99,9 +102,10 @@ export function PaymentMethods({
                 <PaymentMethodItem
                   key={method.id}
                   method={method}
-                  onSetDefault={() => onSetDefault(method.id)}
-                  onDelete={() => setDeleteId(method.id)}
+                  onSetDefault={onSetDefault ? () => onSetDefault(method.id) : undefined}
+                  onDelete={onDelete ? () => setDeleteId(method.id) : undefined}
                   isSettingDefault={isSettingDefault}
+                  hasActions={hasActions}
                 />
               ))}
             </div>
@@ -135,9 +139,10 @@ export function PaymentMethods({
 
 interface PaymentMethodItemProps {
   method: PaymentMethod
-  onSetDefault: () => void
-  onDelete: () => void
+  onSetDefault?: () => void
+  onDelete?: () => void
   isSettingDefault?: boolean
+  hasActions?: boolean
 }
 
 function PaymentMethodItem({
@@ -145,6 +150,7 @@ function PaymentMethodItem({
   onSetDefault,
   onDelete,
   isSettingDefault,
+  hasActions = true,
 }: PaymentMethodItemProps) {
   const getIcon = () => {
     switch (method.type) {
@@ -224,33 +230,37 @@ function PaymentMethodItem({
         </div>
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="h-4 w-4" />
-            <span className="sr-only">More options</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {!method.isDefault && (
-            <DropdownMenuItem
-              onClick={onSetDefault}
-              disabled={isSettingDefault}
-            >
-              <Check className="mr-2 h-4 w-4" />
-              Set as default
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem
-            onClick={onDelete}
-            className="text-destructive focus:text-destructive"
-            disabled={method.isDefault}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {hasActions && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-4 w-4" />
+              <span className="sr-only">More options</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {onSetDefault && !method.isDefault && (
+              <DropdownMenuItem
+                onClick={onSetDefault}
+                disabled={isSettingDefault}
+              >
+                <Check className="mr-2 h-4 w-4" />
+                Set as default
+              </DropdownMenuItem>
+            )}
+            {onDelete && (
+              <DropdownMenuItem
+                onClick={onDelete}
+                className="text-destructive focus:text-destructive"
+                disabled={method.isDefault}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   )
 }
