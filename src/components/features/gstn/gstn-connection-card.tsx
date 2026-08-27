@@ -45,10 +45,10 @@ function sanitizeErrorMessage(message: string): string {
 
 interface GstnConnectionCardProps {
   connection: GstnConnection;
-  onConnectInitiated: (gstinId: string, destination: string) => void;
-  onSettings: (connection: GstnConnection) => void;
-  onHistory: (connection: GstnConnection) => void;
-  onDisconnect: (connection: GstnConnection) => void;
+  onConnectInitiated?: (gstinId: string, destination: string) => void;
+  onSettings?: (connection: GstnConnection) => void;
+  onHistory?: (connection: GstnConnection) => void;
+  onDisconnect?: (connection: GstnConnection) => void;
 }
 
 export function GstnConnectionCard({
@@ -62,6 +62,7 @@ export function GstnConnectionCard({
   const triggerSync = useTriggerSync();
 
   const handleConnect = async () => {
+    if (!onConnectInitiated) return;
     try {
       const result = await initiateConnection.mutateAsync(connection.organizationGstinId);
       if (result.success && result.otpDestination) {
@@ -71,6 +72,9 @@ export function GstnConnectionCard({
       // Error is handled by the mutation's onError callback
     }
   };
+
+  // Check if any dropdown actions are available
+  const hasDropdownActions = !!onSettings || !!onHistory || !!onDisconnect;
 
   const handleSync = () => {
     triggerSync.mutate(connection.organizationGstinId);
@@ -92,7 +96,7 @@ export function GstnConnectionCard({
             <Badge className={getStatusColor(connection.status)} variant="outline">
               {getStatusLabel(connection.status)}
             </Badge>
-            {connection.isConnected && (
+            {connection.isConnected && hasDropdownActions && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -100,22 +104,28 @@ export function GstnConnectionCard({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onSettings(connection)}>
-                    <Settings2 className="h-4 w-4 mr-2" />
-                    Sync Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onHistory(connection)}>
-                    <History className="h-4 w-4 mr-2" />
-                    Sync History
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => onDisconnect(connection)}
-                    className="text-destructive"
-                  >
-                    <Link2Off className="h-4 w-4 mr-2" />
-                    Disconnect
-                  </DropdownMenuItem>
+                  {onSettings && (
+                    <DropdownMenuItem onClick={() => onSettings(connection)}>
+                      <Settings2 className="h-4 w-4 mr-2" />
+                      Sync Settings
+                    </DropdownMenuItem>
+                  )}
+                  {onHistory && (
+                    <DropdownMenuItem onClick={() => onHistory(connection)}>
+                      <History className="h-4 w-4 mr-2" />
+                      Sync History
+                    </DropdownMenuItem>
+                  )}
+                  {onDisconnect && (onSettings || onHistory) && <DropdownMenuSeparator />}
+                  {onDisconnect && (
+                    <DropdownMenuItem
+                      onClick={() => onDisconnect(connection)}
+                      className="text-destructive"
+                    >
+                      <Link2Off className="h-4 w-4 mr-2" />
+                      Disconnect
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -215,18 +225,20 @@ export function GstnConnectionCard({
             </div>
 
             {/* Connect Button */}
-            <Button
-              className="w-full"
-              onClick={handleConnect}
-              disabled={!canConnect(connection.status) || isLoading}
-            >
-              {initiateConnection.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Link2 className="h-4 w-4 mr-2" />
-              )}
-              Connect to GST Portal
-            </Button>
+            {onConnectInitiated && (
+              <Button
+                className="w-full"
+                onClick={handleConnect}
+                disabled={!canConnect(connection.status) || isLoading}
+              >
+                {initiateConnection.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Link2 className="h-4 w-4 mr-2" />
+                )}
+                Connect to GST Portal
+              </Button>
+            )}
           </>
         )}
       </CardContent>
