@@ -42,7 +42,32 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
       // If on other auth pages (login, register, etc.) and authenticated
       if (pathname !== '/onboarding') {
-        // Redirect to onboarding if no organization, otherwise to dashboard
+        // Check if there's a pending invitation - either in URL or localStorage
+        const urlParams = new URLSearchParams(window.location.search)
+        const redirectTo = urlParams.get('redirect')
+        // Use localStorage since email verification link opens in a new tab
+        const pendingInvitation = typeof window !== 'undefined'
+          ? localStorage.getItem('pendingInvitationUrl')
+          : null
+
+        // If on login/register page with redirect param, let those pages handle it
+        // This prevents race conditions between those pages and auth-layout redirects
+        if ((pathname === '/login' || pathname === '/register') && redirectTo) {
+          return
+        }
+
+        // If there's an invitation redirect, go there immediately
+        if (redirectTo?.startsWith('/invitations/')) {
+          router.push(redirectTo)
+          return
+        }
+
+        if (pendingInvitation?.startsWith('/invitations/')) {
+          router.push(pendingInvitation)
+          return
+        }
+
+        // No pending invitation - redirect based on organization status
         if (!hasOrganization) {
           router.push('/onboarding')
         } else {

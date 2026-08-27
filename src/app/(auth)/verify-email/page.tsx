@@ -48,6 +48,21 @@ function VerifyEmailContent() {
   const [state, setState] = useState<VerificationState>('loading')
   const [errorMessage, setErrorMessage] = useState<string>('')
 
+  // Track if we're on client (for SSR hydration)
+  const [isClient, setIsClient] = useState(false)
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- necessary for client-only localStorage access
+  useEffect(() => { setIsClient(true) }, [])
+
+  // Compute loginUrl - check localStorage only on client to avoid SSR mismatch
+  const loginUrl = isClient
+    ? (() => {
+        const pendingInvitation = localStorage.getItem('pendingInvitationUrl')
+        return pendingInvitation
+          ? `/login?redirect=${encodeURIComponent(pendingInvitation)}`
+          : '/login'
+      })()
+    : '/login'
+
   const token = searchParams.get('token')
 
   // A missing token is knowable at render time; only the async verification
@@ -179,7 +194,7 @@ function VerifyEmailContent() {
           You can now log in to your account and start using EffortlessInsight.
         </p>
         <Button asChild>
-          <Link href="/login">Sign in to your account</Link>
+          <Link href={loginUrl}>Sign in to your account</Link>
         </Button>
       </CardContent>
     </Card>

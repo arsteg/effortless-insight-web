@@ -26,7 +26,7 @@ interface ErrorInfo {
 export default function AcceptInvitationPage() {
   const params = useParams()
   const router = useRouter()
-  const { isAuthenticated, isLoading: authLoading, isInitialized } = useAuthStore()
+  const { isAuthenticated, isLoading: authLoading, isInitialized, refreshUser } = useAuthStore()
 
   const [state, setState] = useState<InvitationState>('loading')
   const [error, setError] = useState<ErrorInfo | null>(null)
@@ -41,7 +41,9 @@ export default function AcceptInvitationPage() {
 
     if (!isAuthenticated) {
       // Store the invitation URL to redirect back after login
+      // Use localStorage to persist across tabs (email verification opens in new tab)
       const currentUrl = window.location.pathname
+      localStorage.setItem('pendingInvitationUrl', currentUrl)
       router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`)
       return
     }
@@ -58,6 +60,12 @@ export default function AcceptInvitationPage() {
       const result = await organizationsApi.acceptInvitation(token)
       setOrganizationName(result.organization.name)
       setState('accepted')
+
+      // Clear the pending invitation URL since it's been handled
+      localStorage.removeItem('pendingInvitationUrl')
+
+      // Refresh user data to include the new organization membership
+      await refreshUser()
 
       // Redirect to dashboard after a brief delay
       setTimeout(() => {
@@ -80,6 +88,9 @@ export default function AcceptInvitationPage() {
     try {
       await organizationsApi.declineInvitation(token)
       setState('declined')
+
+      // Clear the pending invitation URL since it's been handled
+      localStorage.removeItem('pendingInvitationUrl')
     } catch (err: unknown) {
       // API client transforms errors to flat ApiError structure
       const apiError = err as { code?: string; message?: string }
