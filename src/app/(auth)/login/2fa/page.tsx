@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 
 import { authApi } from '@/lib/api/auth'
+import { useAuthStore } from '@/stores/auth-store'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,6 +46,7 @@ function TwoFactorForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
+  const setUser = useAuthStore((state) => state.setUser)
   const [code, setCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -61,7 +63,12 @@ function TwoFactorForm() {
 
     setIsLoading(true)
     try {
+      // Complete 2FA login (stores tokens)
       await authApi.login2fa(partialToken, code)
+
+      // Fetch user data and update auth store
+      const user = await authApi.getMe()
+      setUser(user)
 
       toast({
         title: 'Welcome back!',
