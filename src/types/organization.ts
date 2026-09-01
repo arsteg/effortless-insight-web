@@ -204,4 +204,6 @@ export interface AcceptInvitationResponse {
     name: string
     role: OrganizationRole
   }
+  accessToken: string
+  refreshToken: string
 }

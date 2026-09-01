@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { Loader2, CheckCircle2, AlertCircle, UserPlus, XCircle } from 'lucide-react'
 
-import { organizationsApi } from '@/lib/api'
+import { organizationsApi, setTokens } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth-store'
 import { Button } from '@/components/ui/button'
 import {
@@ -60,6 +60,10 @@ export default function AcceptInvitationPage() {
       const result = await organizationsApi.acceptInvitation(token)
       setOrganizationName(result.organization.name)
       setState('accepted')
+
+      // Store the new tokens with the correct organization context
+      // This ensures the JWT includes the org_id and role claims for the joined organization
+      setTokens(result.accessToken, result.refreshToken)
 
       // Clear the pending invitation URL since it's been handled
       localStorage.removeItem('pendingInvitationUrl')
