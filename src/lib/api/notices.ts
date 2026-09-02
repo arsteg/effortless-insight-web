@@ -244,6 +244,18 @@ export const noticesApi = {
     return response.data.data
   },
 
+  async rejectResponse(
+    noticeId: string,
+    responseId: string,
+    reason?: string
+  ): Promise<NoticeResponse> {
+    const response = await apiClient.post<ApiResponse<NoticeResponse>>(
+      `/notices/${noticeId}/responses/${responseId}/reject`,
+      { reason }
+    )
+    return response.data.data
+  },
+
   async markSubmitted(
     noticeId: string,
     responseId: string,
@@ -311,5 +323,13 @@ export const noticesApi = {
       { params: limit ? { limit } : undefined }
     )
     return response.data.data
+  },
+
+  // Export notice summary as PDF
+  async exportSummary(noticeId: string): Promise<Blob> {
+    const response = await apiClient.get(`/notices/${noticeId}/export-summary`, {
+      responseType: 'blob',
+    })
+    return response.data
   },
 }

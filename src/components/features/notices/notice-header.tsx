@@ -4,6 +4,7 @@ import Link from 'next/link'
 import {
   ArrowLeft,
   Download,
+  FileDown,
   MoreHorizontal,
   UserPlus,
   Archive,
@@ -37,6 +38,8 @@ interface NoticeHeaderProps {
   isLoading?: boolean
   canChangeStatus?: boolean
   onDownload?: () => void
+  onExportSummary?: () => void
+  isExportingSummary?: boolean
   onEdit?: () => void
   onAssign?: () => void
   onArchive?: () => void
@@ -48,6 +51,8 @@ export function NoticeHeader({
   isLoading = false,
   canChangeStatus = true,
   onDownload,
+  onExportSummary,
+  isExportingSummary = false,
   onEdit,
   onAssign,
   onArchive,
@@ -98,6 +103,17 @@ export function NoticeHeader({
             <Button variant="outline" size="sm" onClick={onDownload}>
               <Download className="mr-2 h-4 w-4" />
               Download
+            </Button>
+          )}
+          {onExportSummary && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onExportSummary}
+              disabled={isExportingSummary}
+            >
+              <FileDown className="mr-2 h-4 w-4" />
+              {isExportingSummary ? 'Exporting...' : 'Export Summary'}
             </Button>
           )}
           {/* Only show dropdown menu if user has any permissions for the actions */}

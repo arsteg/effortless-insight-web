@@ -32,7 +32,7 @@ import { AIChatPanel } from '@/components/features/ai-chat'
 import { CommentList } from '@/components/features/comments'
 import { DocumentRequestPanel } from '@/components/features/document-requests/document-request-panel'
 import { WorkflowPanel } from '@/components/features/workflow'
-import { useNotice, useDeleteNotice } from '@/hooks/use-notices'
+import { useNotice, useDeleteNotice, useExportNoticeSummary } from '@/hooks/use-notices'
 import { useNoticeUpdates } from '@/hooks/use-notice-updates'
 import {
   useAttachments,
@@ -67,6 +67,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const { data: notice, isLoading: isLoadingNotice, error } = useNotice(noticeId)
   const { data: attachments = [], isLoading: isLoadingAttachments } = useAttachments(noticeId)
   const deleteMutation = useDeleteNotice()
+  const exportSummaryMutation = useExportNoticeSummary()
   const deleteAttachmentMutation = useDeleteAttachment(noticeId)
   const downloadAttachmentMutation = useDownloadAttachment(noticeId)
 
@@ -111,6 +112,13 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         variant: 'destructive',
       })
     }
+  }
+
+  const handleExportSummary = () => {
+    exportSummaryMutation.mutate({
+      noticeId,
+      noticeNumber: notice?.noticeNumber ?? undefined,
+    })
   }
 
   const handleRetryAnalysis = async () => {
@@ -160,6 +168,8 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         isLoading={isLoadingNotice}
         onEdit={notice && canEditNotices ? () => setShowEditDialog(true) : undefined}
         onDownload={notice?.fileUrl ? handleDownloadNotice : undefined}
+        onExportSummary={notice ? handleExportSummary : undefined}
+        isExportingSummary={exportSummaryMutation.isPending}
         onDelete={canDeleteNotices ? () => setShowDeleteDialog(true) : undefined}
       />
 

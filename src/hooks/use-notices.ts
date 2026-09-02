@@ -274,3 +274,47 @@ export function useSimilarNotices(noticeId: string) {
     enabled: !!noticeId,
   })
 }
+
+// Export notice summary as PDF
+export function useExportNoticeSummary() {
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async ({
+      noticeId,
+      noticeNumber,
+    }: {
+      noticeId: string
+      noticeNumber?: string
+    }) => {
+      const blob = await noticesApi.exportSummary(noticeId)
+      return { blob, noticeNumber }
+    },
+    onSuccess: ({ blob, noticeNumber }) => {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const fileName = noticeNumber
+        ? `notice-${noticeNumber.replace(/[^a-zA-Z0-9-_]/g, '_')}-summary.pdf`
+        : `notice-summary-${new Date().toISOString().split('T')[0]}.pdf`
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast({
+        title: 'Export successful',
+        description: 'Notice summary has been exported to PDF.',
+        variant: 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Export failed',
+        description: 'Failed to export notice summary. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}

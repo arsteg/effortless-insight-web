@@ -16,6 +16,8 @@ import {
   File,
   ChevronDown,
   ChevronUp,
+  Check,
+  X,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -56,6 +58,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useToast } from '@/hooks/use-toast'
+import { usePermissions } from '@/hooks/use-permissions'
 import { noticesApi } from '@/lib/api'
 import {
   useAttachments,
@@ -84,10 +87,14 @@ const statusConfig: Record<
 export function ResponseEditor({ noticeId }: ResponseEditorProps) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const { canApproveResponse } = usePermissions()
   const [content, setContent] = useState('')
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [showAutoDraftDialog, setShowAutoDraftDialog] = useState(false)
   const [showUploadDialog, setShowUploadDialog] = useState(false)
+  const [showApproveDialog, setShowApproveDialog] = useState(false)
+  const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
   const [isDocumentsOpen, setIsDocumentsOpen] = useState(true)
   const [uploadDescription, setUploadDescription] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -224,6 +231,55 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
     },
   })
 
+  // Approve response mutation
+  const approveResponseMutation = useMutation({
+    mutationFn: () => {
+      if (!response) throw new Error('No response to approve')
+      return noticesApi.approveResponse(noticeId, response.id)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notices', noticeId, 'response'] })
+      setShowApproveDialog(false)
+      toast({
+        title: 'Response approved',
+        description: 'The response has been approved and is ready for submission.',
+        variant: 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Approval failed',
+        description: 'Failed to approve response. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+
+  // Reject response mutation
+  const rejectResponseMutation = useMutation({
+    mutationFn: (reason?: string) => {
+      if (!response) throw new Error('No response to reject')
+      return noticesApi.rejectResponse(noticeId, response.id, reason)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notices', noticeId, 'response'] })
+      setShowRejectDialog(false)
+      setRejectReason('')
+      toast({
+        title: 'Response returned for revision',
+        description: 'The response has been sent back to the author for revision.',
+        variant: 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Rejection failed',
+        description: 'Failed to reject response. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+
   const handleSaveDraft = () => {
     saveDraftMutation.mutate(content)
   }
@@ -245,7 +301,16 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
     submitForReviewMutation.mutate()
   }
 
+  const handleApproveResponse = () => {
+    approveResponseMutation.mutate()
+  }
+
+  const handleRejectResponse = () => {
+    rejectResponseMutation.mutate(rejectReason.trim() || undefined)
+  }
+
   const canEdit = !response || response.status === 'draft'
+  const canReview = response?.status === 'review' && canApproveResponse
   const canSubmit = response?.status === 'draft' && content.trim().length > 0
 
   // Handle file selection
@@ -552,9 +617,41 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
         )}
 
         {response?.status === 'review' && (
-          <p className="text-sm text-muted-foreground text-center">
-            This response is awaiting approval. You cannot edit it until it&apos;s returned for revision.
-          </p>
+          <div className="space-y-4">
+            {canReview ? (
+              <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800">
+                <div>
+                  <p className="font-medium text-amber-800 dark:text-amber-200">
+                    Review Required
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    This response is awaiting your approval.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowRejectDialog(true)}
+                    className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Reject
+                  </Button>
+                  <Button
+                    onClick={() => setShowApproveDialog(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center">
+                This response is awaiting approval. You cannot edit it until it&apos;s returned for revision.
+              </p>
+            )}
+          </div>
         )}
 
         {response?.status === 'approved' && (
@@ -721,6 +818,104 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Approve Response Dialog */}
+      <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Check className="h-5 w-5 text-green-600" />
+              Approve Response?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will approve the response and mark it ready for submission to the GST portal.
+              The content will be finalized and the author will be notified.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={approveResponseMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleApproveResponse}
+              disabled={approveResponseMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {approveResponseMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Approve
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reject Response Dialog */}
+      <Dialog open={showRejectDialog} onOpenChange={(open) => {
+        setShowRejectDialog(open)
+        if (!open) setRejectReason('')
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <X className="h-5 w-5 text-red-600" />
+              Reject Response
+            </DialogTitle>
+            <DialogDescription>
+              This will return the response to the author for revision.
+              They will be able to edit and resubmit it.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejectReason">Reason for rejection (optional)</Label>
+              <Textarea
+                id="rejectReason"
+                placeholder="Provide feedback on what needs to be changed..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRejectDialog(false)
+                setRejectReason('')
+              }}
+              disabled={rejectResponseMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRejectResponse}
+              disabled={rejectResponseMutation.isPending}
+              variant="destructive"
+            >
+              {rejectResponseMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                <>
+                  <X className="mr-2 h-4 w-4" />
+                  Reject
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
