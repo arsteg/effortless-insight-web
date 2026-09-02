@@ -57,7 +57,10 @@ import { cn } from '@/lib/utils'
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or less'),
   description: z.string().max(2000, 'Description must be 2000 characters or less').optional(),
-  dueDate: z.string().optional(),
+  dueDate: z.string().optional().refine(
+    (d) => !d || new Date(d) >= new Date(new Date().toDateString()),
+    'Due date must be today or in the future'
+  ),
   priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
   estimatedHours: z.number().min(0).max(999).optional(),
   labels: z.array(z.string()).optional(),
@@ -366,7 +369,12 @@ export function TaskForm({
                   Due Date <span className="text-muted-foreground font-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input type="date" disabled={isLoading} {...field} />
+                  <Input
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    disabled={isLoading}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -78,6 +78,7 @@ export function useMyTasks(params?: {
 
 export function useCreateTask(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: (data: CreateTaskRequest) => taskApi.createTask(noticeId, data),
@@ -85,6 +86,17 @@ export function useCreateTask(noticeId: string) {
       queryClient.invalidateQueries({ queryKey: ['tasks', noticeId] })
       queryClient.invalidateQueries({ queryKey: ['myTasks'] })
       queryClient.invalidateQueries({ queryKey: ['activity', noticeId] })
+    },
+    onError: (error: unknown) => {
+      const apiError = error as { message?: string; errors?: Record<string, string[]> }
+      const message = apiError.errors?.DueDate?.[0]
+        || apiError.message
+        || 'Failed to create task'
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
