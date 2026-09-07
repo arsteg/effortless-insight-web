@@ -591,7 +591,7 @@ export interface UsageCheckResponse {
 
 declare global {
   interface Window {
-    Razorpay?: new (options: RazorpayCheckoutOptions) => RazorpayInstance
+    Razorpay?: new (options: RazorpayCheckoutOptions | RazorpaySubscriptionCheckoutOptions) => RazorpayInstance
   }
 }
 
@@ -616,9 +616,35 @@ export interface RazorpayCheckoutOptions {
   }
 }
 
+/** Razorpay checkout options for subscription/recurring billing */
+export interface RazorpaySubscriptionCheckoutOptions {
+  key: string
+  subscription_id: string
+  name: string
+  description: string
+  prefill?: {
+    name?: string
+    email?: string
+    contact?: string
+  }
+  theme?: {
+    color?: string
+  }
+  handler: (response: RazorpaySubscriptionResponse) => void
+  modal?: {
+    ondismiss?: () => void
+  }
+}
+
 export interface RazorpayPaymentResponse {
   razorpay_payment_id: string
   razorpay_order_id: string
+  razorpay_signature: string
+}
+
+export interface RazorpaySubscriptionResponse {
+  razorpay_payment_id: string
+  razorpay_subscription_id: string
   razorpay_signature: string
 }
 

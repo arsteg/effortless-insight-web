@@ -15,6 +15,8 @@ import type {
   VerifySeatsPaymentRequest,
   ValidateCouponRequest,
   RazorpayPaymentResponse,
+  RazorpaySubscriptionCheckoutOptions,
+  RazorpaySubscriptionResponse,
 } from '@/types/billing'
 
 // ============================================================================
@@ -515,12 +517,6 @@ export function useDeletePaymentMethod() {
 // Razorpay Checkout Hook
 // ============================================================================
 
-export interface RazorpaySubscriptionResponse {
-  razorpay_payment_id: string
-  razorpay_subscription_id: string
-  razorpay_signature: string
-}
-
 export function useRazorpayCheckout() {
   const { toast } = useToast()
 
@@ -629,7 +625,7 @@ export function useRazorpayCheckout() {
       return false
     }
 
-    const razorpayOptions = {
+    const razorpayOptions: RazorpaySubscriptionCheckoutOptions = {
       key: options.key,
       subscription_id: options.subscriptionId,
       name: options.name,

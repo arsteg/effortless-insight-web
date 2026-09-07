@@ -215,21 +215,11 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   // Has valid subscription - render children with optional trial banner
   const subscription = freshSubscription ?? cachedSubscription
 
-  // Build upgrade URL from subscription data (stored in BillingSubscription table)
-  const getUpgradeUrl = () => {
-    const planCode = subscription?.planCode || ''
-    const billingCycle = subscription?.billingCycle || 'annually'
-    return `/checkout?plan=${planCode}&billing=${billingCycle}`
-  }
-
   return (
     <>
       {subscription?.status === 'trialing' && subscription.isTrialing && (
         <div className="mb-4">
-          <TrialBanner
-            subscription={subscription}
-            onUpgrade={() => router.push(getUpgradeUrl())}
-          />
+          <TrialBanner subscription={subscription} />
         </div>
       )}
       {children}
