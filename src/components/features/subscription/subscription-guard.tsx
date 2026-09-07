@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { Loader2, AlertTriangle, CreditCard, Clock, RefreshCw } from 'lucide-react'
 
 import { useSubscriptionStore } from '@/stores'
-import { useCurrentSubscription } from '@/hooks/use-billing'
+import { useCurrentSubscription, useResumeSubscription } from '@/hooks/use-billing'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -53,6 +53,9 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
     error,
     refetch,
   } = useCurrentSubscription()
+
+  // Resume subscription mutation
+  const resumeSubscription = useResumeSubscription()
 
   const [showBlockingUI, setShowBlockingUI] = useState(false)
 
@@ -174,6 +177,22 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   if (showBlockingUI) {
     const subscription = freshSubscription ?? cachedSubscription
 
+    const handleResume = () => {
+      resumeSubscription.mutate(undefined, {
+        onError: (error: Error & { response?: { status?: number; data?: { code?: string } } }) => {
+          // If payment is required, redirect to plan selection
+          const isPaymentRequired =
+            error.response?.status === 402 ||
+            error.response?.data?.code === 'PAYMENT_REQUIRED' ||
+            error.message?.includes('PAYMENT_REQUIRED')
+
+          if (isPaymentRequired) {
+            router.push('/select-plan')
+          }
+        },
+      })
+    }
+
     return (
       <div className="flex min-h-[60vh] items-center justify-center p-4">
         <SubscriptionBlockedCard
@@ -181,6 +200,8 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
           planName={subscription?.planName}
           onSelectPlan={() => router.push('/select-plan')}
           onManageBilling={() => router.push('/settings/billing')}
+          onResume={handleResume}
+          isResuming={resumeSubscription.isPending}
         />
       </div>
     )
@@ -221,6 +242,8 @@ interface SubscriptionBlockedCardProps {
   planName?: string
   onSelectPlan: () => void
   onManageBilling: () => void
+  onResume?: () => void
+  isResuming?: boolean
 }
 
 function SubscriptionBlockedCard({
@@ -228,6 +251,8 @@ function SubscriptionBlockedCard({
   planName,
   onSelectPlan,
   onManageBilling,
+  onResume,
+  isResuming = false,
 }: SubscriptionBlockedCardProps) {
   const getStatusInfo = () => {
     switch (status) {
@@ -319,9 +344,27 @@ function SubscriptionBlockedCard({
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3">
-        <Button className="w-full" size="lg" onClick={onSelectPlan}>
-          {info.primaryAction}
-        </Button>
+        {status === 'paused' && onResume ? (
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={onResume}
+            disabled={isResuming}
+          >
+            {isResuming ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Resuming...
+              </>
+            ) : (
+              info.primaryAction
+            )}
+          </Button>
+        ) : (
+          <Button className="w-full" size="lg" onClick={onSelectPlan}>
+            {info.primaryAction}
+          </Button>
+        )}
         {info.showManage && (
           <Button variant="outline" className="w-full" onClick={onManageBilling}>
             Manage Billing

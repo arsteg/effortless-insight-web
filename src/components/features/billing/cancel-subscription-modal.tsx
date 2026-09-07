@@ -157,10 +157,11 @@ export function CancelSubscriptionModal({
               </Label>
             </div>
 
-            <div className="p-4 border rounded-lg bg-background">
+            <div className="p-4 border rounded-lg bg-destructive/10 border-destructive/20">
               <p className="text-sm">
-                <strong>Note:</strong> You can reactivate your subscription within
-                30 days of cancellation without losing your data.
+                <strong>Warning:</strong> Cancellation is permanent. Once cancelled,
+                you will need to subscribe to a new plan to continue using the service.
+                Your data will be retained for 30 days.
               </p>
             </div>
           </div>

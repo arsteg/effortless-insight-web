@@ -50,6 +50,24 @@ export interface AddOn {
 export interface PlansListResponse {
   plans: Plan[]
   addOns?: AddOn[]
+  globalSettings?: GlobalBillingSettings
+}
+
+/**
+ * Global billing settings controlled by admin.
+ */
+export interface GlobalBillingSettings {
+  /**
+   * Whether additional seats/per-seat pricing is enabled globally.
+   * When false, the "Add Seats" feature should be hidden from UI.
+   */
+  additionalSeatsEnabled: boolean
+
+  /**
+   * Whether plan downgrades are allowed.
+   * When false, users can only upgrade to higher plans.
+   */
+  downgradesAllowed: boolean
 }
 
 // ============================================================================
@@ -183,8 +201,26 @@ export interface BillingDetailsRequest {
 
 export interface CreateSubscriptionResponse {
   subscriptionId: string
-  razorpayOrder: RazorpayOrder
-  checkoutOptions: CheckoutOptions
+  razorpayOrder?: RazorpayOrder | null
+  checkoutOptions?: CheckoutOptions | null
+  isFreePlan?: boolean
+  subscription?: Subscription | null
+  /** Razorpay subscription details for recurring billing setup (true auto-recurring) */
+  razorpaySubscription?: RazorpaySubscriptionCheckout | null
+}
+
+/** Details for Razorpay subscription checkout (for true auto-recurring billing) */
+export interface RazorpaySubscriptionCheckout {
+  /** Razorpay subscription ID (starts with sub_) */
+  subscriptionId: string
+  /** Razorpay public key for checkout */
+  key: string
+  /** Subscription status (created, authenticated, active, etc.) */
+  status: string
+  /** Short URL for customer to complete mandate authentication if needed */
+  shortUrl?: string | null
+  /** Number of trial days before first charge */
+  trialDays: number
 }
 
 export interface RazorpayOrder {
@@ -223,6 +259,13 @@ export interface CheckoutTheme {
 export interface VerifyPaymentRequest {
   razorpayPaymentId: string
   razorpayOrderId: string
+  razorpaySignature: string
+}
+
+/** Request for verifying subscription-based payments (true auto-recurring) */
+export interface VerifySubscriptionPaymentRequest {
+  razorpayPaymentId: string
+  razorpaySubscriptionId: string
   razorpaySignature: string
 }
 

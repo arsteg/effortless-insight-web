@@ -148,12 +148,13 @@ export function OrderSummary({
 
         {/* Trial Info */}
         {plan.trialDays > 0 && !isUpgradingFromTrial && (
-          <div className="p-3 bg-primary/5 rounded-lg">
+          <div className="p-3 bg-primary/5 rounded-lg space-y-1">
             <p className="text-sm font-medium text-primary">
               {plan.trialDays}-day free trial included
             </p>
             <p className="text-xs text-muted-foreground">
-              You won&apos;t be charged until your trial ends
+              Payment method authorization required. You won&apos;t be charged until your trial ends.
+              Auto-billing starts after trial.
             </p>
           </div>
         )}

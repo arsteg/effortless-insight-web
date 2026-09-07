@@ -1,11 +1,12 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { AlertCircle, CreditCard, Clock, XCircle } from 'lucide-react'
+import { AlertCircle, CreditCard, Clock, XCircle, Loader2, PauseCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { useResumeSubscription } from '@/hooks/use-billing'
 import {
   Card,
   CardContent,
@@ -19,10 +20,36 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 function SubscriptionRequiredContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const resumeSubscription = useResumeSubscription()
+  const [isResuming, setIsResuming] = useState(false)
+
   // Derived directly from the URL; no state needed
   const errorDetails = {
     error: searchParams.get('error'),
     status: searchParams.get('status'),
+  }
+
+  const handleResume = async () => {
+    setIsResuming(true)
+    resumeSubscription.mutate(undefined, {
+      onSuccess: () => {
+        // Redirect to dashboard on successful resume
+        router.push('/dashboard')
+      },
+      onError: (error: Error & { response?: { status?: number; data?: { code?: string } } }) => {
+        // Check if payment is required (402 error)
+        const isPaymentRequired =
+          error.response?.status === 402 ||
+          error.response?.data?.code === 'PAYMENT_REQUIRED' ||
+          error.message?.includes('PAYMENT_REQUIRED')
+
+        if (isPaymentRequired) {
+          // Redirect to select-plan if payment is required
+          router.push('/select-plan')
+        }
+        setIsResuming(false)
+      },
+    })
   }
 
   const getErrorMessage = () => {
@@ -33,6 +60,7 @@ function SubscriptionRequiredContent() {
         title: 'Your free trial has expired',
         description:
           'Your trial period has ended. Upgrade to a paid plan to continue using EffortlessInsight and access all your data.',
+        showResume: false,
       }
     }
 
@@ -43,6 +71,7 @@ function SubscriptionRequiredContent() {
         title: 'Subscription required',
         description:
           'You need an active subscription to access this feature. Choose a plan that works for you and start your free trial today.',
+        showResume: false,
       }
     }
 
@@ -53,6 +82,7 @@ function SubscriptionRequiredContent() {
         title: 'Subscription expired',
         description:
           'Your subscription has expired. Renew your subscription to regain access to all features.',
+        showResume: false,
       }
     }
 
@@ -63,6 +93,18 @@ function SubscriptionRequiredContent() {
         title: 'Subscription cancelled',
         description:
           'Your subscription was cancelled. Reactivate or choose a new plan to continue using EffortlessInsight.',
+        showResume: false,
+      }
+    }
+
+    if (errorDetails.status === 'paused') {
+      return {
+        icon: PauseCircle,
+        variant: 'default' as const,
+        title: 'Subscription Paused',
+        description:
+          'Your subscription is currently paused. Resume it to continue using EffortlessInsight.',
+        showResume: true,
       }
     }
 
@@ -72,6 +114,7 @@ function SubscriptionRequiredContent() {
       title: 'Access restricted',
       description:
         'Your current subscription status does not allow access to this feature. Please upgrade your plan.',
+      showResume: false,
     }
   }
 
@@ -132,9 +175,32 @@ function SubscriptionRequiredContent() {
         </CardContent>
 
         <CardFooter className="flex flex-col gap-3">
-          <Button asChild className="w-full" size="lg">
-            <Link href="/select-plan">Choose a Plan</Link>
-          </Button>
+          {errorInfo.showResume ? (
+            <>
+              <Button
+                onClick={handleResume}
+                disabled={isResuming}
+                className="w-full"
+                size="lg"
+              >
+                {isResuming ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Resuming...
+                  </>
+                ) : (
+                  'Resume Subscription'
+                )}
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/select-plan">Choose a Different Plan</Link>
+              </Button>
+            </>
+          ) : (
+            <Button asChild className="w-full" size="lg">
+              <Link href="/select-plan">Choose a Plan</Link>
+            </Button>
+          )}
 
           {errorDetails.status === 'expired' || errorDetails.status === 'cancelled' ? (
             <Button asChild variant="outline" className="w-full">

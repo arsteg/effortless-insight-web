@@ -41,25 +41,10 @@ function SelectPlanContent() {
   const handleSelectPlan = async (plan: Plan) => {
     setSelectedPlan(plan.code)
 
-    // Plan selection is stored in BillingSubscription table when trial starts
-    // No need for localStorage - subscription data contains planCode and billingCycle
-
     const isFreePlan = plan.pricing.monthly === 0 || plan.pricing.annually === 0
 
-    // If plan has trial days AND user hasn't used trial yet, start trial
-    if (plan.trialDays > 0 && !hasUsedTrial) {
-      try {
-        await startTrial.mutateAsync({
-          planCode: plan.code,
-          billingCycle,
-        })
-        // Trial started successfully - redirect to dashboard
-        router.push('/dashboard')
-      } catch {
-        setSelectedPlan(null)
-      }
-    } else if (isFreePlan) {
-      // Free plan - activate immediately
+    if (isFreePlan) {
+      // Free plan - activate immediately (no payment needed)
       try {
         await startTrial.mutateAsync({
           planCode: plan.code,
@@ -70,7 +55,11 @@ function SelectPlanContent() {
         setSelectedPlan(null)
       }
     } else {
-      // Paid plan (either no trial days OR user already used trial) - go to checkout
+      // ALL paid plans (with OR without trial) go through checkout
+      // This ensures:
+      // 1. Billing details collected for GST compliance
+      // 2. Razorpay subscription created with mandate authorization
+      // 3. Auto-renewal works when trial ends
       router.push(`/checkout?plan=${plan.code}&billing=${billingCycle}`)
     }
   }

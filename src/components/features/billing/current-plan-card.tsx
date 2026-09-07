@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { Calendar, Clock, CreditCard, AlertCircle, PauseCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,7 +17,6 @@ interface CurrentPlanCardProps {
   onManage?: () => void
   onAddSeats?: () => void
   onCancel?: () => void
-  onReactivate?: () => void
   onPause?: () => void
   onResume?: () => void
   /** Whether the current plan allows adding additional seats */
@@ -30,11 +30,12 @@ export function CurrentPlanCard({
   onManage,
   onAddSeats,
   onCancel,
-  onReactivate,
   onPause,
   onResume,
   canAddSeats = false,
 }: CurrentPlanCardProps) {
+  const router = useRouter()
+
   if (isLoading) {
     return (
       <Card>
@@ -98,14 +99,17 @@ export function CurrentPlanCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Trial Warning */}
+        {/* Trial Info - No actions during trial */}
         {isTrialing && subscription.trialEnd && (
-          <Alert>
-            <Clock className="h-4 w-4" />
-            <AlertTitle>Trial Period</AlertTitle>
-            <AlertDescription>
-              Your trial ends on {formatDate(subscription.trialEnd)}.
-              Add a payment method to continue after the trial.
+          <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+            <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertTitle className="text-blue-800 dark:text-blue-200">Trial Period</AlertTitle>
+            <AlertDescription className="text-blue-700 dark:text-blue-300">
+              <p>You are in Trial Mode.</p>
+              <p className="mt-1 flex items-center gap-1.5">
+                <CreditCard className="h-4 w-4" />
+                On {formatDate(subscription.trialEnd)}, {formatAmount(subscription.pricing.total, subscription.pricing.currency)} will be automatically debited from your account.
+              </p>
             </AlertDescription>
           </Alert>
         )}
@@ -116,7 +120,7 @@ export function CurrentPlanCard({
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Subscription Cancelled</AlertTitle>
             <AlertDescription>
-              Your subscription has been cancelled. You can reactivate it within 30 days.
+              Your subscription has been cancelled. Subscribe to a new plan to continue using the service.
             </AlertDescription>
           </Alert>
         )}
@@ -126,8 +130,8 @@ export function CurrentPlanCard({
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Cancellation Scheduled</AlertTitle>
             <AlertDescription>
-              Your subscription will end on {formatDate(subscription.currentPeriodEnd)}.
-              You can reactivate anytime before then.
+              Your subscription will be cancelled on {formatDate(subscription.currentPeriodEnd)}.
+              This cancellation cannot be undone. You will need to subscribe to a new plan after this date.
             </AlertDescription>
           </Alert>
         )}
@@ -154,30 +158,40 @@ export function CurrentPlanCard({
           </Alert>
         )}
 
-        {/* Billing Info */}
-        <div className="grid grid-cols-2 gap-4 pt-2">
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-muted-foreground">
-              Current Period
+        {/* Billing Info - Not shown during trial since trial info is more prominent */}
+        {!isTrialing && (
+          <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground">
+                Current Period
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                {formatDate(subscription.currentPeriodStart)} - {formatDate(subscription.currentPeriodEnd)}
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              {formatDate(subscription.currentPeriodStart)} - {formatDate(subscription.currentPeriodEnd)}
+
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground">
+                Next Billing Date
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                {formatDate(subscription.nextBillingDate)}
+              </div>
             </div>
           </div>
+        )}
 
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-muted-foreground">
-              Next Billing Date
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-              {formatDate(subscription.nextBillingDate)}
-            </div>
+        {/* Plan details during trial */}
+        {isTrialing && (
+          <div className="pt-2">
+            <div className="text-sm font-medium text-muted-foreground">Plan</div>
+            <div className="text-sm">{subscription.planName} ({subscription.billingCycle === 'annually' ? 'Annual' : 'Monthly'})</div>
           </div>
-        </div>
+        )}
 
-        {/* Seats */}
+        {/* Seats - show if applicable */}
         {(subscription.seats.included > 1 || subscription.seats.additional > 0) && (
           <div className="pt-2">
             <div className="text-sm font-medium text-muted-foreground">Seats</div>
@@ -204,49 +218,51 @@ export function CurrentPlanCard({
         )}
       </CardContent>
 
-      <CardFooter className="flex gap-2 flex-wrap">
-        {isPaused ? (
-          <>
-            <Button onClick={onResume}>Resume Subscription</Button>
-            <Button onClick={onCancel} variant="ghost" className="text-destructive">
-              Cancel Instead
-            </Button>
-          </>
-        ) : isCancelled && !subscription.cancelAtPeriodEnd ? (
-          <Button onClick={onReactivate}>Reactivate Subscription</Button>
-        ) : subscription.cancelAtPeriodEnd ? (
-          <>
-            <Button onClick={onReactivate} variant="outline">
-              Undo Cancellation
-            </Button>
-            <Button onClick={onUpgrade}>Change Plan</Button>
-          </>
-        ) : (
-          <>
-            <Button onClick={onUpgrade} variant="outline">
-              Change Plan
-            </Button>
-            {/* Add Seats - only show if: not trialing, plan allows it, and callback provided */}
-            {!isTrialing && canAddSeats && onAddSeats && (
-              <Button onClick={onAddSeats} variant="outline">
-                Add Seats
+      {/* Footer with action buttons - NO buttons during trial */}
+      {!isTrialing && (
+        <CardFooter className="flex gap-2 flex-wrap">
+          {isPaused ? (
+            <>
+              <Button onClick={onResume}>Resume Subscription</Button>
+              <Button onClick={onCancel} variant="ghost" className="text-destructive">
+                Cancel Instead
               </Button>
-            )}
-            {/* Legacy manage billing - for backward compatibility */}
-            {onManage && !onAddSeats && (
-              <Button onClick={onManage} variant="outline">
-                Manage Billing
+            </>
+          ) : isCancelled && !subscription.cancelAtPeriodEnd ? (
+            <Button onClick={() => router.push('/settings/billing/plans')}>
+              Subscribe to New Plan
+            </Button>
+          ) : subscription.cancelAtPeriodEnd ? (
+            <Button onClick={() => router.push('/settings/billing/plans')}>
+              Subscribe to New Plan
+            </Button>
+          ) : (
+            <>
+              <Button onClick={onUpgrade} variant="outline">
+                Change Plan
               </Button>
-            )}
-            <Button onClick={onPause} variant="outline">
-              Pause
-            </Button>
-            <Button onClick={onCancel} variant="ghost" className="text-destructive">
-              Cancel
-            </Button>
-          </>
-        )}
-      </CardFooter>
+              {/* Add Seats - only show if plan allows it and callback provided */}
+              {canAddSeats && onAddSeats && (
+                <Button onClick={onAddSeats} variant="outline">
+                  Add Seats
+                </Button>
+              )}
+              {/* Legacy manage billing - for backward compatibility */}
+              {onManage && !onAddSeats && (
+                <Button onClick={onManage} variant="outline">
+                  Manage Billing
+                </Button>
+              )}
+              <Button onClick={onPause} variant="outline">
+                Pause
+              </Button>
+              <Button onClick={onCancel} variant="ghost" className="text-destructive">
+                Cancel
+              </Button>
+            </>
+          )}
+        </CardFooter>
+      )}
     </Card>
   )
 }

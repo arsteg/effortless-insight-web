@@ -7,6 +7,7 @@ import type {
   CreateSubscriptionRequest,
   StartTrialRequest,
   VerifyPaymentRequest,
+  VerifySubscriptionPaymentRequest,
   ChangePlanRequest,
   CancelSubscriptionRequest,
   PauseSubscriptionRequest,
@@ -42,6 +43,24 @@ export function usePlans() {
     queryFn: async () => {
       const response = await billingApi.getPlans()
       return response.plans
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+  })
+}
+
+/**
+ * Fetches plans with global billing settings.
+ * Use this when you need access to global settings like additionalSeatsEnabled.
+ */
+export function usePlansWithSettings() {
+  return useQuery({
+    queryKey: [...billingKeys.plans(), 'withSettings'],
+    queryFn: async () => {
+      const response = await billingApi.getPlans()
+      return {
+        plans: response.plans,
+        globalSettings: response.globalSettings,
+      }
     },
     staleTime: 1000 * 60 * 60, // 1 hour
   })
@@ -115,6 +134,7 @@ export function useVerifyPayment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: billingKeys.subscription() })
       queryClient.invalidateQueries({ queryKey: billingKeys.invoices() })
+      queryClient.invalidateQueries({ queryKey: billingKeys.paymentMethods() })
       toast({
         title: 'Payment successful',
         description: 'Your subscription has been activated.',
@@ -124,6 +144,37 @@ export function useVerifyPayment() {
     onError: (error: Error) => {
       toast({
         title: 'Payment verification failed',
+        description: error.message,
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+/**
+ * Verify subscription-based payment (true auto-recurring)
+ * Used when checkout is done via Razorpay Subscription API
+ */
+export function useVerifySubscriptionPayment() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (data: VerifySubscriptionPaymentRequest) =>
+      billingApi.verifySubscriptionPayment(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: billingKeys.subscription() })
+      queryClient.invalidateQueries({ queryKey: billingKeys.invoices() })
+      queryClient.invalidateQueries({ queryKey: billingKeys.paymentMethods() })
+      toast({
+        title: 'Subscription activated',
+        description: 'Your subscription has been activated with auto-renewal.',
+        variant: 'default',
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Subscription verification failed',
         description: error.message,
         variant: 'destructive',
       })
@@ -225,6 +276,7 @@ export function useVerifySeatsPayment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: billingKeys.subscription() })
       queryClient.invalidateQueries({ queryKey: billingKeys.invoices() })
+      queryClient.invalidateQueries({ queryKey: billingKeys.paymentMethods() })
       toast({
         title: 'Seats added',
         description: 'Additional seats have been added to your subscription.',
@@ -306,12 +358,27 @@ export function useResumeSubscription() {
         variant: 'default',
       })
     },
-    onError: (error: Error) => {
-      toast({
-        title: 'Failed to resume subscription',
-        description: error.message,
-        variant: 'destructive',
-      })
+    onError: (error: Error & { response?: { status?: number; data?: { code?: string } } }) => {
+      // Check if payment is required (402 error)
+      const isPaymentRequired =
+        error.response?.status === 402 ||
+        error.response?.data?.code === 'PAYMENT_REQUIRED' ||
+        error.message?.includes('PAYMENT_REQUIRED')
+
+      if (isPaymentRequired) {
+        toast({
+          title: 'Payment required',
+          description:
+            'Your billing period ended while paused. Please select a plan to continue.',
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Failed to resume subscription',
+          description: error.message,
+          variant: 'destructive',
+        })
+      }
     },
   })
 }
@@ -448,9 +515,19 @@ export function useDeletePaymentMethod() {
 // Razorpay Checkout Hook
 // ============================================================================
 
+export interface RazorpaySubscriptionResponse {
+  razorpay_payment_id: string
+  razorpay_subscription_id: string
+  razorpay_signature: string
+}
+
 export function useRazorpayCheckout() {
   const { toast } = useToast()
 
+  /**
+   * Opens Razorpay checkout for one-time order-based payments.
+   * Used when plan doesn't have Razorpay Plan IDs configured.
+   */
   const openCheckout = async (
     options: {
       key: string
@@ -508,5 +585,75 @@ export function useRazorpayCheckout() {
     razorpay.open()
   }
 
-  return { openCheckout }
+  /**
+   * Opens Razorpay checkout for subscription-based payments with auto-recurring.
+   * This creates a mandate/token for automatic monthly/annual charges.
+   * Used when plan has Razorpay Plan IDs configured.
+   *
+   * For plans WITH trial:
+   * - User completes mandate authorization (UPI Autopay, card mandate, etc.)
+   * - No immediate charge
+   * - Razorpay auto-debits when trial ends
+   *
+   * For plans WITHOUT trial:
+   * - User pays immediately
+   * - Future charges are automatic via mandate
+   *
+   * @returns true if checkout was opened successfully, false if script failed to load
+   */
+  const openSubscriptionCheckout = async (
+    options: {
+      key: string
+      subscriptionId: string
+      name: string
+      description: string
+      prefill?: {
+        name?: string
+        email?: string
+        contact?: string
+      }
+      theme?: {
+        color?: string
+      }
+    },
+    onSuccess: (response: RazorpaySubscriptionResponse) => void,
+    onDismiss?: () => void
+  ): Promise<boolean> => {
+    const loaded = await loadRazorpayScript()
+    if (!loaded) {
+      toast({
+        title: 'Payment failed',
+        description: 'Failed to load payment gateway. Please try again.',
+        variant: 'destructive',
+      })
+      return false
+    }
+
+    const razorpayOptions = {
+      key: options.key,
+      subscription_id: options.subscriptionId,
+      name: options.name,
+      description: options.description,
+      prefill: options.prefill,
+      theme: options.theme,
+      handler: (response: RazorpaySubscriptionResponse) => {
+        onSuccess({
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_subscription_id: response.razorpay_subscription_id,
+          razorpay_signature: response.razorpay_signature,
+        })
+      },
+      modal: {
+        ondismiss: () => {
+          onDismiss?.()
+        },
+      },
+    }
+
+    const razorpay = new window.Razorpay!(razorpayOptions)
+    razorpay.open()
+    return true
+  }
+
+  return { openCheckout, openSubscriptionCheckout }
 }

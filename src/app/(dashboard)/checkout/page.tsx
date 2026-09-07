@@ -20,10 +20,11 @@ import {
 import { formatAmount } from '@/lib/api/billing'
 import type { CheckoutStep, BillingDetailsFormValues } from '@/components/features/billing'
 import {
-  usePlans,
+  usePlansWithSettings,
   useCurrentSubscription,
   useCreateSubscription,
   useVerifyPayment,
+  useVerifySubscriptionPayment,
   useValidateCoupon,
   useRazorpayCheckout,
 } from '@/hooks/use-billing'
@@ -49,15 +50,20 @@ function CheckoutContent() {
   const [isProcessing, setIsProcessing] = useState(false)
 
   // Queries
-  const { data: plans, isLoading: isLoadingPlans } = usePlans()
+  const { data: plansData, isLoading: isLoadingPlans } = usePlansWithSettings()
   const { data: subscription } = useCurrentSubscription()
   const { data: organization } = useOrganization()
+
+  // Extract plans and global settings
+  const plans = plansData?.plans
+  const globalSettings = plansData?.globalSettings
 
   // Mutations
   const createSubscription = useCreateSubscription()
   const verifyPayment = useVerifyPayment()
+  const verifySubscriptionPayment = useVerifySubscriptionPayment()
   const validateCoupon = useValidateCoupon()
-  const { openCheckout } = useRazorpayCheckout()
+  const { openCheckout, openSubscriptionCheckout } = useRazorpayCheckout()
 
   // Get selected plan
   const selectedPlan = plans?.find((p) => p.code === selectedPlanCode)
@@ -137,39 +143,98 @@ function CheckoutContent() {
         autoRenew: true,
       })
 
-      // Open Razorpay checkout
-      await openCheckout(
-        {
-          key: orderResponse.razorpayOrder.key,
-          amount: orderResponse.razorpayOrder.amount,
-          currency: orderResponse.razorpayOrder.currency,
-          name: 'EffortlessInsight',
-          description: `${selectedPlan.displayName} - ${billingCycle === 'annually' ? 'Annual' : 'Monthly'}`,
-          orderId: orderResponse.razorpayOrder.id,
-          prefill: {
-            name: billingDetails.companyName,
-            email: billingDetails.billingEmail,
-            contact: billingDetails.phone,
-          },
-          theme: {
-            color: '#7C3AED',
-          },
-        },
-        async (response) => {
-          // Verify payment
-          await verifyPayment.mutateAsync({
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpayOrderId: response.razorpay_order_id,
-            razorpaySignature: response.razorpay_signature,
-          })
+      // Check if this is a free plan (no payment required)
+      if (orderResponse.isFreePlan) {
+        setCompletedSteps(['plan', 'billing', 'payment'])
+        setCurrentStep('confirmation')
+        setIsProcessing(false)
+        return
+      }
 
-          setCompletedSteps(['plan', 'billing', 'payment'])
-          setCurrentStep('confirmation')
-        },
-        () => {
+      // Check if this is a subscription-based checkout (true auto-recurring)
+      if (orderResponse.razorpaySubscription) {
+        // Use subscription checkout for auto-recurring billing
+        // This opens Razorpay checkout for mandate authorization
+        // - For plans with trial: User authorizes payment method, no immediate charge
+        // - For plans without trial: User pays immediately
+        const checkoutOpened = await openSubscriptionCheckout(
+          {
+            key: orderResponse.razorpaySubscription.key,
+            subscriptionId: orderResponse.razorpaySubscription.subscriptionId,
+            name: 'EffortlessInsight',
+            description: `${selectedPlan.displayName} - ${billingCycle === 'annually' ? 'Annual' : 'Monthly'} (Auto-Renewal)`,
+            prefill: {
+              name: billingDetails.companyName,
+              email: billingDetails.billingEmail,
+              contact: billingDetails.phone,
+            },
+            theme: {
+              color: '#7C3AED',
+            },
+          },
+          async (response) => {
+            try {
+              // Verify subscription payment/authorization
+              await verifySubscriptionPayment.mutateAsync({
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySubscriptionId: response.razorpay_subscription_id,
+                razorpaySignature: response.razorpay_signature,
+              })
+
+              setCompletedSteps(['plan', 'billing', 'payment'])
+              setCurrentStep('confirmation')
+            } finally {
+              setIsProcessing(false)
+            }
+          },
+          () => {
+            // User dismissed checkout
+            setIsProcessing(false)
+          }
+        )
+
+        // If checkout failed to open (e.g., Razorpay script load failed)
+        if (!checkoutOpened) {
           setIsProcessing(false)
         }
-      )
+        return
+      }
+
+      // Fall back to order-based checkout (legacy flow)
+      if (orderResponse.razorpayOrder && orderResponse.checkoutOptions) {
+        await openCheckout(
+          {
+            key: orderResponse.razorpayOrder.key,
+            amount: orderResponse.razorpayOrder.amount,
+            currency: orderResponse.razorpayOrder.currency,
+            name: 'EffortlessInsight',
+            description: `${selectedPlan.displayName} - ${billingCycle === 'annually' ? 'Annual' : 'Monthly'}`,
+            orderId: orderResponse.razorpayOrder.id,
+            prefill: {
+              name: billingDetails.companyName,
+              email: billingDetails.billingEmail,
+              contact: billingDetails.phone,
+            },
+            theme: {
+              color: '#7C3AED',
+            },
+          },
+          async (response) => {
+            // Verify payment
+            await verifyPayment.mutateAsync({
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature,
+            })
+
+            setCompletedSteps(['plan', 'billing', 'payment'])
+            setCurrentStep('confirmation')
+          },
+          () => {
+            setIsProcessing(false)
+          }
+        )
+      }
     } catch {
       setIsProcessing(false)
     }
@@ -247,8 +312,13 @@ function CheckoutContent() {
       {currentStep === 'billing' && selectedPlan && (
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            {/* Additional Seats Selector - only shown if plan allows it */}
-            {selectedPlan.limits.additionalUsersAllowed && selectedPlan.pricing.perSeat && (
+            {/* Additional Seats Selector - only shown if:
+                1. Plan allows additional users
+                2. Plan has per-seat pricing configured
+                3. Global setting for additional seats is enabled (admin control) */}
+            {globalSettings?.additionalSeatsEnabled !== false &&
+             selectedPlan.limits.additionalUsersAllowed &&
+             selectedPlan.pricing.perSeat && (
               <Card>
                 <CardHeader>
                   <CardTitle>Additional Team Members</CardTitle>
@@ -384,6 +454,16 @@ function CheckoutContent() {
                   />
                 </div>
 
+                {/* Trial Notice */}
+                {selectedPlan.trialDays > 0 && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>{selectedPlan.trialDays}-day free trial:</strong> You will be asked to
+                      authorize a payment method. No charge will be made until your trial ends.
+                    </p>
+                  </div>
+                )}
+
                 {/* Pay Button */}
                 <Button
                   className="w-full"
@@ -396,6 +476,8 @@ function CheckoutContent() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Processing...
                     </>
+                  ) : selectedPlan.trialDays > 0 ? (
+                    'Start Free Trial'
                   ) : (
                     'Pay Now'
                   )}
@@ -410,6 +492,17 @@ function CheckoutContent() {
                   <Link href="/privacy" className="underline">
                     Privacy Policy
                   </Link>
+                  {selectedPlan.trialDays > 0 && (
+                    <>
+                      . After your trial, you will be charged{' '}
+                      {formatAmount(
+                        billingCycle === 'annually'
+                          ? selectedPlan.pricing.annually || 0
+                          : selectedPlan.pricing.monthly || 0
+                      )}
+                      /{billingCycle === 'annually' ? 'year' : 'month'}.
+                    </>
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -435,11 +528,31 @@ function CheckoutContent() {
             <Check className="h-10 w-10 text-green-600" />
           </div>
 
-          <h2 className="text-2xl font-bold mb-4">Payment Successful!</h2>
-          <p className="text-muted-foreground mb-8">
-            Thank you for subscribing to {selectedPlan?.displayName}. Your
-            subscription is now active and you have full access to all features.
-          </p>
+          {selectedPlan?.trialDays && selectedPlan.trialDays > 0 ? (
+            <>
+              <h2 className="text-2xl font-bold mb-4">Trial Started!</h2>
+              <p className="text-muted-foreground mb-4">
+                Welcome to {selectedPlan.displayName}! Your {selectedPlan.trialDays}-day free trial has started.
+              </p>
+              <p className="text-sm text-muted-foreground mb-8">
+                Your payment method has been authorized. You will be automatically charged{' '}
+                {formatAmount(
+                  billingCycle === 'annually'
+                    ? selectedPlan.pricing.annually || 0
+                    : selectedPlan.pricing.monthly || 0
+                )}{' '}
+                when your trial ends. Enjoy full access to all features!
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold mb-4">Payment Successful!</h2>
+              <p className="text-muted-foreground mb-8">
+                Thank you for subscribing to {selectedPlan?.displayName}. Your
+                subscription is now active and you have full access to all features.
+              </p>
+            </>
+          )}
 
           <div className="space-y-4">
             <Button asChild className="w-full">

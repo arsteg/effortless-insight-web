@@ -5,7 +5,8 @@ import { ArrowLeft, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { InfoIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -22,12 +23,11 @@ import {
   useCurrentSubscription,
   useUsage,
   useInvoices,
-  usePlans,
+  usePlansWithSettings,
   useChangePlan,
   useCancelSubscription,
   usePauseSubscription,
   useResumeSubscription,
-  useReactivateSubscription,
   useAddSeats,
   useVerifySeatsPayment,
   useRazorpayCheckout,
@@ -55,15 +55,18 @@ export default function BillingSettingsPage() {
   const { data: subscription, isLoading: isLoadingSubscription } = useCurrentSubscription()
   const { data: usage, isLoading: isLoadingUsage } = useUsage()
   const { data: invoicesData, isLoading: isLoadingInvoices } = useInvoices(invoicePage, 10)
-  const { data: plans, isLoading: isLoadingPlans } = usePlans()
+  const { data: plansData, isLoading: isLoadingPlans } = usePlansWithSettings()
   const { data: paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
+
+  // Extract plans and global settings
+  const plans = plansData?.plans
+  const globalSettings = plansData?.globalSettings
 
   // Mutations
   const changePlan = useChangePlan()
   const cancelSubscription = useCancelSubscription()
   const pauseSubscription = usePauseSubscription()
   const resumeSubscription = useResumeSubscription()
-  const reactivateSubscription = useReactivateSubscription()
   const addSeats = useAddSeats()
   const verifySeatsPayment = useVerifySeatsPayment()
   const { openCheckout } = useRazorpayCheckout()
@@ -74,6 +77,11 @@ export default function BillingSettingsPage() {
   const isLoading = isLoadingSubscription || isLoadingPlans
 
   const handleUpgrade = () => {
+    // During trial, no action allowed - informational only
+    if (subscription?.isTrialing) {
+      return
+    }
+
     if (subscription) {
       setShowChangePlanModal(true)
     } else {
@@ -106,10 +114,6 @@ export default function BillingSettingsPage() {
 
   const handleResume = () => {
     resumeSubscription.mutate()
-  }
-
-  const handleReactivate = () => {
-    reactivateSubscription.mutate()
   }
 
   const handleChangePlanConfirm = (
@@ -247,17 +251,28 @@ export default function BillingSettingsPage() {
         </Alert>
       )}
 
-      {/* Current Plan */}
+      {/* Upgrade-only policy message */}
+      {subscription && globalSettings?.downgradesAllowed === false && (
+        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+          <InfoIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertTitle className="text-blue-800 dark:text-blue-200">Upgrade-Only Policy</AlertTitle>
+          <AlertDescription className="text-blue-700 dark:text-blue-300">
+            Once subscribed, you can only upgrade to a higher plan. Downgrades to lower plans are not available.
+            If you need to change your plan or have any questions, please contact our support team.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Current Plan - during trial, no action buttons are shown */}
       <CurrentPlanCard
         subscription={subscription}
         isLoading={isLoadingSubscription}
-        onUpgrade={canEdit ? handleUpgrade : undefined}
+        onUpgrade={canEdit && !subscription?.isTrialing ? handleUpgrade : undefined}
         onAddSeats={canEdit ? handleAddSeats : undefined}
         canAddSeats={canEdit && canAddSeats}
-        onCancel={canEdit ? handleCancel : undefined}
-        onPause={canEdit ? handlePause : undefined}
+        onCancel={canEdit && !subscription?.isTrialing ? handleCancel : undefined}
+        onPause={canEdit && !subscription?.isTrialing ? handlePause : undefined}
         onResume={canEdit ? handleResume : undefined}
-        onReactivate={canEdit ? handleReactivate : undefined}
       />
 
       {/* Usage */}
@@ -284,8 +299,8 @@ export default function BillingSettingsPage() {
         isDownloading={downloadInvoice.isPending}
       />
 
-      {/* Change Plan Modal */}
-      {subscription && plans && (
+      {/* Change Plan Modal - only for active subscriptions, not during trial */}
+      {subscription && plans && !subscription.isTrialing && (
         <ChangePlanModal
           open={showChangePlanModal}
           onOpenChange={setShowChangePlanModal}
@@ -293,11 +308,12 @@ export default function BillingSettingsPage() {
           currentSubscription={subscription}
           onConfirm={handleChangePlanConfirm}
           isLoading={changePlan.isPending}
+          globalSettings={globalSettings}
         />
       )}
 
-      {/* Cancel Subscription Modal */}
-      {subscription && (
+      {/* Cancel Subscription Modal - not during trial */}
+      {subscription && !subscription.isTrialing && (
         <CancelSubscriptionModal
           open={showCancelModal}
           onOpenChange={setShowCancelModal}
@@ -307,8 +323,8 @@ export default function BillingSettingsPage() {
         />
       )}
 
-      {/* Pause Subscription Modal */}
-      {subscription && (
+      {/* Pause Subscription Modal - not during trial */}
+      {subscription && !subscription.isTrialing && (
         <PauseSubscriptionModal
           open={showPauseModal}
           onOpenChange={setShowPauseModal}
@@ -318,8 +334,8 @@ export default function BillingSettingsPage() {
         />
       )}
 
-      {/* Add Seats Modal */}
-      {subscription && currentPlan && canAddSeats && (
+      {/* Add Seats Modal - not during trial */}
+      {subscription && currentPlan && canAddSeats && !subscription.isTrialing && (
         <AddSeatsModal
           open={showAddSeatsModal}
           onOpenChange={setShowAddSeatsModal}

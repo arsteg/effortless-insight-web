@@ -8,6 +8,7 @@ import type {
   StartTrialRequest,
   VerifyPaymentRequest,
   VerifyPaymentResponse,
+  VerifySubscriptionPaymentRequest,
   ChangePlanRequest,
   ChangePlanResponse,
   ValidatePlanChangeRequest,
@@ -115,11 +116,25 @@ export const billingApi = {
   },
 
   /**
-   * Verify payment and activate subscription
+   * Verify payment and activate subscription (order-based checkout)
    */
   async verifyPayment(data: VerifyPaymentRequest): Promise<VerifyPaymentResponse> {
     const response = await apiClient.post<{ data: VerifyPaymentResponse }>(
       '/subscriptions/verify',
+      data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Verify subscription payment and activate subscription (subscription-based checkout)
+   * Used for true auto-recurring billing with mandate/token registration
+   */
+  async verifySubscriptionPayment(
+    data: VerifySubscriptionPaymentRequest
+  ): Promise<VerifyPaymentResponse> {
+    const response = await apiClient.post<{ data: VerifyPaymentResponse }>(
+      '/subscriptions/verify-subscription',
       data
     )
     return response.data.data
