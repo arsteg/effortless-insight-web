@@ -39,6 +39,25 @@ export const COMPANY = {
    */
   salesEmail:
     process.env.NEXT_PUBLIC_COMPANY_SALES_EMAIL || 'sales@effortlessinsight.in',
+  /**
+   * Social profiles. Empty string = account not live yet — consumers must
+   * skip empty entries (the footer and JSON-LD both do).
+   */
+  socials: {
+    linkedin:
+      process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN ||
+      'https://www.linkedin.com/company/effortlessinsight',
+    twitter: process.env.NEXT_PUBLIC_SOCIAL_TWITTER || 'https://x.com/InsightMadeEasy',
+    instagram:
+      process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM ||
+      'https://www.instagram.com/effortless_insight',
+    facebook:
+      process.env.NEXT_PUBLIC_SOCIAL_FACEBOOK ||
+      'https://www.facebook.com/profile.php?id=61594166517403',
+    youtube:
+      process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE ||
+      'https://www.youtube.com/@EffortlessInsightIN',
+  },
   /** Public contact phone, display form. */
   phone: process.env.NEXT_PUBLIC_COMPANY_PHONE || '+91 93113 91932',
   /** Phone in tel: href form (E.164, no spaces). */

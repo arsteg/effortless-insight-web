@@ -61,6 +61,8 @@ const structuredData = {
       operatingSystem: 'Web',
       description,
       url: SITE_URL,
+      // Official social profiles — helps search engines tie them to the brand
+      sameAs: Object.values(COMPANY.socials).filter(Boolean),
       offers: {
         '@type': 'Offer',
         price: '0',

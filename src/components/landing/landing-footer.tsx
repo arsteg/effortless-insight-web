@@ -1,12 +1,17 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Mail, MapPin, Phone } from 'lucide-react'
+import { Mail, MapPin, Phone, Linkedin, Twitter, Instagram, Facebook, Youtube } from 'lucide-react'
 import { COMPANY } from '@/lib/company'
 
-/**
- * TODO(marketing): add social links (Twitter/LinkedIn) once the real
- * accounts exist — placeholders were removed on purpose.
- */
+// Social accounts (real, created 2026-09-08). Entries with an empty URL in
+// COMPANY.socials (e.g. YouTube until the channel exists) are skipped.
+const socialLinks = [
+  { label: 'LinkedIn', href: COMPANY.socials.linkedin, icon: Linkedin },
+  { label: 'X (Twitter)', href: COMPANY.socials.twitter, icon: Twitter },
+  { label: 'Instagram', href: COMPANY.socials.instagram, icon: Instagram },
+  { label: 'Facebook', href: COMPANY.socials.facebook, icon: Facebook },
+  { label: 'YouTube', href: COMPANY.socials.youtube, icon: Youtube },
+].filter((s) => s.href)
 
 const footerLinks = {
   product: {
@@ -84,6 +89,20 @@ export function LandingFooter() {
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                 <span>{COMPANY.addressInline}</span>
               </p>
+            </div>
+            <div className="mt-6 flex items-center gap-3">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`EffortlessInsight on ${social.label}`}
+                  className="rounded-lg border border-gray-800 p-2 text-gray-400 transition-colors hover:border-gray-600 hover:text-white"
+                >
+                  <social.icon className="h-4 w-4" aria-hidden />
+                </a>
+              ))}
             </div>
           </div>
 
