@@ -1,4 +1,5 @@
 import { apiClient, setTokens, clearTokens } from './client'
+import { track } from '@/lib/analytics'
 import type {
   ApiResponse,
   LoginRequest,
@@ -94,6 +95,7 @@ export const authApi = {
   // Registration & verification
   async register(data: RegisterRequest): Promise<RegisterResponse> {
     const response = await apiClient.post<ApiResponse<RegisterResponse>>('/auth/register', data)
+    track('signup_completed')
     return response.data.data
   },
 
@@ -103,6 +105,7 @@ export const authApi = {
       '/auth/signup/otp/request',
       { mobile }
     )
+    track('signup_started')
     return response.data.data
   },
 
@@ -117,6 +120,7 @@ export const authApi = {
       // the visitor verifies but never completes registration
       { mobile, otp, name: details?.name || undefined, email: details?.email || undefined, source: 'web' }
     )
+    track('signup_mobile_verified')
     return response.data.data
   },
 
@@ -135,12 +139,15 @@ export const authApi = {
     // Store tokens if login successful (not 2FA required)
     if ('accessToken' in result) {
       setTokens(result.accessToken, result.refreshToken)
+      track('login')
     }
 
     return result
   },
 
   async logout(): Promise<void> {
+    // Before clearTokens so the event flushes while still authenticated
+    track('logout')
     try {
       await apiClient.post('/auth/logout')
     } finally {
@@ -221,6 +228,7 @@ export const authApi = {
     )
     const result = response.data.data
     setTokens(result.accessToken, result.refreshToken)
+    track('login', { name: '2fa' })
     return result
   },
 
@@ -258,6 +266,7 @@ export const authApi = {
     // Store tokens if login successful (not 2FA required)
     if ('accessToken' in result) {
       setTokens(result.accessToken, result.refreshToken)
+      track('login', { name: 'oauth' })
     }
 
     return result

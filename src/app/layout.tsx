@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
+import { RouteTracker } from '@/components/analytics/route-tracker'
 import { COMPANY } from '@/lib/company'
 import { SITE_URL } from '@/lib/site'
 
@@ -55,6 +56,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
+          <RouteTracker />
           {children}
         </Providers>
       </body>
