@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
+import { COMPANY } from '@/lib/company'
 
 export const metadata: Metadata = {
   title: 'Account Deletion | EffortlessInsight',
