@@ -38,7 +38,12 @@ function BrowserFrame({ children }: { children: React.ReactNode }) {
         <span className="h-2.5 w-2.5 rounded-full bg-gray-200" />
         <span className="h-2.5 w-2.5 rounded-full bg-gray-200" />
         <span className="ml-3 rounded-md bg-white px-3 py-0.5 text-[11px] text-gray-400">
-          app.effortlessinsight.in
+          effortlessinsight.in
+        </span>
+        {/* All figures, clients and names in the mockups are illustrative —
+            labeled so nobody reads them as real company performance. */}
+        <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-400">
+          Sample data
         </span>
       </div>
       <div className="p-5">{children}</div>
@@ -50,7 +55,10 @@ function PhoneFrame({ children, header }: { children: React.ReactNode; header: R
   return (
     <div className="mx-auto w-full max-w-[300px] overflow-hidden rounded-[2rem] border-[6px] border-gray-900 bg-white shadow-xl">
       {header}
-      <div className="p-3">{children}</div>
+      <div className="p-3">
+        {children}
+        <p className="mt-2 text-center text-[10px] font-medium text-gray-400">Sample data</p>
+      </div>
     </div>
   )
 }
