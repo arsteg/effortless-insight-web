@@ -70,7 +70,7 @@ export default function PricingError({
                 href={`mailto:${COMPANY.email}`}
                 className="text-primary font-medium hover:underline"
               >
-                Contact Support
+                Write to us
               </a>
             </p>
           </div>

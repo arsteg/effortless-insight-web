@@ -179,9 +179,9 @@ function SelectPlanContent() {
         {/* FAQ or Help */}
         <div className="text-center mt-12">
           <p className="text-muted-foreground">
-            Have questions?{' '}
-            <a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">
-              Contact our support team
+            Have questions about plans?{' '}
+            <a href={`mailto:${COMPANY.salesEmail}`} className="text-primary hover:underline">
+              Contact our sales team
             </a>
           </p>
         </div>

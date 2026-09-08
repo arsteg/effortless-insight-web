@@ -314,7 +314,7 @@ function PricingCard({
       <CardFooter>
         {plan.contactSales ? (
           <Button className="w-full" variant="outline" asChild>
-            <a href={`mailto:${COMPANY.email}`}>Contact Sales</a>
+            <a href={`mailto:${COMPANY.salesEmail}`}>Contact Sales</a>
           </Button>
         ) : (
           <Button
@@ -377,7 +377,7 @@ function EmptyPlansState() {
               Retry
             </Button>
             <Button asChild>
-              <a href={`mailto:${COMPANY.email}`}>Contact Support</a>
+              <a href={`mailto:${COMPANY.salesEmail}`}>Contact Sales</a>
             </Button>
           </div>
         </CardContent>

@@ -11,8 +11,9 @@ export const metadata: Metadata = {
     'Talk to the EffortlessInsight team about GST notice management — sales questions, enterprise plans, support or security.',
 }
 
-// TODO(marketing): switch to dedicated sales@/support@ mailboxes on the
-// product domain once provisioned — single shared inbox for now.
+// Channel policy: sales@ for pre-sales, info@ for everything else. Customer
+// support is deliberately NOT an email channel — it lives inside the app
+// (dashboard support), so no support@ mailbox exists.
 const CONTACT_EMAIL = COMPANY.email
 
 const topics = [
@@ -20,16 +21,22 @@ const topics = [
     icon: Building2,
     title: 'Sales & enterprise',
     body: 'Custom plans, many GSTINs, procurement questions, or a walkthrough for your team or practice.',
+    channelLabel: COMPANY.salesEmail,
+    channelHref: `mailto:${COMPANY.salesEmail}`,
   },
   {
     icon: LifeBuoy,
     title: 'Support',
-    body: 'Already using EffortlessInsight and stuck on something? We read every message.',
+    body: 'Already using EffortlessInsight? Support is built into the app — sign in and raise a request from your dashboard. We read every message.',
+    channelLabel: 'Sign in to the app',
+    channelHref: '/login',
   },
   {
     icon: MessageSquareText,
     title: 'Everything else',
     body: 'Security questions, partnerships, press, or feedback on the product.',
+    channelLabel: COMPANY.email,
+    channelHref: `mailto:${COMPANY.email}`,
   },
 ]
 
@@ -49,7 +56,7 @@ export default function ContactPage() {
               Talk to a human.
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-gray-600">
-              No call-booking maze. One address reaches the whole team, and a
+              No call-booking maze. Every message below reaches the team, and a
               real person replies — usually within one business day.
             </p>
             <a
@@ -72,6 +79,12 @@ export default function ContactPage() {
                 </div>
                 <h2 className="mt-4 font-semibold text-gray-950">{topic.title}</h2>
                 <p className="mt-1.5 text-sm leading-relaxed text-gray-600">{topic.body}</p>
+                <a
+                  href={topic.channelHref}
+                  className="mt-3 inline-block text-sm font-medium text-primary-700 hover:underline"
+                >
+                  {topic.channelLabel}
+                </a>
               </div>
             ))}
           </div>

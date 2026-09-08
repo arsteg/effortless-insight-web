@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Calendar,
   Lock,
+  LifeBuoy,
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -84,6 +85,11 @@ const bottomNavItems: NavItem[] = [
     title: 'Team',
     href: '/team',
     icon: Users,
+  },
+  {
+    title: 'Support',
+    href: '/support',
+    icon: LifeBuoy,
   },
   {
     title: 'Settings',

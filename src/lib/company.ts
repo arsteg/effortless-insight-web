@@ -31,10 +31,16 @@ export const COMPANY = {
     'Aravali Heights, Sector 24, Dharuhera, Rewari, Haryana – 123106, India',
   /** District whose courts have jurisdiction (matches registered office). */
   jurisdiction: process.env.NEXT_PUBLIC_COMPANY_JURISDICTION || 'Rewari, Haryana',
-  /** Public contact email. */
+  /** General/press/legal contact email. */
   email: process.env.NEXT_PUBLIC_COMPANY_EMAIL || 'info@effortlessinsight.in',
+  /**
+   * Pre-sales contact email. Customer *support* is deliberately not an email
+   * channel — it lives in-app (dashboard support) — so no support@ exists.
+   */
+  salesEmail:
+    process.env.NEXT_PUBLIC_COMPANY_SALES_EMAIL || 'sales@effortlessinsight.in',
   /** Public contact phone, display form. */
-  phone: process.env.NEXT_PUBLIC_COMPANY_PHONE || '+91 84474 70101',
+  phone: process.env.NEXT_PUBLIC_COMPANY_PHONE || '+91 93113 91932',
   /** Phone in tel: href form (E.164, no spaces). */
-  phoneHref: process.env.NEXT_PUBLIC_COMPANY_PHONE_HREF || '+918447470101',
+  phoneHref: process.env.NEXT_PUBLIC_COMPANY_PHONE_HREF || '+919311391932',
 } as const
