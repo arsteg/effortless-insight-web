@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/landing/legal-page'
+import { COMPANY } from '@/lib/company'
 
 export const metadata: Metadata = {
   title: 'Refund Policy | EffortlessInsight',
@@ -50,7 +51,7 @@ export default function RefundPage() {
         {
           heading: 'Requesting a refund',
           paragraphs: [
-            'Email info@arsteg.com from your account email with the payment reference. We respond to every request.',
+            `Email ${COMPANY.email} from your account email with the payment reference. We respond to every request.`,
           ],
         },
       ]}

@@ -2,12 +2,14 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
+import { COMPANY } from '@/lib/company'
+import { SITE_URL } from '@/lib/site'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://effortlessinsight.in'),
-  title: 'EffortlessInsight - GST Notice Management',
+  metadataBase: new URL(SITE_URL),
+  title: `${COMPANY.brand} - GST Notice Management`,
   description: 'AI-powered GST Notice Operating System for Indian businesses',
   manifest: '/manifest.json',
   icons: {
@@ -17,7 +19,18 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'EffortlessInsight',
+    title: COMPANY.brand,
+  },
+  // Site-wide social-share fallback; individual pages (e.g. the homepage) may override.
+  openGraph: {
+    siteName: COMPANY.brand,
+    locale: 'en_IN',
+    type: 'website',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: COMPANY.brand }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/og-image.png'],
   },
 }
 

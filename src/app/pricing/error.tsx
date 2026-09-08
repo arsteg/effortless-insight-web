@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { AlertCircle, RefreshCcw, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { COMPANY } from '@/lib/company'
 
 export default function PricingError({
   error,
@@ -66,7 +67,7 @@ export default function PricingError({
             <p className="text-sm text-gray-600 text-center">
               Still having issues?{' '}
               <a
-                href="mailto:info@arsteg.com"
+                href={`mailto:${COMPANY.email}`}
                 className="text-primary font-medium hover:underline"
               >
                 Contact Support

@@ -1,5 +1,6 @@
 import { LandingHeader } from './landing-header'
 import { LandingFooter } from './landing-footer'
+import { COMPANY } from '@/lib/company'
 
 export interface LegalSection {
   heading: string
@@ -56,10 +57,10 @@ export function LegalPage({
             <p className="mt-2 text-gray-700">
               Write to{' '}
               <a
-                href="mailto:info@arsteg.com"
+                href={`mailto:${COMPANY.email}`}
                 className="font-medium text-primary-600 underline-offset-2 hover:underline"
               >
-                info@arsteg.com
+                {COMPANY.email}
               </a>{' '}
               and a real person will reply.
             </p>

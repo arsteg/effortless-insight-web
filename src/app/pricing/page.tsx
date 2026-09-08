@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BillingToggle, PlanComparison } from '@/components/features/billing'
+import { COMPANY } from '@/lib/company'
 import { usePlans } from '@/hooks/use-billing'
 import { formatAmount } from '@/lib/api/billing'
 import type { BillingCycle, Plan } from '@/types/billing'
@@ -313,7 +314,7 @@ function PricingCard({
       <CardFooter>
         {plan.contactSales ? (
           <Button className="w-full" variant="outline" asChild>
-            <a href="mailto:info@arsteg.com">Contact Sales</a>
+            <a href={`mailto:${COMPANY.email}`}>Contact Sales</a>
           </Button>
         ) : (
           <Button
@@ -376,7 +377,7 @@ function EmptyPlansState() {
               Retry
             </Button>
             <Button asChild>
-              <a href="mailto:info@arsteg.com">Contact Support</a>
+              <a href={`mailto:${COMPANY.email}`}>Contact Support</a>
             </Button>
           </div>
         </CardContent>

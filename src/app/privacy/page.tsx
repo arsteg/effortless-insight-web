@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/landing/legal-page'
+import { COMPANY } from '@/lib/company'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | EffortlessInsight',
@@ -86,7 +87,13 @@ export default function PrivacyPage() {
         {
           heading: 'Your rights',
           paragraphs: [
-            'In line with the Digital Personal Data Protection Act, 2023, you can request access to, correction of, or deletion of your personal data, and raise grievances about how it is handled. Write to info@arsteg.com and we will respond.',
+            `In line with the Digital Personal Data Protection Act, 2023, you can request access to, correction of, or deletion of your personal data, and raise grievances about how it is handled. Write to ${COMPANY.email} and we will respond.`,
+          ],
+        },
+        {
+          heading: 'Who operates this service',
+          paragraphs: [
+            `EffortlessInsight is operated by ${COMPANY.legalName} (CIN ${COMPANY.cin}, GSTIN ${COMPANY.gstin}), registered office ${COMPANY.addressInline}. For any privacy question or grievance, contact ${COMPANY.email} or ${COMPANY.phone}.`,
           ],
         },
         {

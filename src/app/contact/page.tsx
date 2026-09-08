@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight, Mail, Building2, LifeBuoy, MessageSquareText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LandingHeader, LandingFooter } from '@/components/landing'
+import { COMPANY } from '@/lib/company'
 
 export const metadata: Metadata = {
   title: 'Contact | EffortlessInsight',
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 
 // TODO(marketing): switch to dedicated sales@/support@ mailboxes on the
 // product domain once provisioned — single shared inbox for now.
-const CONTACT_EMAIL = 'info@arsteg.com'
+const CONTACT_EMAIL = COMPANY.email
 
 const topics = [
   {
@@ -91,9 +92,25 @@ export default function ContactPage() {
             </Button>
           </div>
 
-          <p className="mt-10 text-center text-sm text-gray-500">
-            EffortlessInsight · Gurugram, Haryana, India
-          </p>
+          <div className="mx-auto mt-10 max-w-2xl border-t border-gray-100 pt-8 text-center text-sm text-gray-500">
+            <p className="font-medium text-gray-700">{COMPANY.legalName}</p>
+            <p className="mt-1">Registered office: {COMPANY.addressInline}</p>
+            <p className="mt-1">
+              CIN {COMPANY.cin} · GSTIN {COMPANY.gstin}
+            </p>
+            <p className="mt-1">
+              <a href={`tel:${COMPANY.phoneHref}`} className="hover:text-gray-700">
+                {COMPANY.phone}
+              </a>
+              {' · '}
+              <a
+                href={`mailto:${COMPANY.email}`}
+                className="hover:text-gray-700"
+              >
+                {COMPANY.email}
+              </a>
+            </p>
+          </div>
         </div>
       </section>
 

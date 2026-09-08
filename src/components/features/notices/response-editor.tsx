@@ -23,6 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AIDisclaimer } from './ai-disclaimer'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -434,6 +435,8 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
             </div>
           </div>
         )}
+
+        <AIDisclaimer />
 
         <Textarea
           placeholder="Draft your response here, or click 'Auto-Draft' to generate an AI-powered response..."

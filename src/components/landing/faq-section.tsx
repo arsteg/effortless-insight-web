@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react'
+import { COMPANY } from '@/lib/company'
 
 /**
  * Two-track FAQ: the questions that block signups, then the operational and
@@ -105,12 +106,11 @@ export function FaqSection() {
             <FaqList items={securityOps} />
             <p className="mt-6 text-sm text-gray-500">
               Something we haven&apos;t covered? Write to{' '}
-              {/* TODO(marketing): confirm the canonical support/security contact address */}
               <a
-                href="mailto:info@arsteg.com"
+                href={`mailto:${COMPANY.email}`}
                 className="font-medium text-primary-600 underline-offset-2 hover:underline"
               >
-                info@arsteg.com
+                {COMPANY.email}
               </a>
               .
             </p>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { COMPANY } from '@/lib/company'
 import { formatAmount } from '@/lib/api/billing'
 import type { Plan, BillingCycle } from '@/types/billing'
 
@@ -100,7 +101,7 @@ export function PlanCard({
       <CardFooter>
         {plan.contactSales ? (
           <Button className="w-full" variant="outline" asChild>
-            <a href="mailto:info@arsteg.com">Contact Sales</a>
+            <a href={`mailto:${COMPANY.email}`}>Contact Sales</a>
           </Button>
         ) : isCurrentPlan ? (
           <Button className="w-full" variant="secondary" disabled>

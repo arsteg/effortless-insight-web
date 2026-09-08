@@ -43,9 +43,9 @@ export default function DeleteAccountPage() {
           Email{' '}
           <a
             className="text-primary-600 underline"
-            href="mailto:hello@effortlessinsight.com?subject=Account%20deletion%20request"
+            href={`mailto:${COMPANY.email}?subject=Account%20deletion%20request`}
           >
-            hello@effortlessinsight.com
+            {COMPANY.email}
           </a>{' '}
           from the email address registered to your account with the subject{' '}
           &quot;Account deletion request&quot;. We will verify the request and confirm once

@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Mail, MapPin } from 'lucide-react'
+import { Mail, MapPin, Phone } from 'lucide-react'
+import { COMPANY } from '@/lib/company'
 
 /**
- * TODO(marketing): add social links (Twitter/LinkedIn) and a phone number
- * once the real accounts/number exist — placeholders were removed on purpose.
+ * TODO(marketing): add social links (Twitter/LinkedIn) once the real
+ * accounts exist — placeholders were removed on purpose.
  */
 
 const footerLinks = {
@@ -66,15 +67,22 @@ export function LandingFooter() {
             </p>
             <div className="space-y-2.5">
               <a
-                href="mailto:info@arsteg.com"
+                href={`mailto:${COMPANY.email}`}
                 className="flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-white"
               >
                 <Mail className="h-4 w-4" aria-hidden />
-                info@arsteg.com
+                {COMPANY.email}
               </a>
-              <p className="flex items-center gap-2 text-sm text-gray-400">
-                <MapPin className="h-4 w-4" aria-hidden />
-                Gurugram, Haryana, India
+              <a
+                href={`tel:${COMPANY.phoneHref}`}
+                className="flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-white"
+              >
+                <Phone className="h-4 w-4" aria-hidden />
+                {COMPANY.phone}
+              </a>
+              <p className="flex items-start gap-2 text-sm text-gray-400">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                <span>{COMPANY.addressInline}</span>
               </p>
             </div>
           </div>
@@ -103,9 +111,15 @@ export function LandingFooter() {
       <div className="border-t border-gray-800">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col items-center justify-between gap-3 md:flex-row">
-            <p className="text-sm text-gray-400">
-              &copy; {new Date().getFullYear()} EffortlessInsight. All rights reserved.
-            </p>
+            <div className="text-center md:text-left">
+              <p className="text-sm text-gray-400">
+                &copy; {new Date().getFullYear()} {COMPANY.legalName}. All rights
+                reserved.
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                CIN {COMPANY.cin} · GSTIN {COMPANY.gstin}
+              </p>
+            </div>
             <p className="text-xs text-gray-400">
               Made in India · OTP-verified access · No password storage · Data hosted in India
             </p>

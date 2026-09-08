@@ -18,6 +18,8 @@ import {
   LandingFooter,
   Reveal,
 } from '@/components/landing'
+import { COMPANY } from '@/lib/company'
+import { SITE_URL } from '@/lib/site'
 
 const title = 'EffortlessInsight — GST notices, found, explained and answered on time'
 const description =
@@ -31,14 +33,16 @@ export const metadata: Metadata = {
     title,
     description,
     url: '/',
-    siteName: 'EffortlessInsight',
+    siteName: COMPANY.brand,
     locale: 'en_IN',
     type: 'website',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: COMPANY.brand }],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title,
     description,
+    images: ['/og-image.png'],
   },
 }
 
@@ -52,11 +56,11 @@ const structuredData = {
   '@graph': [
     {
       '@type': 'SoftwareApplication',
-      name: 'EffortlessInsight',
+      name: COMPANY.brand,
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description,
-      url: 'https://effortlessinsight.in',
+      url: SITE_URL,
       offers: {
         '@type': 'Offer',
         price: '0',

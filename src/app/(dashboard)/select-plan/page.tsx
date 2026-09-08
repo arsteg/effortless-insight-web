@@ -19,6 +19,7 @@ import { usePlans, useStartTrial, useCurrentSubscription } from '@/hooks/use-bil
 import { useAuthStore } from '@/stores'
 import { formatAmount } from '@/lib/api/billing'
 import { cn } from '@/lib/utils'
+import { COMPANY } from '@/lib/company'
 import type { Plan, BillingCycle } from '@/types/billing'
 
 function SelectPlanContent() {
@@ -40,6 +41,9 @@ function SelectPlanContent() {
 
   const handleSelectPlan = async (plan: Plan) => {
     setSelectedPlan(plan.code)
+
+    // Plan selection is stored in BillingSubscription table when trial starts
+    // No need for localStorage - subscription data contains planCode and billingCycle
 
     const isFreePlan = plan.pricing.monthly === 0 || plan.pricing.annually === 0
 
@@ -176,7 +180,7 @@ function SelectPlanContent() {
         <div className="text-center mt-12">
           <p className="text-muted-foreground">
             Have questions?{' '}
-            <a href="mailto:info@arsteg.com" className="text-primary hover:underline">
+            <a href={`mailto:${COMPANY.email}`} className="text-primary hover:underline">
               Contact our support team
             </a>
           </p>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { LegalPage } from '@/components/landing/legal-page'
+import { COMPANY } from '@/lib/company'
 
 export const metadata: Metadata = {
   title: 'Terms of Service | EffortlessInsight',
@@ -16,6 +17,12 @@ export default function TermsPage() {
       updated="11 August 2026"
       intro="These terms govern your use of EffortlessInsight. By creating an account you agree to them. They are written to be read — if anything is unclear, ask us before you agree."
       sections={[
+        {
+          heading: 'Who we are',
+          paragraphs: [
+            `EffortlessInsight is a product operated by ${COMPANY.legalName} (CIN ${COMPANY.cin}, GSTIN ${COMPANY.gstin}), a company incorporated in India with its registered office at ${COMPANY.addressInline}. In these terms, "we", "us" and "EffortlessInsight" refer to this company. You can reach us at ${COMPANY.email} or ${COMPANY.phone}.`,
+          ],
+        },
         {
           heading: 'What EffortlessInsight is',
           paragraphs: [
@@ -83,7 +90,7 @@ export default function TermsPage() {
         {
           heading: 'Governing law',
           paragraphs: [
-            'These terms are governed by the laws of India, and courts in Gurugram, Haryana have jurisdiction over disputes.',
+            `These terms are governed by the laws of India, and the courts at ${COMPANY.jurisdiction} have exclusive jurisdiction over disputes.`,
           ],
         },
       ]}

@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
 import { RiskBadge } from './risk-badge'
+import { AIDisclaimer } from './ai-disclaimer'
 import { cn } from '@/lib/utils'
 import type { NoticeAiReport, ProcessingStatus } from '@/types'
 
@@ -103,6 +104,9 @@ export function AIAnalysisView({
 
   return (
     <div className="space-y-6">
+      {/* AI disclaimer — always shown above analysis output */}
+      <AIDisclaimer />
+
       {/* Risk Assessment */}
       <Card>
         <CardHeader>
