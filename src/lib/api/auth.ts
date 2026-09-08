@@ -106,10 +106,16 @@ export const authApi = {
     return response.data.data
   },
 
-  async verifySignupOtp(mobile: string, otp: string): Promise<MobileVerificationResponse> {
+  async verifySignupOtp(
+    mobile: string,
+    otp: string,
+    details?: { name?: string; email?: string }
+  ): Promise<MobileVerificationResponse> {
     const response = await apiClient.post<ApiResponse<MobileVerificationResponse>>(
       '/auth/signup/otp/verify',
-      { mobile, otp }
+      // name/email let the backend record the lead for admin follow-up if
+      // the visitor verifies but never completes registration
+      { mobile, otp, name: details?.name || undefined, email: details?.email || undefined, source: 'web' }
     )
     return response.data.data
   },

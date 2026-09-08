@@ -168,7 +168,10 @@ function RegisterForm() {
     setOtpError(null)
     setOtpVerifying(true)
     try {
-      const result = await authApi.verifySignupOtp(otpMobileRef.current ?? '', otpValue)
+      const result = await authApi.verifySignupOtp(otpMobileRef.current ?? '', otpValue, {
+        name: form.getValues('name'),
+        email: form.getValues('email'),
+      })
       setVerificationToken(result.verificationToken)
       setOtpState('verified')
       setOtpInfo(null)
