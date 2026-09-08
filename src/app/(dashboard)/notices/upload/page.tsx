@@ -22,14 +22,28 @@ import {
   MultiFileDropzone,
   DuplicateWarning,
 } from '@/components/features/upload'
+import { useQuery } from '@tanstack/react-query'
+import { LimitExceededAlert } from '@/components/ui/limit-exceeded-alert'
 import { useUploadMultipleNotices } from '@/hooks/use-upload'
 import { usePermissions } from '@/hooks/use-permissions'
+import { billingApi } from '@/lib/api/billing'
 import type { DuplicateWarning as DuplicateWarningType } from '@/types'
 
 type UploadStep = 'select' | 'confirm-duplicate' | 'uploading' | 'complete' | 'error'
 
 export default function UploadNoticePage() {
   const { canUploadNotices } = usePermissions()
+
+  // Per-plan notice quota — warn at 80%, block at 100% (the API enforces the
+  // same limit server-side with NOTICE_LIMIT_EXCEEDED; this is the UX for it).
+  const { data: usage } = useQuery({
+    queryKey: ['usage'],
+    queryFn: () => billingApi.getUsage(),
+    staleTime: 30_000,
+  })
+  const noticeLimit = usage?.notices.limit ?? -1
+  const noticesNearLimit = noticeLimit !== -1 && (usage?.notices.percentage ?? 0) >= 80
+  const noticesOverLimit = noticeLimit !== -1 && (usage?.notices.used ?? 0) >= noticeLimit
 
   // Block viewers from accessing this page
   if (!canUploadNotices) {
@@ -288,6 +302,16 @@ export default function UploadNoticePage() {
         </p>
       </div>
 
+      {/* Plan quota: warning from 80%, hard block at 100% with upgrade CTA */}
+      {noticesNearLimit && usage && (
+        <LimitExceededAlert
+          type="notices"
+          currentUsage={usage.notices.used}
+          limit={usage.notices.limit}
+          className="max-w-2xl"
+        />
+      )}
+
       {/* Upload Card */}
       <Card className="max-w-2xl">
         <CardHeader>
@@ -326,12 +350,14 @@ export default function UploadNoticePage() {
               >
                 Cancel
               </Button>
-              <Button onClick={handleUpload} disabled={isUploading}>
+              <Button onClick={handleUpload} disabled={isUploading || noticesOverLimit}>
                 {isUploading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Uploading...
                   </>
+                ) : noticesOverLimit ? (
+                  'Notice limit reached'
                 ) : (
                   `Upload ${selectedFiles.length} Notice${selectedFiles.length > 1 ? 's' : ''}`
                 )}

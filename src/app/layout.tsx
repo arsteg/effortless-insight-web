@@ -13,7 +13,12 @@ export const metadata: Metadata = {
   description: 'AI-powered GST Notice Operating System for Indian businesses',
   manifest: '/manifest.json',
   icons: {
-    icon: '/small-logo.svg',
+    // .ico first as the universal fallback (old browsers, RSS readers,
+    // Google result favicons), SVG for everything modern
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/small-logo.svg', type: 'image/svg+xml' },
+    ],
     apple: '/small-logo.svg',
   },
   appleWebApp: {
