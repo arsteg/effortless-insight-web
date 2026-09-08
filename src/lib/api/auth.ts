@@ -5,6 +5,8 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  SignupOtpResponse,
+  MobileVerificationResponse,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
@@ -92,6 +94,23 @@ export const authApi = {
   // Registration & verification
   async register(data: RegisterRequest): Promise<RegisterResponse> {
     const response = await apiClient.post<ApiResponse<RegisterResponse>>('/auth/register', data)
+    return response.data.data
+  },
+
+  // Signup mobile OTP (backend enforces verification before account creation)
+  async requestSignupOtp(mobile: string): Promise<SignupOtpResponse> {
+    const response = await apiClient.post<ApiResponse<SignupOtpResponse>>(
+      '/auth/signup/otp/request',
+      { mobile }
+    )
+    return response.data.data
+  },
+
+  async verifySignupOtp(mobile: string, otp: string): Promise<MobileVerificationResponse> {
+    const response = await apiClient.post<ApiResponse<MobileVerificationResponse>>(
+      '/auth/signup/otp/verify',
+      { mobile, otp }
+    )
     return response.data.data
   },
 

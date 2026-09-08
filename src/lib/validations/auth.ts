@@ -44,9 +44,9 @@ export const registerSchema = z
     confirmPassword: z.string().min(1, 'Please confirm your password'),
     mobile: z
       .string()
-      .optional()
-      .refine(
-        (val) => !val || /^[6-9]\d{9}$/.test(val),
+      .min(1, 'Mobile number is required')
+      .regex(
+        /^[6-9]\d{9}$/,
         'Please enter a valid 10-digit Indian mobile number'
       ),
     acceptTerms: z.boolean().refine((val) => val === true, {
