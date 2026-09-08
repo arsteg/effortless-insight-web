@@ -331,7 +331,8 @@ export function useDisable2fa() {
   const { toast } = useToast()
 
   return useMutation({
-    mutationFn: (password: string) => authApi.disable2fa(password),
+    mutationFn: (request: { password?: string; code: string }) =>
+      authApi.disable2fa(request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.profile() })
       toast({
@@ -343,7 +344,7 @@ export function useDisable2fa() {
     onError: (error: Error) => {
       toast({
         title: 'Failed to disable 2FA',
-        description: error.message || 'Invalid password. Please try again.',
+        description: error.message || 'Invalid password or verification code. Please try again.',
         variant: 'destructive',
       })
     },

@@ -8,6 +8,7 @@ export interface User {
   emailVerified: boolean
   mobileVerified: boolean
   is2faEnabled: boolean
+  hasPassword: boolean
   role: UserRole
   organization?: UserOrganization
   organizations: UserOrganization[]

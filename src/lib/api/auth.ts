@@ -217,8 +217,8 @@ export const authApi = {
     return response.data.data
   },
 
-  async disable2fa(password: string): Promise<void> {
-    await apiClient.delete('/auth/2fa', { data: { password } })
+  async disable2fa(request: { password?: string; code: string }): Promise<void> {
+    await apiClient.delete('/auth/2fa', { data: request })
   },
 
   async login2fa(partialToken: string, code: string): Promise<TwoFactorLoginResponse> {

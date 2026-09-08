@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { billingApi } from '@/lib/api/billing'
+import { useOrganizationStore } from '@/stores'
 
 /**
  * Known feature codes used in the system.
@@ -28,13 +29,17 @@ export type FeatureCode = typeof FeatureCodes[keyof typeof FeatureCodes]
 
 /**
  * Hook to fetch and check available features for the current organization.
+ * Waits for the organization to be fully initialized before fetching features.
  */
 export function useFeatures() {
+  const { currentOrganization, isLoading: isOrgLoading } = useOrganizationStore()
+
   return useQuery({
-    queryKey: ['features'],
+    queryKey: ['features', currentOrganization?.id],
     queryFn: () => billingApi.getAvailableFeatures(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (cacheTime renamed to gcTime in v5)
+    enabled: !!currentOrganization && !isOrgLoading, // Only run when org is ready
   })
 }
 

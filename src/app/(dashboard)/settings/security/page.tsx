@@ -107,6 +107,7 @@ export default function SecuritySettingsPage() {
   const [show2faDisable, setShow2faDisable] = useState(false)
   const [twoFactorCode, setTwoFactorCode] = useState('')
   const [disablePassword, setDisablePassword] = useState('')
+  const [disableCode, setDisableCode] = useState('')
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
 
   const form = useForm<PasswordFormValues>({
@@ -154,12 +155,19 @@ export default function SecuritySettingsPage() {
   }
 
   const handleDisable2fa = () => {
-    disable2faMutation.mutate(disablePassword, {
-      onSuccess: () => {
-        setShow2faDisable(false)
-        setDisablePassword('')
+    disable2faMutation.mutate(
+      {
+        password: user?.hasPassword ? disablePassword : undefined,
+        code: disableCode,
       },
-    })
+      {
+        onSuccess: () => {
+          setShow2faDisable(false)
+          setDisablePassword('')
+          setDisableCode('')
+        },
+      }
+    )
   }
 
   const isLoading = isLoadingProfile || isLoadingSessions
@@ -493,27 +501,55 @@ export default function SecuritySettingsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Disable Two-Factor Authentication?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will make your account less secure. Enter your password to confirm.
+              This will make your account less secure.
+              {user?.hasPassword
+                ? ' Enter your password and verification code to confirm.'
+                : ' Enter your verification code from your authenticator app to confirm.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4">
-            <Input
-              type="password"
-              placeholder="Enter your password"
-              value={disablePassword}
-              onChange={(e) => setDisablePassword(e.target.value)}
-            />
+          <div className="space-y-4 py-4">
+            {user?.hasPassword && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Password</label>
+                <Input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={disablePassword}
+                  onChange={(e) => setDisablePassword(e.target.value)}
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Verification Code</label>
+              <Input
+                placeholder="Enter 6-digit code or backup code"
+                value={disableCode}
+                onChange={(e) => setDisableCode(e.target.value.slice(0, 8))}
+                maxLength={8}
+                className="text-center font-mono tracking-widest"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter the 6-digit code from your authenticator app, or an 8-character backup code.
+              </p>
+            </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={disable2faMutation.isPending}
-              onClick={() => setDisablePassword('')}
+              onClick={() => {
+                setDisablePassword('')
+                setDisableCode('')
+              }}
             >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDisable2fa}
-              disabled={disable2faMutation.isPending || !disablePassword}
+              disabled={
+                disable2faMutation.isPending ||
+                !disableCode ||
+                (user?.hasPassword && !disablePassword)
+              }
               className="bg-destructive hover:bg-destructive/90"
             >
               {disable2faMutation.isPending ? (

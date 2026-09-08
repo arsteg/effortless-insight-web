@@ -44,6 +44,7 @@ const mockUser: User = {
   emailVerified: true,
   mobileVerified: false,
   is2faEnabled: true,
+  hasPassword: true,
   role: 'admin',
   organizations: [],
   createdAt: '2024-01-01T00:00:00Z',
