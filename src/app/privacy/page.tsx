@@ -9,16 +9,18 @@ export const metadata: Metadata = {
 }
 
 // NOTE(legal): This policy was drafted to accurately reflect the product's
-// actual behavior (OTP-based portal access, no password storage, AES-256 +
-// TLS, Indian data residency, 8-year retention) and the GST Notice Guard
-// Chrome extension (local storage, host permissions, notifications).
+// actual behavior (OTP-based GST-portal access, no portal-password storage,
+// AES-256-GCM at rest + TLS in transit, Indian data residency for storage
+// with transient AI processing by OpenAI in the US, no training on API data,
+// 8-year retention) and the GST Notice Guard Chrome extension (local storage,
+// host permissions, notifications).
 // Have counsel review before any claim here changes.
 export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
       updated="14 August 2026"
-      intro="EffortlessInsight helps Indian businesses, Chartered Accountants and finance teams manage GST notices through our web application and GST Notice Guard browser extension. Doing that requires access to sensitive tax data, so we hold ourselves to a simple standard: collect only what the service needs, protect it seriously, keep it in India, and never sell it. This policy explains exactly what we collect and why."
+      intro="EffortlessInsight helps Indian businesses, Chartered Accountants and finance teams manage GST notices through our web application and GST Notice Guard browser extension. Doing that requires access to sensitive tax data, so we hold ourselves to a simple standard: collect only what the service needs, protect it seriously, store it in India, and never sell it. This policy explains exactly what we collect and why — including the one place data is processed outside India: AI analysis (see below)."
       sections={[
         {
           heading: 'What we collect',
@@ -48,7 +50,7 @@ export default function PrivacyPage() {
         {
           heading: 'AI processing',
           paragraphs: [
-            'Notice text is processed by AI models to produce summaries, risk assessments and draft replies. Where third-party AI model providers are used, data is sent under agreements that prohibit using your data to train their models. AI output is assistance, not professional tax advice, and is always presented alongside the original notice.',
+            'Notice text is processed by AI models to produce summaries, risk assessments and draft replies. This processing is performed by a third-party AI provider (currently OpenAI) on servers located outside India, in the United States; the relevant text is sent there transiently for that purpose. Under the provider’s API terms, data submitted through the API is not used to train their models. AI output is assistance, not professional tax advice, and is always presented alongside the original notice.',
           ],
         },
         {
@@ -68,7 +70,7 @@ export default function PrivacyPage() {
         {
           heading: 'Where your data lives',
           paragraphs: [
-            'All storage and backups are in Indian data centres (Mumbai region). Traffic is encrypted in transit with TLS, and sensitive fields — session tokens, GSTINs, personal data — are protected with AES-256 encryption at rest. During AI analysis, notice text may be processed transiently by the AI model providers described above, under agreements restricting its use.',
+            'All storage and backups are in Indian data centres (Mumbai region). Traffic is encrypted in transit with TLS, and sensitive fields — session tokens, GSTINs, personal data — are protected with AES-256 encryption at rest. The one exception to Indian residency is AI analysis: notice text is sent transiently to the AI provider described above for processing on servers outside India (in the United States).',
           ],
         },
         {
