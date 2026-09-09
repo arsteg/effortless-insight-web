@@ -383,14 +383,35 @@ function RegisterForm() {
                   <FormLabel>Mobile Number</FormLabel>
                   <div className="flex gap-2">
                     <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder="9876543210"
-                        autoComplete="tel"
-                        maxLength={10}
-                        disabled={isLoading}
-                        {...field}
-                      />
+                      <div className="relative flex-1">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 select-none text-sm text-muted-foreground">
+                          +91
+                        </span>
+                        <Input
+                          type="tel"
+                          inputMode="numeric"
+                          placeholder="9876543210"
+                          autoComplete="tel"
+                          maxLength={10}
+                          disabled={isLoading}
+                          className="pl-11"
+                          {...field}
+                          onChange={(e) => {
+                            // Keep only the 10-digit subscriber number. Strip
+                            // non-digits and a country-code prefix users often
+                            // add (91 / 0), so "+91 93113…" or "091…" normalise
+                            // to the bare 10 digits the backend expects.
+                            let digits = e.target.value.replace(/\D/g, '')
+                            if (digits.length > 10 && digits.startsWith('91')) {
+                              digits = digits.slice(2)
+                            }
+                            if (digits.length > 10 && digits.startsWith('0')) {
+                              digits = digits.slice(1)
+                            }
+                            field.onChange(digits.slice(0, 10))
+                          }}
+                        />
+                      </div>
                     </FormControl>
                     {otpState !== 'verified' && (
                       <Button
