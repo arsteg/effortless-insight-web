@@ -69,7 +69,7 @@ export function FourPromises() {
           {promises.map((promise) => (
             <div
               key={promise.title}
-              className="group rounded-2xl border border-gray-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-xl hover:shadow-primary-100/60"
+              className="group rounded-2xl border border-gray-200/80 bg-white p-8 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-elevated"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-md shadow-primary-200/70">
                 <promise.icon className="h-5 w-5" aria-hidden />

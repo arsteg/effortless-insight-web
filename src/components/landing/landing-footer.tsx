@@ -52,7 +52,12 @@ const footerLinks = {
 
 export function LandingFooter() {
   return (
-    <footer className="bg-gray-950 text-white">
+    <footer className="relative bg-gray-950 text-white">
+      {/* Hairline brand accent along the top edge */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary-500/60 to-transparent"
+      />
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
           {/* Logo & one-liner */}
@@ -98,7 +103,7 @@ export function LandingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`EffortlessInsight on ${social.label}`}
-                  className="rounded-lg border border-gray-800 p-2 text-gray-400 transition-colors hover:border-gray-600 hover:text-white"
+                  className="rounded-lg border border-gray-800 p-2 text-gray-400 transition-colors hover:border-primary-500/50 hover:bg-primary-500/10 hover:text-white"
                 >
                   <social.icon className="h-4 w-4" aria-hidden />
                 </a>
@@ -109,13 +114,15 @@ export function LandingFooter() {
           {/* Link Columns */}
           {Object.entries(footerLinks).map(([key, section]) => (
             <div key={key}>
-              <h4 className="mb-4 font-semibold text-white">{section.title}</h4>
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-gray-500">
+                {section.title}
+              </h4>
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-gray-400 transition-colors hover:text-white"
+                      className="inline-block text-sm text-gray-400 transition-all hover:translate-x-0.5 hover:text-white"
                     >
                       {link.label}
                     </Link>

@@ -60,7 +60,14 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "cv11" 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Brand-tinted text selection */
+  ::selection {
+    background-color: hsl(199 89% 48% / 0.18);
+    color: hsl(222.2 84% 4.9%);
   }
 
   /* Typography improvements */
@@ -372,9 +379,25 @@
     @apply bg-gray-900/80 backdrop-blur-md border border-gray-700/50;
   }
 
-  /* Gradient text */
+  /* Gradient text — restrained, kept within the accent family */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-500 to-primary-700;
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-primary-600 to-sky-500;
+  }
+
+  /* Section eyebrow: small, tracked, uppercase label above headings */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em];
+  }
+
+  /* Subtle hover lift for cards / interactive surfaces */
+  .card-lift {
+    @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-elevated;
+  }
+
+  /* Tabular figures for stats so numbers align */
+  .nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
   }
 
   /* Smooth scroll for sections */

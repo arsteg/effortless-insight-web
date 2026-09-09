@@ -76,6 +76,20 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      boxShadow: {
+        // Refined, neutral elevation scale — soft layered shadows instead of
+        // colored glows, for a calmer, more premium feel.
+        soft: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06)',
+        card: '0 1px 3px rgb(15 23 42 / 0.04), 0 10px 26px -8px rgb(15 23 42 / 0.10)',
+        elevated:
+          '0 2px 8px -2px rgb(15 23 42 / 0.06), 0 20px 44px -14px rgb(15 23 42 / 0.16)',
+        premium:
+          '0 4px 14px -6px rgb(15 23 42 / 0.10), 0 34px 64px -24px rgb(15 23 42 / 0.24)',
+      },
+      letterSpacing: {
+        tightest: '-0.04em',
       },
       keyframes: {
         'accordion-down': {
