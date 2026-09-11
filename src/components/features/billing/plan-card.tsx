@@ -17,6 +17,26 @@ interface PlanCardProps {
   isLoading?: boolean
 }
 
+/** Get price for a specific billing cycle */
+function getPriceForCycle(pricing: Plan['pricing'], cycle: BillingCycle): number | null | undefined {
+  switch (cycle) {
+    case 'weekly': return pricing.weekly
+    case 'monthly': return pricing.monthly
+    case 'annually': return pricing.annually
+    default: return pricing.annually
+  }
+}
+
+/** Get cycle label for display */
+function getCycleLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'weekly': return 'week'
+    case 'monthly': return 'month'
+    case 'annually': return 'year'
+    default: return 'year'
+  }
+}
+
 export function PlanCard({
   plan,
   billingCycle,
@@ -25,8 +45,8 @@ export function PlanCard({
   isLoading,
 }: PlanCardProps) {
   const isCurrentPlan = plan.code === currentPlanCode
-  const price = billingCycle === 'annually' ? plan.pricing.annually : plan.pricing.monthly
-  const isFreePlan = price === 0
+  const price = getPriceForCycle(plan.pricing, billingCycle)
+  const isFreePlan = price === 0 || price === null
 
   // Get features to display
   const features = getFeaturesToDisplay(plan)
@@ -75,7 +95,7 @@ export function PlanCard({
               </span>
               {!isFreePlan && (
                 <span className="text-muted-foreground">
-                  /{billingCycle === 'annually' ? 'year' : 'month'}
+                  /{getCycleLabel(billingCycle)}
                 </span>
               )}
               {billingCycle === 'annually' && plan.pricing.annualDiscount && (
@@ -125,6 +145,15 @@ export function PlanCard({
 function getFeaturesToDisplay(plan: Plan): string[] {
   const features: string[] = []
 
+  // GSTIN Limits (new - prominent display)
+  if (plan.limits.gstinsAllowed === -1) {
+    features.push('Unlimited GSTINs')
+  } else if (plan.limits.gstinsAllowed === 1) {
+    features.push('1 GSTIN')
+  } else {
+    features.push(`Up to ${plan.limits.gstinsAllowed} GSTINs`)
+  }
+
   // Limits
   if (plan.limits.noticesPerMonth === -1) {
     features.push('Unlimited notices')
@@ -144,7 +173,33 @@ function getFeaturesToDisplay(plan: Plan): string[] {
     features.push(`${plan.limits.storageGb}GB storage`)
   }
 
-  // Feature flags
+  // AI Features (new feature codes)
+  if (plan.features.includes('ai_explanation')) {
+    features.push('AI-powered explanations')
+  }
+
+  if (plan.features.includes('draft_reply')) {
+    features.push('Auto-generated draft replies')
+  }
+
+  if (plan.features.includes('whatsapp_assistant')) {
+    features.push('WhatsApp assistant')
+  }
+
+  // Team Features
+  if (plan.features.includes('collaboration')) {
+    features.push('Team collaboration')
+  }
+
+  if (plan.features.includes('custom_roles')) {
+    features.push('Custom roles')
+  }
+
+  if (plan.features.includes('audit_trail')) {
+    features.push('Audit trail')
+  }
+
+  // Enterprise Features
   if (plan.features.includes('priority_support')) {
     features.push('Priority support')
   }
@@ -161,8 +216,12 @@ function getFeaturesToDisplay(plan: Plan): string[] {
     features.push('Custom workflows')
   }
 
-  if (plan.features.includes('audit_logs')) {
-    features.push('Audit logs')
+  if (plan.features.includes('sso')) {
+    features.push('Single Sign-On (SSO)')
+  }
+
+  if (plan.features.includes('sla_guarantee')) {
+    features.push('SLA guarantee')
   }
 
   // Add trial info

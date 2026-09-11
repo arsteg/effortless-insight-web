@@ -20,6 +20,11 @@ export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annually')
   const { data: plans, isLoading } = usePlans()
 
+  // Calculate available billing cycles (union of all plans' allowed cycles)
+  const availableCycles: BillingCycle[] = plans
+    ? Array.from(new Set(plans.flatMap(p => p.allowedBillingCycles || ['monthly', 'annually'])))
+    : ['monthly', 'annually']
+
   const handleSelectPlan = (planCode: string) => {
     // Store plan selection in localStorage so it persists through registration/email verification
     if (typeof window !== 'undefined') {
@@ -40,7 +45,7 @@ export default function PricingPage() {
         plans
           .filter(p => p.pricing.monthly && p.pricing.annually && p.pricing.annualDiscount)
           .reduce((sum, p) => sum + (p.pricing.annualDiscount || 0), 0) /
-        plans.filter(p => p.pricing.monthly && p.pricing.annually).length
+        (plans.filter(p => p.pricing.monthly && p.pricing.annually).length || 1)
       )
     : undefined
 
@@ -91,6 +96,7 @@ export default function PricingPage() {
           <BillingToggle
             value={billingCycle}
             onChange={setBillingCycle}
+            allowedCycles={availableCycles}
             annualDiscount={averageAnnualDiscount}
           />
         </div>
@@ -222,6 +228,26 @@ export default function PricingPage() {
   )
 }
 
+/** Get price for a specific billing cycle */
+function getPriceForCycle(pricing: Plan['pricing'], cycle: BillingCycle): number | null | undefined {
+  switch (cycle) {
+    case 'weekly': return pricing.weekly
+    case 'monthly': return pricing.monthly
+    case 'annually': return pricing.annually
+    default: return pricing.annually
+  }
+}
+
+/** Get cycle label for display */
+function getCycleLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'weekly': return 'week'
+    case 'monthly': return 'month'
+    case 'annually': return 'year'
+    default: return 'year'
+  }
+}
+
 function PricingCard({
   plan,
   billingCycle,
@@ -231,8 +257,8 @@ function PricingCard({
   billingCycle: BillingCycle
   onSelect: (planCode: string) => void
 }) {
-  const price = billingCycle === 'annually' ? plan.pricing.annually : plan.pricing.monthly
-  const isFreePlan = price === 0
+  const price = getPriceForCycle(plan.pricing, billingCycle)
+  const isFreePlan = price === 0 || price === null
 
   const features = getTopFeatures(plan)
 
@@ -288,13 +314,13 @@ function PricingCard({
               </span>
               {!isFreePlan && (
                 <span className="text-muted-foreground">
-                  /{billingCycle === 'annually' ? 'year' : 'month'}
+                  /{getCycleLabel(billingCycle)}
                 </span>
               )}
               {/* Per-seat pricing info */}
               {plan.limits.additionalUsersAllowed && plan.pricing.perSeat && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  +{formatAmount(billingCycle === 'annually' ? plan.pricing.perSeat.annually || 0 : plan.pricing.perSeat.monthly || 0)}/user/{billingCycle === 'annually' ? 'year' : 'month'}
+                  +{formatAmount(getPriceForCycle(plan.pricing.perSeat as Plan['pricing'], billingCycle) || 0)}/user/{getCycleLabel(billingCycle)}
                 </p>
               )}
             </div>
@@ -389,6 +415,15 @@ function EmptyPlansState() {
 function getTopFeatures(plan: Plan): string[] {
   const features: string[] = []
 
+  // GSTIN Limits (prominent)
+  if (plan.limits.gstinsAllowed === -1) {
+    features.push('Unlimited GSTINs')
+  } else if (plan.limits.gstinsAllowed === 1) {
+    features.push('1 GSTIN')
+  } else {
+    features.push(`Up to ${plan.limits.gstinsAllowed} GSTINs`)
+  }
+
   // Add limits
   if (plan.limits.noticesPerMonth === -1) {
     features.push('Unlimited notices')
@@ -407,13 +442,18 @@ function getTopFeatures(plan: Plan): string[] {
     }
   }
 
-  features.push(`${plan.limits.storageGb === -1 ? 'Unlimited' : plan.limits.storageGb + 'GB'} storage`)
-
-  // Add key features
-  if (plan.features.includes('full_ai_analysis')) {
+  // AI Features (new feature codes)
+  if (plan.features.includes('ai_explanation') && plan.features.includes('draft_reply')) {
+    features.push('AI explanations + draft replies')
+  } else if (plan.features.includes('full_ai_analysis')) {
     features.push('Full AI analysis')
-  } else {
-    features.push('Basic AI analysis')
+  } else if (!plan.features.includes('ai_explanation')) {
+    features.push('Notice detection only')
+  }
+
+  // WhatsApp
+  if (plan.features.includes('whatsapp_assistant')) {
+    features.push('WhatsApp assistant')
   }
 
   if (plan.features.includes('priority_support')) {

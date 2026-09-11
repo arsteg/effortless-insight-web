@@ -32,6 +32,11 @@ function SelectPlanContent() {
   const { data: subscription, isLoading: isLoadingSubscription } = useCurrentSubscription()
   const startTrial = useStartTrial()
 
+  // Calculate available billing cycles (union of all plans' allowed cycles)
+  const availableCycles: BillingCycle[] = plans
+    ? Array.from(new Set(plans.flatMap(p => p.allowedBillingCycles || ['monthly', 'annually'])))
+    : ['monthly', 'annually']
+
   // Check if user has already used a trial (from subscription data)
   const hasUsedTrial = subscription?.hasUsedTrial ?? false
 
@@ -121,7 +126,12 @@ function SelectPlanContent() {
 
         {/* Billing Toggle */}
         <div className="flex justify-center mb-10">
-          <BillingToggle value={billingCycle} onChange={setBillingCycle} annualDiscount={17} />
+          <BillingToggle
+            value={billingCycle}
+            onChange={setBillingCycle}
+            allowedCycles={availableCycles}
+            annualDiscount={17}
+          />
         </div>
 
         {/* Plans Grid */}
@@ -200,6 +210,26 @@ interface SelectablePlanCardProps {
   onSelect: () => void
 }
 
+/** Get price for a specific billing cycle */
+function getPriceForCycle(pricing: Plan['pricing'], cycle: BillingCycle): number | null | undefined {
+  switch (cycle) {
+    case 'weekly': return pricing.weekly
+    case 'monthly': return pricing.monthly
+    case 'annually': return pricing.annually
+    default: return pricing.annually
+  }
+}
+
+/** Get cycle label for display */
+function getCycleLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'weekly': return 'week'
+    case 'monthly': return 'month'
+    case 'annually': return 'year'
+    default: return 'year'
+  }
+}
+
 function SelectablePlanCard({
   plan,
   billingCycle,
@@ -209,8 +239,8 @@ function SelectablePlanCard({
   isExpiredTrial,
   onSelect,
 }: SelectablePlanCardProps) {
-  const price = billingCycle === 'annually' ? plan.pricing.annually : plan.pricing.monthly
-  const isFreePlan = price === 0
+  const price = getPriceForCycle(plan.pricing, billingCycle)
+  const isFreePlan = price === 0 || price === null
   const hasFreeTrial = plan.trialDays > 0
 
   const features = getFeaturesToDisplay(plan)
@@ -257,7 +287,7 @@ function SelectablePlanCard({
             </span>
             {!isFreePlan && (
               <span className="text-muted-foreground">
-                /{billingCycle === 'annually' ? 'year' : 'month'}
+                /{getCycleLabel(billingCycle)}
               </span>
             )}
           </div>
@@ -321,6 +351,15 @@ function FeatureHighlight({ icon: Icon, title, description }: FeatureHighlightPr
 function getFeaturesToDisplay(plan: Plan): string[] {
   const features: string[] = []
 
+  // GSTIN Limits (prominent)
+  if (plan.limits.gstinsAllowed === -1) {
+    features.push('Unlimited GSTINs')
+  } else if (plan.limits.gstinsAllowed === 1) {
+    features.push('1 GSTIN')
+  } else {
+    features.push(`Up to ${plan.limits.gstinsAllowed} GSTINs`)
+  }
+
   // Limits
   if (plan.limits.noticesPerMonth === -1) {
     features.push('Unlimited notices')
@@ -334,17 +373,18 @@ function getFeaturesToDisplay(plan: Plan): string[] {
     features.push(`Up to ${plan.limits.users} team members`)
   }
 
-  if (plan.limits.storageGb === -1) {
-    features.push('Unlimited storage')
-  } else {
-    features.push(`${plan.limits.storageGb}GB document storage`)
+  // AI Features (new feature codes)
+  if (plan.features.includes('ai_explanation') && plan.features.includes('draft_reply')) {
+    features.push('AI explanations + draft replies')
+  } else if (plan.features.includes('full_ai_analysis')) {
+    features.push('Full AI-powered analysis')
+  } else if (!plan.features.includes('ai_explanation')) {
+    features.push('Notice detection only')
   }
 
-  // Key features
-  if (plan.features.includes('full_ai_analysis')) {
-    features.push('Full AI-powered analysis')
-  } else if (plan.features.includes('basic_ai_analysis')) {
-    features.push('Basic AI analysis')
+  // WhatsApp
+  if (plan.features.includes('whatsapp_assistant')) {
+    features.push('WhatsApp assistant')
   }
 
   if (plan.features.includes('priority_support')) {

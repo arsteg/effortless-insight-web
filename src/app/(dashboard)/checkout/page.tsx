@@ -31,6 +31,36 @@ import {
 import { useOrganization } from '@/hooks/use-settings'
 import type { BillingCycle, CouponValidation } from '@/types/billing'
 
+/** Get cycle label for display */
+function getCycleLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'weekly': return 'Weekly'
+    case 'monthly': return 'Monthly'
+    case 'annually': return 'Annual'
+    default: return 'Annual'
+  }
+}
+
+/** Get short cycle label for display */
+function getShortCycleLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'weekly': return 'week'
+    case 'monthly': return 'month'
+    case 'annually': return 'year'
+    default: return 'year'
+  }
+}
+
+/** Get price for a specific billing cycle */
+function getPriceForCycle(pricing: { weekly?: number | null; monthly?: number | null; annually?: number | null }, cycle: BillingCycle): number | null | undefined {
+  switch (cycle) {
+    case 'weekly': return pricing.weekly
+    case 'monthly': return pricing.monthly
+    case 'annually': return pricing.annually
+    default: return pricing.annually
+  }
+}
+
 function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -162,7 +192,7 @@ function CheckoutContent() {
             key: orderResponse.razorpaySubscription.key,
             subscriptionId: orderResponse.razorpaySubscription.subscriptionId,
             name: 'EffortlessInsight',
-            description: `${selectedPlan.displayName} - ${billingCycle === 'annually' ? 'Annual' : 'Monthly'} (Auto-Renewal)`,
+            description: `${selectedPlan.displayName} - ${getCycleLabel(billingCycle)} (Auto-Renewal)`,
             prefill: {
               name: billingDetails.companyName,
               email: billingDetails.billingEmail,
@@ -208,7 +238,7 @@ function CheckoutContent() {
             amount: orderResponse.razorpayOrder.amount,
             currency: orderResponse.razorpayOrder.currency,
             name: 'EffortlessInsight',
-            description: `${selectedPlan.displayName} - ${billingCycle === 'annually' ? 'Annual' : 'Monthly'}`,
+            description: `${selectedPlan.displayName} - ${getCycleLabel(billingCycle)}`,
             orderId: orderResponse.razorpayOrder.id,
             prefill: {
               name: billingDetails.companyName,
@@ -329,11 +359,9 @@ function CheckoutContent() {
                       Your plan includes {selectedPlan.limits.users} user{selectedPlan.limits.users !== 1 ? 's' : ''}.
                       You can add extra seats at{' '}
                       {formatAmount(
-                        billingCycle === 'annually'
-                          ? selectedPlan.pricing.perSeat.annually || 0
-                          : selectedPlan.pricing.perSeat.monthly || 0
+                        getPriceForCycle(selectedPlan.pricing.perSeat!, billingCycle) || 0
                       )}
-                      /{billingCycle === 'annually' ? 'year' : 'month'} per user.
+                      /{getShortCycleLabel(billingCycle)} per user.
                     </p>
                     <div className="flex items-center gap-4">
                       <Label htmlFor="additionalSeats">Additional seats:</Label>
@@ -410,7 +438,7 @@ function CheckoutContent() {
                   <div>
                     <h3 className="font-semibold">{selectedPlan.displayName} Plan</h3>
                     <p className="text-sm text-muted-foreground">
-                      {billingCycle === 'annually' ? 'Annual' : 'Monthly'} billing
+                      {getCycleLabel(billingCycle)} billing
                     </p>
                   </div>
                   <Button variant="link" onClick={handleBackToBilling}>
@@ -496,11 +524,9 @@ function CheckoutContent() {
                     <>
                       . After your trial, you will be charged{' '}
                       {formatAmount(
-                        billingCycle === 'annually'
-                          ? selectedPlan.pricing.annually || 0
-                          : selectedPlan.pricing.monthly || 0
+                        getPriceForCycle(selectedPlan.pricing, billingCycle) || 0
                       )}
-                      /{billingCycle === 'annually' ? 'year' : 'month'}.
+                      /{getShortCycleLabel(billingCycle)}.
                     </>
                   )}
                 </p>
@@ -537,9 +563,7 @@ function CheckoutContent() {
               <p className="text-sm text-muted-foreground mb-8">
                 Your payment method has been authorized. You will be automatically charged{' '}
                 {formatAmount(
-                  billingCycle === 'annually'
-                    ? selectedPlan.pricing.annually || 0
-                    : selectedPlan.pricing.monthly || 0
+                  getPriceForCycle(selectedPlan.pricing, billingCycle) || 0
                 )}{' '}
                 when your trial ends. Enjoy full access to all features!
               </p>

@@ -158,8 +158,8 @@ export function CurrentPlanCard({
           </Alert>
         )}
 
-        {/* Billing Info - Not shown during trial since trial info is more prominent */}
-        {!isTrialing && (
+        {/* Billing Info - Not shown during trial or for free plans (pricing.total === 0) */}
+        {!isTrialing && subscription.pricing.total > 0 && (
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="space-y-1">
               <div className="text-sm font-medium text-muted-foreground">

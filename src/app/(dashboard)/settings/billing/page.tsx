@@ -131,10 +131,14 @@ export default function BillingSettingsPage() {
         },
         onError: (error: Error) => {
           // Check if this is a PAYMENT_REQUIRED error (free to paid transition)
-          if (error.message?.includes('PAYMENT_REQUIRED')) {
+          // The error code is in the Axios response data
+          const axiosError = error as { response?: { data?: { code?: string } } }
+          const errorCode = axiosError.response?.data?.code
+          if (errorCode === 'PAYMENT_REQUIRED' || error.message?.includes('PAYMENT_REQUIRED')) {
             setShowChangePlanModal(false)
             // Redirect to checkout with the selected plan and billing cycle
             router.push(`/checkout?plan=${planCode}&billing=${billingCycle}`)
+            return
           }
           // Other errors are handled by the hook's default onError
         },

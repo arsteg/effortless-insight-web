@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Info, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,6 +54,18 @@ export function ChangePlanModal({
 
   // Exclude free plan (can't downgrade to free) and enterprise plans (contactSales)
   const availablePlans = plans.filter((p) => !p.contactSales && p.code !== 'free')
+
+  // Calculate available billing cycles from plans
+  const availableCycles: BillingCycle[] = Array.from(
+    new Set(availablePlans.flatMap(p => p.allowedBillingCycles || ['monthly', 'annually']))
+  )
+
+  // Sync billingCycle if current selection is not available
+  useEffect(() => {
+    if (availableCycles.length > 0 && !availableCycles.includes(billingCycle)) {
+      setBillingCycle(availableCycles[0])
+    }
+  }, [availableCycles, billingCycle])
 
   // Helper to calculate daily rate for a plan
   const getDailyRate = (plan: Plan, cycle: BillingCycle) => {
@@ -144,6 +156,7 @@ export function ChangePlanModal({
             <BillingToggle
               value={billingCycle}
               onChange={setBillingCycle}
+              allowedCycles={availableCycles}
               annualDiscount={20}
             />
           </div>

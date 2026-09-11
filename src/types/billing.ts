@@ -14,19 +14,25 @@ export interface Plan {
   isPopular: boolean
   trialDays: number
   contactSales: boolean
+  /** Allowed billing cycles for this plan (e.g., ["weekly", "monthly", "annually"]) */
+  allowedBillingCycles: BillingCycle[]
+  /** Default billing cycle when user doesn't specify */
+  defaultBillingCycle: BillingCycle
 }
 
 export interface PlanPricing {
-  monthly?: number
-  annually?: number
+  weekly?: number | null
+  monthly?: number | null
+  annually?: number | null
   currency: string
-  annualDiscount?: number
-  perSeat?: PerSeatPricing
+  annualDiscount?: number | null
+  perSeat?: PerSeatPricing | null
 }
 
 export interface PerSeatPricing {
-  monthly?: number
-  annually?: number
+  weekly?: number | null
+  monthly?: number | null
+  annually?: number | null
 }
 
 export interface PlanLimits {
@@ -37,6 +43,8 @@ export interface PlanLimits {
   additionalUsersAllowed: boolean
   apiCalls: number
   apiCallsPerMonth?: number
+  /** Maximum GSTINs allowed. -1 for unlimited */
+  gstinsAllowed: number
 }
 
 export interface AddOn {
@@ -101,7 +109,7 @@ export interface Subscription {
 }
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'
-export type BillingCycle = 'monthly' | 'annually'
+export type BillingCycle = 'weekly' | 'monthly' | 'annually'
 
 export interface Seats {
   included: number
