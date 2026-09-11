@@ -30,9 +30,6 @@ const SUBSCRIPTION_EXEMPT_ROUTES = [
   '/settings/billing',
 ]
 
-// Statuses that allow app access
-const ACTIVE_STATUSES: SubscriptionStatus[] = ['active', 'trialing', 'past_due']
-
 export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -96,10 +93,11 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
       return
     }
 
-    // Check subscription status
-    const hasAccess = ACTIVE_STATUSES.includes(subscription.status)
-
-    if (!hasAccess) {
+    // Check subscription access - use hasAccess from API which validates:
+    // - Active/PastDue subscriptions have access
+    // - Trialing subscriptions only have access if plan has trial AND trial hasn't expired
+    // - Cancelled/Expired/Paused subscriptions don't have access
+    if (!subscription.hasAccess) {
       setShowBlockingUI(true)
     } else {
       setShowBlockingUI(false)

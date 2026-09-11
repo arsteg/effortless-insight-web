@@ -106,6 +106,11 @@ export interface Subscription {
   razorpaySubscriptionId?: string
   scheduledChange?: ScheduledChange
   hasUsedTrial: boolean
+  /**
+   * Whether the subscription grants access to the application.
+   * False when: cancelled, expired, or trialing without valid trial period/dates.
+   */
+  hasAccess: boolean
 }
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'
