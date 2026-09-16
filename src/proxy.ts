@@ -56,6 +56,7 @@ export function proxy(request: NextRequest) {
 
   // Get user role from JWT if authenticated
   let userRole: string | null = null
+  let isCaClaim = false
   if (accessToken) {
     const payload = decodeJwtPayload(accessToken)
     // JWT claims can vary - check common claim names
@@ -63,9 +64,15 @@ export function proxy(request: NextRequest) {
       (payload?.role as string) ||
       (payload?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] as string) ||
       null
+    // Claims serialize as strings, so this is 'true'/'false', not a boolean
+    isCaClaim = payload?.is_ca === 'true' || payload?.is_ca === true
   }
 
-  const isCaUser = userRole === 'ca'
+  // Prefer the dedicated claim over the role: creating an organization promotes a CA's
+  // role to 'owner' for org-level permissions, so role alone would stop identifying them
+  // as a CA the moment they finish onboarding. Fall back to the role for tokens issued
+  // before the is_ca claim existed.
+  const isCaUser = isCaClaim || userRole === 'ca'
 
   // Check if current path matches any protected route
   const isProtectedRoute = protectedRoutes.some(

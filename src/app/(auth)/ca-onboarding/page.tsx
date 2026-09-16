@@ -143,7 +143,9 @@ function CaOnboardingForm() {
         variant: 'success',
       })
 
-      router.push('/dashboard')
+      // Go straight to the CA portal. Routing through /dashboard would mount the
+      // SubscriptionGuard and then get bounced here by the proxy anyway.
+      router.push('/ca/clients')
     } catch (error: unknown) {
       const message =
         error && typeof error === 'object' && 'message' in error

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Loader2, AlertTriangle, CreditCard, Clock, RefreshCw } from 'lucide-react'
 
-import { useSubscriptionStore } from '@/stores'
+import { useAuthStore, useSubscriptionStore } from '@/stores'
 import { useCurrentSubscription, useResumeSubscription } from '@/hooks/use-billing'
 import { Button } from '@/components/ui/button'
 import {
@@ -56,10 +56,17 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
 
   const [showBlockingUI, setShowBlockingUI] = useState(false)
 
+  // CAs use the platform free of charge - their organization is put on the zero-cost
+  // ca_operator plan at onboarding, so they must never be blocked or pushed to plan
+  // selection. This is the client-side backstop for a slow or failed subscription fetch.
+  const isCa = useAuthStore((state) => state.user?.isCa ?? false)
+
   // Check if current route is exempt from subscription check
-  const isExemptRoute = SUBSCRIPTION_EXEMPT_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  )
+  const isExemptRoute =
+    isCa ||
+    SUBSCRIPTION_EXEMPT_ROUTES.some(
+      (route) => pathname === route || pathname.startsWith(`${route}/`)
+    )
 
   // Sync React Query data with Zustand store
   useEffect(() => {
