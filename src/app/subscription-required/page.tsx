@@ -29,6 +29,10 @@ function SubscriptionRequiredContent() {
     status: searchParams.get('status'),
   }
 
+  // A CA waiting on admin approval owes nothing, so every payment call-to-action on this
+  // page is hidden for them.
+  const isAwaitingCaApproval = errorDetails.error === 'CA_APPROVAL_PENDING'
+
   const handleResume = async () => {
     setIsResuming(true)
     resumeSubscription.mutate(undefined, {
@@ -53,6 +57,17 @@ function SubscriptionRequiredContent() {
   }
 
   const getErrorMessage = () => {
+    if (errorDetails.error === 'CA_APPROVAL_PENDING') {
+      return {
+        icon: Clock,
+        variant: 'default' as const,
+        title: 'Your CA account is awaiting approval',
+        description:
+          "Thanks for registering. An administrator needs to approve your Chartered Accountant account before you can start managing client GST notices. We'll email you as soon as it's approved — there's nothing to pay.",
+        showResume: false,
+      }
+    }
+
     if (errorDetails.error === 'TRIAL_EXPIRED') {
       return {
         icon: Clock,
@@ -141,7 +156,27 @@ function SubscriptionRequiredContent() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {errorDetails.status && (
+          {isAwaitingCaApproval && (
+            <div className="rounded-lg bg-muted p-4 space-y-2">
+              <h4 className="font-semibold text-sm">What happens next:</h4>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">1.</span>
+                  <span>An administrator reviews your CA registration.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">2.</span>
+                  <span>Once approved, your free CA access is enabled automatically.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">3.</span>
+                  <span>Sign in again and start managing your clients&apos; GST notices.</span>
+                </li>
+              </ul>
+            </div>
+          )}
+
+          {!isAwaitingCaApproval && errorDetails.status && (
             <Alert variant={errorInfo.variant}>
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Current Status</AlertTitle>
@@ -151,6 +186,7 @@ function SubscriptionRequiredContent() {
             </Alert>
           )}
 
+          {!isAwaitingCaApproval && (
           <div className="rounded-lg bg-muted p-4 space-y-2">
             <h4 className="font-semibold text-sm">What you&apos;ll get with a subscription:</h4>
             <ul className="space-y-1 text-sm text-muted-foreground">
@@ -172,10 +208,15 @@ function SubscriptionRequiredContent() {
               </li>
             </ul>
           </div>
+          )}
         </CardContent>
 
         <CardFooter className="flex flex-col gap-3">
-          {errorInfo.showResume ? (
+          {isAwaitingCaApproval ? (
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/login">Back to sign in</Link>
+            </Button>
+          ) : errorInfo.showResume ? (
             <>
               <Button
                 onClick={handleResume}
@@ -202,15 +243,18 @@ function SubscriptionRequiredContent() {
             </Button>
           )}
 
-          {errorDetails.status === 'expired' || errorDetails.status === 'cancelled' ? (
+          {!isAwaitingCaApproval &&
+          (errorDetails.status === 'expired' || errorDetails.status === 'cancelled') ? (
             <Button asChild variant="outline" className="w-full">
               <Link href="/settings/billing">Manage Subscription</Link>
             </Button>
           ) : null}
 
-          <Button asChild variant="ghost" className="w-full">
-            <Link href="/pricing">View All Plans & Pricing</Link>
-          </Button>
+          {!isAwaitingCaApproval && (
+            <Button asChild variant="ghost" className="w-full">
+              <Link href="/pricing">View All Plans & Pricing</Link>
+            </Button>
+          )}
 
           <div className="text-center text-sm text-muted-foreground pt-2">
             Need help?{' '}

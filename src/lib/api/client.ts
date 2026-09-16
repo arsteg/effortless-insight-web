@@ -146,6 +146,16 @@ apiClient.interceptors.response.use(
         return Promise.reject(error)
       }
 
+      // A CA whose free access an admin hasn't decided on yet is waiting for approval,
+      // not declining to pay - sending them to plan selection would be misleading.
+      if (errorCode === 'CA_APPROVAL_PENDING') {
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+        if (!currentPath.startsWith('/subscription-required')) {
+          window.location.href = '/subscription-required?error=CA_APPROVAL_PENDING'
+        }
+        return Promise.reject(error)
+      }
+
       // Check if we're already on subscription-related pages to avoid redirect loops
       const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
       const isOnExemptPage = currentPath.startsWith('/select-plan') ||
