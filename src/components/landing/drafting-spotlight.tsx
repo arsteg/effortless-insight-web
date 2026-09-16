@@ -55,6 +55,11 @@ export function DraftingSpotlight() {
             own facts — your CA polishes and files, instead of starting from
             zero at 11 PM.
           </p>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-gray-500">
+            We delete the blank page and the 11 PM panic. Your CA keeps the
+            judgment, the filing and the relationship — we never file anything
+            on our own.
+          </p>
         </div>
 
         <div className="mx-auto mt-12 grid max-w-6xl items-center gap-10 lg:grid-cols-[2fr_3fr]">
@@ -84,12 +89,12 @@ export function DraftingSpotlight() {
           <div className="relative">
             <div
               aria-hidden
-              className="absolute inset-0 rotate-1 rounded-3xl bg-gradient-to-br from-primary-100 to-sky-100"
+              className="absolute inset-0 rotate-1 rounded-3xl bg-gradient-to-br from-primary-100 to-azure-100"
             />
             <div className="relative rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl shadow-primary-200/40 ring-1 ring-gray-100">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-4">
                 <p className="font-semibold text-gray-900">Draft reply · DRC-01</p>
-                <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700">
+                <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                   Respond by 24 Aug · 15 days left
                 </span>
               </div>
@@ -118,8 +123,8 @@ export function DraftingSpotlight() {
                   'Share with your CA in one click',
                 ].map((item) => (
                   <li key={item} className="flex gap-2 text-sm text-gray-700">
-                    <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
-                      <Check className="h-3 w-3 text-green-600" aria-hidden />
+                    <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-mint-100">
+                      <Check className="h-3 w-3 text-mint-600" aria-hidden />
                     </span>
                     {item}
                   </li>

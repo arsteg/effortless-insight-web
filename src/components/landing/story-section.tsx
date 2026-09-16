@@ -38,8 +38,8 @@ export function StorySection() {
 
         <div className="mx-auto mt-10 grid max-w-5xl items-stretch gap-6 lg:grid-cols-[1fr_auto_1fr]">
           {/* Before: the raw notice */}
-          <div className="flex flex-col rounded-2xl border border-red-100 bg-gradient-to-b from-red-50/60 to-white p-6">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-red-500">
+          <div className="flex flex-col rounded-2xl border border-coral-100 bg-gradient-to-b from-coral-50/60 to-white p-6">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-coral-500">
               What the portal sends you
             </p>
             <div className="flex-1 space-y-3 font-serif text-[13px] leading-relaxed text-gray-500">
@@ -115,9 +115,9 @@ export function StorySection() {
                 <span
                   className={
                     i === 0
-                      ? 'rounded-full border border-red-200 bg-red-50 px-3.5 py-1.5 text-xs font-medium text-red-700 md:text-sm'
+                      ? 'rounded-full border border-coral-200 bg-coral-50 px-3.5 py-1.5 text-xs font-medium text-coral-700 md:text-sm'
                       : i === journey.length - 1
-                        ? 'rounded-full border border-green-200 bg-green-50 px-3.5 py-1.5 text-xs font-semibold text-green-700 md:text-sm'
+                        ? 'rounded-full border border-mint-200 bg-mint-50 px-3.5 py-1.5 text-xs font-semibold text-mint-700 md:text-sm'
                         : 'rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-700 shadow-sm md:text-sm'
                   }
                 >

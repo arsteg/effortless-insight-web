@@ -94,7 +94,7 @@ export function OrderSummary({
 
         {/* Coupon Discount */}
         {coupon?.valid && discount > 0 && (
-          <div className="flex justify-between text-sm text-green-600">
+          <div className="flex justify-between text-sm text-mint-600">
             <span className="flex items-center gap-2">
               Discount
               <Badge variant="secondary" className="text-xs">
@@ -161,11 +161,11 @@ export function OrderSummary({
 
         {/* Upgrading from trial */}
         {isUpgradingFromTrial && (
-          <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">
+          <div className="p-3 bg-mint-50 dark:bg-mint-900/20 rounded-lg border border-mint-200 dark:border-mint-800">
+            <p className="text-sm font-medium text-mint-700 dark:text-mint-400">
               Upgrade to paid plan
             </p>
-            <p className="text-xs text-green-600 dark:text-green-500">
+            <p className="text-xs text-mint-600 dark:text-mint-500">
               Your paid subscription will start immediately after payment
             </p>
           </div>

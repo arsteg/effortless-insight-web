@@ -31,10 +31,10 @@ export function ClientAttentionCard() {
   }
 
   return (
-    <Card className="border-red-200 dark:border-red-900">
+    <Card className="border-coral-200 dark:border-coral-900">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertTriangle className="h-4 w-4 text-coral-600" />
           Clients needing attention
         </CardTitle>
         <Button asChild variant="ghost" size="sm">

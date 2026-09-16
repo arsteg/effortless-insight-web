@@ -142,8 +142,8 @@ function SimilarNoticeCard({ notice }: SimilarNoticeCardProps) {
               <span>Similarity</span>
               <span className={cn(
                 'font-medium',
-                similarityPercent >= 80 && 'text-green-600',
-                similarityPercent >= 60 && similarityPercent < 80 && 'text-yellow-600',
+                similarityPercent >= 80 && 'text-mint-600',
+                similarityPercent >= 60 && similarityPercent < 80 && 'text-amber-600',
                 similarityPercent < 60 && 'text-muted-foreground'
               )}>
                 {similarityPercent}%

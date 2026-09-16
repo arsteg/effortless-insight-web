@@ -230,14 +230,14 @@ export default function WhatsAppSettingsPage() {
         <CardContent>
           {isLinked ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border p-4 bg-green-50 dark:bg-green-950/20">
+              <div className="flex items-center justify-between rounded-lg border p-4 bg-mint-50 dark:bg-mint-900/20">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                    <Check className="h-6 w-6 text-green-600" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mint-100 dark:bg-mint-900">
+                    <Check className="h-6 w-6 text-mint-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-green-700 dark:text-green-400">WhatsApp Connected</p>
-                    <p className="text-sm text-green-600 dark:text-green-500">
+                    <p className="font-medium text-mint-700 dark:text-mint-400">WhatsApp Connected</p>
+                    <p className="text-sm text-mint-600 dark:text-mint-500">
                       {status?.phoneNumber || 'Phone number linked'}
                     </p>
                     {status?.linkedAt && (
@@ -247,7 +247,7 @@ export default function WhatsAppSettingsPage() {
                     )}
                   </div>
                 </div>
-                <Badge variant="outline" className="text-green-600 border-green-600">
+                <Badge variant="outline" className="text-mint-600 border-mint-600">
                   <Check className="mr-1 h-3 w-3" />
                   Verified
                 </Badge>
@@ -376,8 +376,8 @@ export default function WhatsAppSettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900">
-                  <Clock className="h-5 w-5 text-orange-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900">
+                  <Clock className="h-5 w-5 text-amber-600" />
                 </div>
                 <div className="space-y-0.5">
                   <Label className="font-medium">Deadline Reminders</Label>
@@ -395,8 +395,8 @@ export default function WhatsAppSettingsPage() {
 
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900">
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-coral-100 dark:bg-coral-900">
+                  <AlertTriangle className="h-5 w-5 text-coral-600" />
                 </div>
                 <div className="space-y-0.5">
                   <Label className="font-medium">High-Risk Alerts</Label>
@@ -433,8 +433,8 @@ export default function WhatsAppSettingsPage() {
 
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900">
-                  <Calendar className="h-5 w-5 text-purple-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-lavender-100 dark:bg-lavender-900">
+                  <Calendar className="h-5 w-5 text-lavender-600" />
                 </div>
                 <div className="space-y-0.5">
                   <Label className="font-medium">Daily Digest</Label>

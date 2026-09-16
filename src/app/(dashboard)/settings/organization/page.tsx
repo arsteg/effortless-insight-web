@@ -382,7 +382,7 @@ export default function OrganizationSettingsPage() {
                       <span className="font-mono font-medium">{gstin.gstin}</span>
                       {gstin.isPrimary && <Badge variant="secondary">Primary</Badge>}
                       {gstin.isVerified && (
-                        <Badge variant="outline" className="text-green-600">
+                        <Badge variant="outline" className="text-mint-600">
                           Verified
                         </Badge>
                       )}

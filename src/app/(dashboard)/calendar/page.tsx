@@ -66,22 +66,22 @@ interface TypeFilters {
 const FILTER_STORAGE_KEY = 'calendar-type-filters'
 
 const priorityColors = {
-  critical: 'bg-red-500 text-white',
-  high: 'bg-orange-500 text-white',
-  medium: 'bg-yellow-500 text-black',
-  low: 'bg-green-500 text-white',
+  critical: 'bg-coral-500 text-white',
+  high: 'bg-amber-500 text-white',
+  medium: 'bg-amber-500 text-black',
+  low: 'bg-mint-500 text-white',
 }
 
 const priorityBorderColors = {
-  critical: 'border-l-red-500',
-  high: 'border-l-orange-500',
-  medium: 'border-l-yellow-500',
-  low: 'border-l-green-500',
+  critical: 'border-l-coral-500',
+  high: 'border-l-amber-500',
+  medium: 'border-l-amber-500',
+  low: 'border-l-mint-500',
 }
 
 const typeColors = {
   notice: 'bg-blue-100 text-blue-800 border-blue-200',
-  task: 'bg-purple-100 text-purple-800 border-purple-200',
+  task: 'bg-lavender-100 text-lavender-800 border-lavender-200',
 }
 
 const typeIcons = {
@@ -468,11 +468,11 @@ export default function CalendarPage() {
                 <div className="flex items-center gap-2">
                   <div className={cn(
                     'p-1.5 rounded',
-                    typeFilters.tasks ? 'bg-purple-100' : 'bg-muted'
+                    typeFilters.tasks ? 'bg-lavender-100' : 'bg-muted'
                   )}>
                     <CheckSquare className={cn(
                       'h-4 w-4',
-                      typeFilters.tasks ? 'text-purple-600' : 'text-muted-foreground'
+                      typeFilters.tasks ? 'text-lavender-600' : 'text-muted-foreground'
                     )} />
                   </div>
                   <div>

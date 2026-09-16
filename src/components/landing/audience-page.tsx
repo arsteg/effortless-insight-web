@@ -104,7 +104,7 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
               <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
                 {content.checklist.items.map((item) => (
                   <li key={item} className="flex gap-2.5 text-sm leading-relaxed text-gray-700">
-                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" aria-hidden />
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-mint-600" aria-hidden />
                     {item}
                   </li>
                 ))}
@@ -134,7 +134,7 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
                 </div>
               </div>
             ))}
-            <div className="flex items-center justify-center gap-2 pt-4 text-sm font-medium text-green-700">
+            <div className="flex items-center justify-center gap-2 pt-4 text-sm font-medium text-mint-700">
               <Check className="h-4 w-4" aria-hidden />
               {content.closingLine}
             </div>

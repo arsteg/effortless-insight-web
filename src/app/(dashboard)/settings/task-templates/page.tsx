@@ -79,10 +79,10 @@ const NOTICE_TYPES = [
 ]
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string; badgeClass: string }[] = [
-  { value: 'critical', label: 'Critical', badgeClass: 'bg-red-100 text-red-800' },
-  { value: 'high', label: 'High', badgeClass: 'bg-orange-100 text-orange-800' },
-  { value: 'medium', label: 'Medium', badgeClass: 'bg-yellow-100 text-yellow-800' },
-  { value: 'low', label: 'Low', badgeClass: 'bg-green-100 text-green-800' },
+  { value: 'critical', label: 'Critical', badgeClass: 'bg-coral-100 text-coral-800' },
+  { value: 'high', label: 'High', badgeClass: 'bg-amber-100 text-amber-800' },
+  { value: 'medium', label: 'Medium', badgeClass: 'bg-amber-100 text-amber-800' },
+  { value: 'low', label: 'Low', badgeClass: 'bg-mint-100 text-mint-800' },
 ]
 
 const templateSchema = z.object({

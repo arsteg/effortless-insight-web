@@ -84,7 +84,7 @@ export function BulkAddGstClientsDialog({ open, onOpenChange }: BulkAddGstClient
         {result ? (
           <div className="space-y-3">
             <p className="text-sm">
-              <span className="font-semibold text-green-600">{result.created} added</span>
+              <span className="font-semibold text-mint-600">{result.created} added</span>
               {', '}
               <span className="text-muted-foreground">{result.skipped} skipped</span>
               {result.failed > 0 && (

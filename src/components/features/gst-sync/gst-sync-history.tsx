@@ -236,7 +236,7 @@ function SessionRow({ session, gstin }: SessionRowProps) {
         )}
       </TableCell>
       <TableCell className="text-right">{session.noticesFound}</TableCell>
-      <TableCell className="text-right text-green-600">
+      <TableCell className="text-right text-mint-600">
         {session.noticesNew > 0 ? `+${session.noticesNew}` : '-'}
       </TableCell>
       <TableCell className="text-right text-blue-600">

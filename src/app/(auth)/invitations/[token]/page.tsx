@@ -202,7 +202,7 @@ export default function AcceptInvitationPage() {
       <Card>
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <CheckCircle2 className="h-16 w-16 text-green-500" />
+            <CheckCircle2 className="h-16 w-16 text-mint-500" />
           </div>
           <CardTitle className="text-2xl font-bold">
             Welcome to the team!

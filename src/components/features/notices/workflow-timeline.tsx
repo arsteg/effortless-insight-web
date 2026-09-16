@@ -85,13 +85,13 @@ export function WorkflowTimeline({
                 className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors',
                   stage.status === 'completed' &&
-                    'border-green-500 bg-green-500 text-white',
+                    'border-mint-500 bg-mint-500 text-white',
                   stage.status === 'current' &&
                     'border-primary bg-primary text-primary-foreground',
                   stage.status === 'pending' &&
                     'border-muted-foreground/30 bg-background text-muted-foreground',
                   stage.status === 'error' &&
-                    'border-red-500 bg-red-500 text-white'
+                    'border-coral-500 bg-coral-500 text-white'
                 )}
               >
                 {stage.status === 'completed' && <Check className="h-5 w-5" />}
@@ -110,10 +110,10 @@ export function WorkflowTimeline({
               <span
                 className={cn(
                   'mt-2 text-xs font-medium text-center max-w-[80px]',
-                  stage.status === 'completed' && 'text-green-600 dark:text-green-400',
+                  stage.status === 'completed' && 'text-mint-600 dark:text-mint-400',
                   stage.status === 'current' && 'text-primary',
                   stage.status === 'pending' && 'text-muted-foreground',
-                  stage.status === 'error' && 'text-red-600 dark:text-red-400'
+                  stage.status === 'error' && 'text-coral-600 dark:text-coral-400'
                 )}
               >
                 {stage.label}
@@ -126,7 +126,7 @@ export function WorkflowTimeline({
                 className={cn(
                   'h-0.5 flex-1 mx-2 mt-[-20px]',
                   stage.status === 'completed'
-                    ? 'bg-green-500'
+                    ? 'bg-mint-500'
                     : 'bg-muted-foreground/30'
                 )}
               />

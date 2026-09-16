@@ -101,18 +101,18 @@ const STATUS_CONFIG: Record<
 > = {
   pending: { label: 'Pending', icon: <Clock className="h-4 w-4" />, color: 'text-gray-500' },
   submitted: { label: 'Submitted', icon: <Upload className="h-4 w-4" />, color: 'text-blue-500' },
-  reviewing: { label: 'Reviewing', icon: <Eye className="h-4 w-4" />, color: 'text-purple-500' },
-  fulfilled: { label: 'Fulfilled', icon: <CheckCircle className="h-4 w-4" />, color: 'text-green-500' },
+  reviewing: { label: 'Reviewing', icon: <Eye className="h-4 w-4" />, color: 'text-lavender-500' },
+  fulfilled: { label: 'Fulfilled', icon: <CheckCircle className="h-4 w-4" />, color: 'text-mint-500' },
   resubmit_needed: { label: 'Resubmit', icon: <RotateCcw className="h-4 w-4" />, color: 'text-amber-500' },
-  cancelled: { label: 'Cancelled', icon: <XCircle className="h-4 w-4" />, color: 'text-red-500' },
+  cancelled: { label: 'Cancelled', icon: <XCircle className="h-4 w-4" />, color: 'text-coral-500' },
 }
 
 function StatusSummary({ summary }: { summary: DocumentRequestSummary }) {
   const items = [
     { label: 'Pending', count: summary.pending, icon: Clock, color: 'text-gray-500' },
     { label: 'Submitted', count: summary.submitted, icon: Upload, color: 'text-blue-500' },
-    { label: 'Reviewing', count: summary.reviewing, icon: Eye, color: 'text-purple-500' },
-    { label: 'Fulfilled', count: summary.fulfilled, icon: CheckCircle, color: 'text-green-500' },
+    { label: 'Reviewing', count: summary.reviewing, icon: Eye, color: 'text-lavender-500' },
+    { label: 'Fulfilled', count: summary.fulfilled, icon: CheckCircle, color: 'text-mint-500' },
     { label: 'Resubmit', count: summary.resubmitNeeded, icon: RotateCcw, color: 'text-amber-500' },
   ]
 
@@ -130,7 +130,7 @@ function StatusSummary({ summary }: { summary: DocumentRequestSummary }) {
           </div>
         ))}
       {summary.overdue > 0 && (
-        <div className="flex items-center gap-2 text-red-600">
+        <div className="flex items-center gap-2 text-coral-600">
           <AlertTriangle className="h-4 w-4" />
           <span className="text-sm font-medium">{summary.overdue} Overdue</span>
         </div>
@@ -408,7 +408,7 @@ export function DocumentRequestList({
                     <DropdownMenuCheckboxItem
                       checked={showOverdueOnly}
                       onCheckedChange={setShowOverdueOnly}
-                      className="text-red-600"
+                      className="text-coral-600"
                     >
                       Overdue Only
                     </DropdownMenuCheckboxItem>

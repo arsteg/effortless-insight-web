@@ -42,9 +42,15 @@ export function AIAnalysisView({
   // Processing state
   if (processingStatus && processingStatus !== 'completed' && processingStatus !== 'failed') {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+      <div className="ai-panel">
+        <div className="flex flex-col items-center justify-center px-6 py-12">
+          <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-lavender-100 text-lavender-600">
+            <Loader2 className="h-7 w-7 animate-spin" />
+          </span>
+          <span className="ai-chip mb-3">
+            <Sparkles className="h-3.5 w-3.5" />
+            AI analysis
+          </span>
           <h3 className="text-lg font-semibold mb-2">Analyzing Notice</h3>
           <p className="text-muted-foreground text-center max-w-md">
             {getProcessingMessage(processingStatus)}
@@ -52,8 +58,8 @@ export function AIAnalysisView({
           <div className="w-full max-w-xs mt-6">
             <Progress value={getProcessingProgress(processingStatus)} className="h-2" />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     )
   }
 
@@ -62,7 +68,7 @@ export function AIAnalysisView({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+          <AlertTriangle className="h-12 w-12 text-coral-500 mb-4" />
           <h3 className="text-lg font-semibold mb-2">Analysis Failed</h3>
           <p className="text-muted-foreground text-center max-w-md mb-4">
             We encountered an error while analyzing this notice. Please try again.
@@ -92,7 +98,7 @@ export function AIAnalysisView({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <Sparkles className="h-12 w-12 text-muted-foreground/50 mb-4" />
+          <Sparkles className="h-12 w-12 text-lavender-300 mb-4" />
           <h3 className="text-lg font-semibold mb-2">No Analysis Available</h3>
           <p className="text-muted-foreground text-center max-w-md">
             AI analysis is not available for this notice yet.
@@ -111,7 +117,7 @@ export function AIAnalysisView({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <AlertTriangle className="h-5 w-5" />
+            <AlertTriangle className="h-5 w-5 text-coral-500" />
             Risk Assessment
           </CardTitle>
         </CardHeader>
@@ -132,7 +138,7 @@ export function AIAnalysisView({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="h-5 w-5" />
+              <FileText className="h-5 w-5 text-azure-500" />
               Summary
             </CardTitle>
           </CardHeader>
@@ -153,19 +159,20 @@ export function AIAnalysisView({
         </Card>
       )}
 
-      {/* Plain English Explanation */}
+      {/* Plain English Explanation — the signature AI "translation" panel */}
       {report.plainEnglish && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <div className="ai-panel p-6">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-lavender-100 text-lavender-600">
               <Sparkles className="h-5 w-5" />
-              What This Means
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed">{report.plainEnglish}</p>
-          </CardContent>
-        </Card>
+            </span>
+            <div>
+              <h3 className="text-lg font-semibold leading-none">What This Means</h3>
+              <span className="ai-chip mt-1.5">Plain-English translation</span>
+            </div>
+          </div>
+          <p className="text-sm leading-relaxed text-foreground/90">{report.plainEnglish}</p>
+        </div>
       )}
 
       {/* Action Items */}
@@ -173,7 +180,7 @@ export function AIAnalysisView({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <CheckCircle2 className="h-5 w-5" />
+              <CheckCircle2 className="h-5 w-5 text-mint-500" />
               Recommended Actions
             </CardTitle>
           </CardHeader>
@@ -183,13 +190,21 @@ export function AIAnalysisView({
                 <div
                   key={index}
                   className={cn(
-                    'flex gap-4 rounded-lg border p-4',
-                    item.priority === 1 && 'border-l-4 border-l-red-500',
-                    item.priority === 2 && 'border-l-4 border-l-yellow-500',
-                    item.priority === 3 && 'border-l-4 border-l-green-500'
+                    'flex gap-4 rounded-xl border p-4',
+                    item.priority === 1 && 'border-l-4 border-l-coral-500 bg-coral-50/40',
+                    item.priority === 2 && 'border-l-4 border-l-amber-500 bg-amber-50/40',
+                    item.priority === 3 && 'border-l-4 border-l-mint-500 bg-mint-50/40'
                   )}
                 >
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
+                  <div
+                    className={cn(
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                      item.priority === 1 && 'bg-coral-100 text-coral-700',
+                      item.priority === 2 && 'bg-amber-100 text-amber-700',
+                      item.priority === 3 && 'bg-mint-100 text-mint-700',
+                      ![1, 2, 3].includes(item.priority) && 'bg-muted'
+                    )}
+                  >
                     {item.priority}
                   </div>
                   <div className="flex-1">
@@ -225,7 +240,7 @@ export function AIAnalysisView({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="h-5 w-5" />
+              <FileText className="h-5 w-5 text-azure-500" />
               Required Documents
             </CardTitle>
           </CardHeader>
@@ -236,7 +251,7 @@ export function AIAnalysisView({
                   <CheckCircle2
                     className={cn(
                       'h-4 w-4 mt-0.5 shrink-0',
-                      doc.mandatory ? 'text-red-500' : 'text-muted-foreground'
+                      doc.mandatory ? 'text-coral-500' : 'text-muted-foreground'
                     )}
                   />
                   <span>
@@ -259,7 +274,7 @@ export function AIAnalysisView({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Scale className="h-5 w-5" />
+              <Scale className="h-5 w-5 text-azure-500" />
               Legal References
             </CardTitle>
           </CardHeader>

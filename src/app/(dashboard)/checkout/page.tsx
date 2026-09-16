@@ -550,8 +550,8 @@ function CheckoutContent() {
 
       {currentStep === 'confirmation' && (
         <div className="max-w-lg mx-auto text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="h-10 w-10 text-green-600" />
+          <div className="w-20 h-20 bg-mint-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="h-10 w-10 text-mint-600" />
           </div>
 
           {selectedPlan?.trialDays && selectedPlan.trialDays > 0 ? (

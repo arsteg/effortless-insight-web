@@ -264,11 +264,11 @@ export function WorkflowPanel({
         {isPaused && (
           <>
             <Separator />
-            <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
-              <Clock className="h-5 w-5 text-yellow-600" />
+            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
+              <Clock className="h-5 w-5 text-amber-600" />
               <div>
-                <p className="font-medium text-yellow-800">Workflow Paused</p>
-                <p className="text-sm text-yellow-600">
+                <p className="font-medium text-amber-800">Workflow Paused</p>
+                <p className="text-sm text-amber-600">
                   SLA timer is paused. Resume to continue processing.
                 </p>
               </div>
@@ -334,13 +334,13 @@ export function WorkflowPanel({
             <div
               className={cn(
                 'p-3 rounded-lg text-center',
-                isCompleted ? 'bg-green-50' : 'bg-gray-50'
+                isCompleted ? 'bg-mint-50' : 'bg-gray-50'
               )}
             >
               <p
                 className={cn(
                   'font-medium',
-                  isCompleted ? 'text-green-800' : 'text-gray-800'
+                  isCompleted ? 'text-mint-800' : 'text-gray-800'
                 )}
               >
                 Workflow {isCompleted ? 'Completed' : 'Cancelled'}

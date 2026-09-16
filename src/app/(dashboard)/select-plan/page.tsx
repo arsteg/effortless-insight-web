@@ -297,7 +297,7 @@ function SelectablePlanCard({
             </Badge>
           )}
           {hasFreeTrial && !isFreePlan && !hasUsedTrial && (
-            <p className="text-sm text-green-600 mt-2 font-medium">
+            <p className="text-sm text-mint-600 mt-2 font-medium">
               {plan.trialDays}-day free trial included
             </p>
           )}

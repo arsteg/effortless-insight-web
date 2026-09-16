@@ -244,21 +244,21 @@ export function PushNotificationStatus({ className }: { className?: string }) {
       case 'registered':
         return {
           icon: CheckCircle,
-          iconClass: 'text-green-500',
+          iconClass: 'text-mint-500',
           title: 'Push Notifications Enabled',
           description: 'You will receive push notifications on this device.',
         }
       case 'permission-granted':
         return {
           icon: Bell,
-          iconClass: 'text-yellow-500',
+          iconClass: 'text-amber-500',
           title: 'Ready to Enable',
           description: 'Click to enable push notifications on this device.',
         }
       case 'permission-denied':
         return {
           icon: BellOff,
-          iconClass: 'text-red-500',
+          iconClass: 'text-coral-500',
           title: 'Notifications Blocked',
           description: 'Enable notifications in your browser settings.',
         }

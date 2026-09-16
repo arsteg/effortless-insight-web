@@ -80,22 +80,22 @@ export function UploadProgress({
             className={cn(
               'flex h-16 w-16 items-center justify-center rounded-full mb-4',
               state === 'uploading' && 'bg-blue-100 dark:bg-blue-900/30',
-              state === 'processing' && 'bg-yellow-100 dark:bg-yellow-900/30',
-              state === 'success' && 'bg-green-100 dark:bg-green-900/30',
-              state === 'error' && 'bg-red-100 dark:bg-red-900/30'
+              state === 'processing' && 'bg-amber-100 dark:bg-amber-900/30',
+              state === 'success' && 'bg-mint-100 dark:bg-mint-900/30',
+              state === 'error' && 'bg-coral-100 dark:bg-coral-900/30'
             )}
           >
             {state === 'uploading' && (
               <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
             )}
             {state === 'processing' && (
-              <Loader2 className="h-8 w-8 text-yellow-600 dark:text-yellow-400 animate-spin" />
+              <Loader2 className="h-8 w-8 text-amber-600 dark:text-amber-400 animate-spin" />
             )}
             {state === 'success' && (
-              <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+              <CheckCircle2 className="h-8 w-8 text-mint-600 dark:text-mint-400" />
             )}
             {state === 'error' && (
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+              <AlertCircle className="h-8 w-8 text-coral-600 dark:text-coral-400" />
             )}
           </div>
 

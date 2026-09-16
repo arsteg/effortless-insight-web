@@ -83,7 +83,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto bg-gradient-to-b from-background to-secondary/40 p-4 md:p-6">
           <SubscriptionGuard>{children}</SubscriptionGuard>
         </main>
       </div>

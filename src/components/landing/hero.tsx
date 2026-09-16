@@ -26,7 +26,7 @@ export function Hero() {
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 right-0 h-[520px] w-[520px] rounded-full bg-sky-100/50 blur-3xl"
+        className="pointer-events-none absolute -top-40 right-0 h-[520px] w-[520px] rounded-full bg-azure-100/50 blur-3xl"
       />
       {/* Hairline grid texture for depth, masked to fade out */}
       <div
@@ -53,8 +53,9 @@ export function Hero() {
 
             <p className="mt-6 text-lg leading-relaxed text-gray-600 md:text-xl">
               EffortlessInsight finds every notice on the GST portal, explains it
-              in plain English, reminds you before every deadline, and drafts
-              your reply — so a scary envelope becomes a fifteen-minute task.
+              in plain English, reminds you before every deadline, and drafts a
+              first reply for you and your CA to finalize — so a scary envelope
+              becomes a calm, fifteen-minute task.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -84,7 +85,7 @@ export function Hero() {
             {/* Trust strip — one line, three facts */}
             <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2.5 border-t border-gray-100 pt-6 text-sm text-gray-600">
               <span className="flex items-center gap-1.5">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" /> Authorized portal access
+                <ShieldCheck className="h-4 w-4 text-mint-600" /> Authorized portal access
               </span>
               <span className="flex items-center gap-1.5">
                 <Fingerprint className="h-4 w-4 text-primary-600" /> OTP-verified, no passwords stored
@@ -93,6 +94,10 @@ export function Hero() {
                 <MapPin className="h-4 w-4 text-gray-400" /> Data stored in India
               </span>
             </div>
+
+            <p className="mt-4 text-sm font-medium text-gray-500">
+              Works <span className="text-gray-800">with</span> your CA — never instead of them.
+            </p>
           </div>
 
           {/* Visual: the product's core moment — notice understood */}
@@ -100,19 +105,19 @@ export function Hero() {
             {/* Tilted backdrop card for depth */}
             <div
               aria-hidden
-              className="absolute inset-0 -rotate-[2.5deg] rounded-[1.75rem] bg-gradient-to-br from-primary-100/80 to-sky-100/60"
+              className="absolute inset-0 -rotate-[2.5deg] rounded-[1.75rem] bg-gradient-to-br from-primary-100/80 to-azure-100/60"
             />
             <div className="relative rounded-3xl border border-gray-200/70 bg-white/95 p-6 shadow-premium ring-1 ring-gray-900/5 backdrop-blur">
               {/* Notice header */}
               <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-sm font-bold text-red-600 ring-1 ring-red-100">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-coral-50 text-sm font-bold text-coral-600 ring-1 ring-coral-100">
                   DRC
                 </div>
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900">DRC-01 · Tax Demand Notice</p>
                   <p className="text-sm text-gray-500">Received today, 9:14 AM</p>
                 </div>
-                <span className="ml-auto rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700 ring-1 ring-orange-200/60">
+                <span className="ml-auto rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200/60">
                   High priority
                 </span>
               </div>
@@ -134,9 +139,9 @@ export function Hero() {
                     response is ready for your CA to review.
                   </p>
                 </div>
-                <div className="flex items-center justify-between rounded-xl bg-orange-50 px-4 py-3 ring-1 ring-orange-100">
-                  <span className="text-sm font-medium text-orange-900">Respond by 24 August</span>
-                  <span className="nums text-sm font-semibold text-orange-700">15 days left</span>
+                <div className="flex items-center justify-between rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-100">
+                  <span className="text-sm font-medium text-amber-900">Respond by 24 August</span>
+                  <span className="nums text-sm font-semibold text-amber-700">15 days left</span>
                 </div>
               </div>
             </div>
@@ -144,8 +149,8 @@ export function Hero() {
             {/* WhatsApp reminder float */}
             <div className="animate-float absolute -bottom-16 -left-4 hidden rounded-2xl border border-gray-200/70 bg-white p-3.5 shadow-elevated ring-1 ring-gray-900/5 sm:block">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
-                  <svg className="h-5 w-5 text-emerald-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-mint-100">
+                  <svg className="h-5 w-5 text-mint-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                     <path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.9-1.4A10 10 0 1 0 12 2Zm5.2 14.1c-.2.6-1.2 1.1-1.7 1.2-.5 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c0 .2.1.3 0 .5l-.3.5-.5.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1.1 2.2 1.4 2.5 1.5.3.1.5.1.7-.1l1-1.1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.6.3 0 .1 0 .7-.2 1.4Z" />
                   </svg>
                 </div>

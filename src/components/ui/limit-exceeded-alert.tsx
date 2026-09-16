@@ -64,7 +64,7 @@ export function LimitExceededAlert({
     <Alert
       variant={isOverLimit ? 'destructive' : 'default'}
       className={cn(
-        isWarning && 'border-yellow-500/50 text-yellow-700 dark:text-yellow-400 [&>svg]:text-yellow-600',
+        isWarning && 'border-amber-500/50 text-amber-700 dark:text-amber-400 [&>svg]:text-amber-600',
         className
       )}
     >

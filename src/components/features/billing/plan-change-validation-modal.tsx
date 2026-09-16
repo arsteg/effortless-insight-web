@@ -78,19 +78,19 @@ function LimitComparisonRow({ label, change, icon: Icon }: { label: string; chan
   const isIncrease = change.direction === 'increase'
 
   return (
-    <div className={`flex items-center justify-between p-2 rounded ${isIncrease ? 'bg-green-50 dark:bg-green-950/20' : 'bg-orange-50 dark:bg-orange-950/20'}`}>
+    <div className={`flex items-center justify-between p-2 rounded ${isIncrease ? 'bg-mint-50 dark:bg-mint-900/20' : 'bg-amber-50 dark:bg-amber-900/20'}`}>
       <div className="flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${isIncrease ? 'text-green-600' : 'text-orange-600'}`} />
+        <Icon className={`h-4 w-4 ${isIncrease ? 'text-mint-600' : 'text-amber-600'}`} />
         <span className="text-sm">{label}</span>
       </div>
       <div className="flex items-center gap-2 text-sm">
         <span className="text-muted-foreground">{formatLimit(change.current)}</span>
         {isIncrease ? (
-          <ArrowUp className="h-4 w-4 text-green-600" />
+          <ArrowUp className="h-4 w-4 text-mint-600" />
         ) : (
-          <ArrowDown className="h-4 w-4 text-orange-600" />
+          <ArrowDown className="h-4 w-4 text-amber-600" />
         )}
-        <span className={isIncrease ? 'text-green-600 font-medium' : 'text-orange-600 font-medium'}>
+        <span className={isIncrease ? 'text-mint-600 font-medium' : 'text-amber-600 font-medium'}>
           {formatLimit(change.new)}
         </span>
       </div>
@@ -122,7 +122,7 @@ function formatBillingCycle(cycle: string): string {
 function ProrationPreviewSection({ proration }: { proration: ProrationPreview }) {
   const colorClass = proration.isUpgrade
     ? 'border-blue-500/50 bg-blue-50 dark:bg-blue-950/20'
-    : 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/20'
+    : 'border-amber-500/50 bg-amber-50 dark:bg-amber-900/20'
 
   const textClass = proration.isUpgrade
     ? 'text-blue-800 dark:text-blue-400'
@@ -212,17 +212,17 @@ export function PlanChangeValidationModal({
               </>
             ) : hasActiveFeatureLoss ? (
               <>
-                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
                 Important: Active Features Will Be Lost
               </>
             ) : hasWarnings ? (
               <>
-                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
                 Confirm Plan Change
               </>
             ) : (
               <>
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-mint-600" />
                 Plan Change Available
               </>
             )}
@@ -252,12 +252,12 @@ export function PlanChangeValidationModal({
 
           {/* Active features warning - shows for features currently in use */}
           {hasActiveFeatureLoss && !hasBlockers && (
-            <Alert className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
-              <AlertTriangle className="h-4 w-4 text-orange-600" />
-              <AlertTitle className="text-orange-800 dark:text-orange-400">
+            <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-900/20">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertTitle className="text-amber-800 dark:text-amber-400">
                 Active Features Will Become Unavailable
               </AlertTitle>
-              <AlertDescription className="text-orange-700 dark:text-orange-300">
+              <AlertDescription className="text-amber-700 dark:text-amber-300">
                 <p className="text-sm mb-2">
                   The following features are currently in use and will stop working after you switch plans:
                 </p>
@@ -301,12 +301,12 @@ export function PlanChangeValidationModal({
           {/* Features to gain */}
           {hasGains && !hasBlockers && (
             <>
-              <Alert className="border-green-500/50 bg-green-50 dark:bg-green-950/20">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertTitle className="text-green-800 dark:text-green-400">
+              <Alert className="border-mint-500/50 bg-mint-50 dark:bg-mint-900/20">
+                <CheckCircle className="h-4 w-4 text-mint-600" />
+                <AlertTitle className="text-mint-800 dark:text-mint-400">
                   Features You Will Gain
                 </AlertTitle>
-                <AlertDescription className="text-green-700 dark:text-green-300">
+                <AlertDescription className="text-mint-700 dark:text-mint-300">
                   <ul className="list-disc list-inside space-y-1 text-sm mt-2">
                     {validation.featuresToGain!.map((feature, index) => (
                       <li key={index}>{feature}</li>
@@ -320,12 +320,12 @@ export function PlanChangeValidationModal({
           {/* Features to lose warning */}
           {hasWarnings && (
             <>
-              <Alert className="border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <AlertTitle className="text-yellow-800 dark:text-yellow-400">
+              <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-900/20">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertTitle className="text-amber-800 dark:text-amber-400">
                   Features You Will Lose
                 </AlertTitle>
-                <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+                <AlertDescription className="text-amber-700 dark:text-amber-300">
                   <ul className="list-disc list-inside space-y-1 text-sm mt-2">
                     {validation.featuresToLose!.map((feature, index) => (
                       <li key={index}>{feature}</li>
@@ -338,12 +338,12 @@ export function PlanChangeValidationModal({
 
           {/* Ready state when no blockers */}
           {!hasBlockers && !hasWarnings && !hasGains && !hasActiveFeatureLoss && (
-            <Alert className="border-green-500/50 bg-green-50 dark:bg-green-950/20">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-800 dark:text-green-400">
+            <Alert className="border-mint-500/50 bg-mint-50 dark:bg-mint-900/20">
+              <CheckCircle className="h-4 w-4 text-mint-600" />
+              <AlertTitle className="text-mint-800 dark:text-mint-400">
                 Ready to Switch
               </AlertTitle>
-              <AlertDescription className="text-green-700 dark:text-green-300">
+              <AlertDescription className="text-mint-700 dark:text-mint-300">
                 Your current usage is within the limits of the new plan. You can proceed with the plan change.
               </AlertDescription>
             </Alert>

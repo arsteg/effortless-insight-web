@@ -131,21 +131,33 @@ export function Sidebar() {
           }
         }}
         className={cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+          'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
           active
-            ? 'bg-primary text-primary-foreground'
+            ? 'bg-azure-50 text-azure-700 shadow-soft'
             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
           isLocked && 'opacity-60',
           sidebarCollapsed && 'justify-center px-2'
         )}
       >
-        <Icon className="h-5 w-5 shrink-0" />
+        {/* Active azure rail */}
+        {active && !sidebarCollapsed && (
+          <span
+            aria-hidden
+            className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-azure-500"
+          />
+        )}
+        <Icon
+          className={cn(
+            'h-5 w-5 shrink-0 transition-colors',
+            active ? 'text-azure-600' : 'text-muted-foreground group-hover:text-accent-foreground'
+          )}
+        />
         {!sidebarCollapsed && <span>{item.title}</span>}
         {!sidebarCollapsed && isLocked && (
           <Lock className="ml-auto h-3.5 w-3.5 text-amber-500" />
         )}
         {!sidebarCollapsed && !isLocked && item.badge && item.badge > 0 && (
-          <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary-foreground text-xs text-primary">
+          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-coral-500 px-1.5 text-xs font-semibold text-white">
             {item.badge}
           </span>
         )}
@@ -171,7 +183,7 @@ export function Sidebar() {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -179,7 +191,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-background transition-all duration-300 md:static md:z-auto',
+          'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border/70 bg-card/80 backdrop-blur-xl transition-all duration-300 md:static md:z-auto',
           sidebarCollapsed ? 'w-16' : 'w-64',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}

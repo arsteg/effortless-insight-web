@@ -118,28 +118,28 @@ export function ExtensionSetupGuide({ onAddClient }: ExtensionSetupGuideProps) {
           <h4 className="font-semibold mb-2">How It Works</h4>
           <ul className="text-sm text-muted-foreground space-y-2">
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-mint-500 mt-0.5 flex-shrink-0" />
               <span>
                 <strong>Privacy First:</strong> All processing happens in your browser. We never
                 store your GST portal credentials.
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-mint-500 mt-0.5 flex-shrink-0" />
               <span>
                 <strong>Automatic Detection:</strong> The extension detects when you visit notice
                 pages and captures the data automatically.
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-mint-500 mt-0.5 flex-shrink-0" />
               <span>
                 <strong>Offline Support:</strong> If you&apos;re offline, captured notices are queued and
                 synced when you reconnect.
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-mint-500 mt-0.5 flex-shrink-0" />
               <span>
                 <strong>PDF Downloads:</strong> Optionally download notice PDFs automatically for
                 your records.

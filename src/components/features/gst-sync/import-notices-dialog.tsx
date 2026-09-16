@@ -192,7 +192,7 @@ export function ImportNoticesDialog({
             {/* Results Summary */}
             <div className="rounded-lg border p-4 space-y-3">
               {importResult.imported > 0 && (
-                <div className="flex items-center gap-2 text-green-600">
+                <div className="flex items-center gap-2 text-mint-600">
                   <CheckCircle2 className="h-5 w-5" />
                   <span>{importResult.imported} notice(s) imported successfully</span>
                 </div>

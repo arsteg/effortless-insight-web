@@ -261,8 +261,8 @@ function OnboardingForm() {
                         className={
                           gstinValidation
                             ? gstinValidation.isValid
-                              ? 'border-green-500 focus-visible:ring-green-500'
-                              : 'border-red-500 focus-visible:ring-red-500'
+                              ? 'border-mint-500 focus-visible:ring-mint-500'
+                              : 'border-coral-500 focus-visible:ring-coral-500'
                             : ''
                         }
                       />
@@ -271,20 +271,20 @@ function OnboardingForm() {
                       )}
                       {gstinValidation && !isValidatingGstin && (
                         gstinValidation.isValid ? (
-                          <CheckCircle2 className="absolute right-3 top-2.5 h-4 w-4 text-green-500" />
+                          <CheckCircle2 className="absolute right-3 top-2.5 h-4 w-4 text-mint-500" />
                         ) : (
-                          <AlertCircle className="absolute right-3 top-2.5 h-4 w-4 text-red-500" />
+                          <AlertCircle className="absolute right-3 top-2.5 h-4 w-4 text-coral-500" />
                         )
                       )}
                     </div>
                   </FormControl>
                   {gstinValidation?.isValid && gstinValidation.stateName && (
-                    <FormDescription className="text-green-600">
+                    <FormDescription className="text-mint-600">
                       State: {gstinValidation.stateName}
                     </FormDescription>
                   )}
                   {gstinValidation && !gstinValidation.isValid && gstinValidation.errorMessage && (
-                    <FormDescription className="text-red-500">
+                    <FormDescription className="text-coral-500">
                       {gstinValidation.errorMessage}
                     </FormDescription>
                   )}

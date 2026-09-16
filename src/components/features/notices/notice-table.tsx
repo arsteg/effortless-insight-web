@@ -115,10 +115,10 @@ export function NoticeTable({
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-muted/50 hover:bg-muted/50">
             {onSelectionChange && (
               <TableHead className="w-12">
                 <Checkbox
@@ -204,7 +204,7 @@ export function NoticeTable({
             <TableRow
               key={notice.id}
               className={cn(
-                selectedIds.includes(notice.id) && 'bg-muted/50'
+                selectedIds.includes(notice.id) && 'bg-azure-50/60'
               )}
             >
               {onSelectionChange && (
@@ -251,7 +251,7 @@ export function NoticeTable({
                 />
               </TableCell>
               <TableCell>
-                <div className="font-medium">
+                <div className="font-medium nums">
                   {formatCurrency(notice.taxAmount)}
                 </div>
                 {notice.penaltyAmount !== undefined && notice.penaltyAmount > 0 && (
@@ -340,9 +340,9 @@ function DeadlineCell({ deadline, daysRemaining }: DeadlineCellProps) {
 
   const getDeadlineColor = () => {
     if (daysRemaining === undefined) return ''
-    if (daysRemaining < 0) return 'text-red-600 dark:text-red-400'
-    if (daysRemaining <= 3) return 'text-red-600 dark:text-red-400'
-    if (daysRemaining <= 7) return 'text-yellow-600 dark:text-yellow-400'
+    if (daysRemaining < 0) return 'text-coral-600 dark:text-coral-400'
+    if (daysRemaining <= 3) return 'text-coral-600 dark:text-coral-400'
+    if (daysRemaining <= 7) return 'text-amber-600 dark:text-amber-400'
     return ''
   }
 
@@ -370,7 +370,7 @@ function DeadlineCell({ deadline, daysRemaining }: DeadlineCellProps) {
 
 function NoticeTableSkeleton() {
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -429,9 +429,9 @@ function NoticeTableSkeleton() {
 
 function NoticeTableEmpty() {
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
       <div className="flex flex-col items-center justify-center py-12">
-        <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+        <FileText className="h-12 w-12 text-azure-300 mb-4" />
         <h3 className="text-lg font-semibold mb-2">No notices found</h3>
         <p className="text-muted-foreground mb-4 text-center max-w-sm">
           Upload your first GST notice to get started with AI-powered analysis.

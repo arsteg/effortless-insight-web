@@ -170,8 +170,8 @@ export function PricingPreview() {
                   <ul className="mb-8 flex-1 space-y-3">
                     {getTopFeatures(plan).map((feature) => (
                       <li key={feature} className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
-                          <Check className="h-3 w-3 text-green-600" />
+                        <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-mint-100">
+                          <Check className="h-3 w-3 text-mint-600" />
                         </div>
                         <span className="text-sm text-gray-700">{feature}</span>
                       </li>

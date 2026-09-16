@@ -107,9 +107,9 @@ const STATUS_ICONS: Record<TaskStatus, React.ReactNode> = {
 const STATUS_COLORS: Record<TaskStatus, string> = {
   todo: 'text-gray-500',
   in_progress: 'text-blue-500',
-  done: 'text-green-500',
-  blocked: 'text-red-500',
-  on_hold: 'text-yellow-500',
+  done: 'text-mint-500',
+  blocked: 'text-coral-500',
+  on_hold: 'text-amber-500',
   archived: 'text-gray-400',
 }
 
@@ -117,9 +117,9 @@ function StatusSummary({ summary }: { summary: TaskSummary }) {
   const items = [
     { label: 'To Do', count: summary.todo, icon: Circle, color: 'text-gray-500' },
     { label: 'In Progress', count: summary.inProgress, icon: ChevronRight, color: 'text-blue-500' },
-    { label: 'Done', count: summary.done, icon: CheckCircle2, color: 'text-green-500' },
-    { label: 'Blocked', count: summary.blocked, icon: AlertCircle, color: 'text-red-500' },
-    { label: 'On Hold', count: summary.onHold, icon: PauseCircle, color: 'text-yellow-500' },
+    { label: 'Done', count: summary.done, icon: CheckCircle2, color: 'text-mint-500' },
+    { label: 'Blocked', count: summary.blocked, icon: AlertCircle, color: 'text-coral-500' },
+    { label: 'On Hold', count: summary.onHold, icon: PauseCircle, color: 'text-amber-500' },
   ]
 
   return (
@@ -136,7 +136,7 @@ function StatusSummary({ summary }: { summary: TaskSummary }) {
           </div>
         ))}
       {summary.overdue > 0 && (
-        <div className="flex items-center gap-2 text-red-600">
+        <div className="flex items-center gap-2 text-coral-600">
           <AlertCircle className="h-4 w-4" />
           <span className="text-sm font-medium">{summary.overdue} Overdue</span>
         </div>
@@ -406,7 +406,7 @@ export function TaskList({
                     <DropdownMenuCheckboxItem
                       checked={showOverdueOnly}
                       onCheckedChange={setShowOverdueOnly}
-                      className="text-red-600"
+                      className="text-coral-600"
                     >
                       Overdue Only
                     </DropdownMenuCheckboxItem>

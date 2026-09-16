@@ -80,10 +80,10 @@ interface DocumentRequestFormProps {
 }
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string }[] = [
-  { value: 'critical', label: 'Critical', color: 'bg-red-100 text-red-800' },
-  { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-800' },
-  { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'low', label: 'Low', color: 'bg-green-100 text-green-800' },
+  { value: 'critical', label: 'Critical', color: 'bg-coral-100 text-coral-800' },
+  { value: 'high', label: 'High', color: 'bg-amber-100 text-amber-800' },
+  { value: 'medium', label: 'Medium', color: 'bg-amber-100 text-amber-800' },
+  { value: 'low', label: 'Low', color: 'bg-mint-100 text-mint-800' },
 ]
 
 const COMMON_FORMATS = [

@@ -203,7 +203,7 @@ export function PlanComparison({ plans, highlightPlan }: PlanComparisonProps) {
 function FeatureValue({ value }: { value: string | number | boolean }) {
   if (typeof value === 'boolean') {
     return value ? (
-      <Check className="h-5 w-5 text-green-600 mx-auto" />
+      <Check className="h-5 w-5 text-mint-600 mx-auto" />
     ) : (
       <X className="h-5 w-5 text-muted-foreground/50 mx-auto" />
     )

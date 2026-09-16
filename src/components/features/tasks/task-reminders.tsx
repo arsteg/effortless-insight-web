@@ -190,7 +190,7 @@ export function TaskReminders({ taskId, dueDate, className }: TaskRemindersProps
                       {reminder.isSent && (
                         <Badge
                           variant="outline"
-                          className="shrink-0 bg-green-100 text-xs text-green-800"
+                          className="shrink-0 bg-mint-100 text-xs text-mint-800"
                         >
                           <Check className="mr-0.5 h-3 w-3" />
                           Sent

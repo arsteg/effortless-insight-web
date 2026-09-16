@@ -189,10 +189,10 @@ export default function UploadNoticePage() {
               <div className="space-y-3">
                 {progress.completedFiles.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-green-600">Successfully uploaded:</p>
+                    <p className="text-sm font-medium text-mint-600">Successfully uploaded:</p>
                     {progress.completedFiles.map((name, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <CheckCircle className="h-4 w-4 text-mint-600" />
                         <span className="truncate">{name}</span>
                       </div>
                     ))}

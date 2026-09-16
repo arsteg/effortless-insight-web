@@ -59,11 +59,11 @@ export function GstnDisconnectDialog({
 
         <div className="space-y-4 py-4">
           {/* Warning */}
-          <div className="flex items-start gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800">
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
             <AlertTriangle className="h-5 w-5 flex-shrink-0" />
             <div className="text-sm">
               <p className="font-medium">Are you sure?</p>
-              <p className="mt-1 text-yellow-700">
+              <p className="mt-1 text-amber-700">
                 Disconnecting will stop automatic notice fetching. You can reconnect
                 at any time by verifying with a new OTP.
               </p>

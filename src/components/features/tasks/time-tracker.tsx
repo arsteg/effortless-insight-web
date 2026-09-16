@@ -311,13 +311,13 @@ export function TimeTracker({ taskId, estimatedHours, className }: TimeTrackerPr
               <div
                 className={cn(
                   'h-full transition-all',
-                  totalHours > estimatedHours ? 'bg-red-500' : 'bg-primary'
+                  totalHours > estimatedHours ? 'bg-coral-500' : 'bg-primary'
                 )}
                 style={{ width: `${Math.min((totalHours / estimatedHours) * 100, 100)}%` }}
               />
             </div>
             {totalHours > estimatedHours && (
-              <p className="text-xs text-red-500">
+              <p className="text-xs text-coral-500">
                 Over estimate by {formatHours(totalHours - estimatedHours)}
               </p>
             )}

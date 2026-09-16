@@ -230,7 +230,7 @@ function ChannelToggle({
           <div className="flex items-center gap-2">
             <Label className="font-medium">{label}</Label>
             {verified === true && (
-              <Badge variant="outline" className="text-xs text-green-600">
+              <Badge variant="outline" className="text-xs text-mint-600">
                 <Check className="mr-1 h-3 w-3" />
                 Verified
               </Badge>

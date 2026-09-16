@@ -23,8 +23,8 @@ export default function PricingError({
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white flex items-center justify-center p-4">
       <Card className="max-w-lg w-full">
         <CardHeader className="text-center pb-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4 mx-auto">
-            <AlertCircle className="w-8 h-8 text-red-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-coral-100 mb-4 mx-auto">
+            <AlertCircle className="w-8 h-8 text-coral-600" />
           </div>
           <CardTitle className="text-2xl">Something went wrong</CardTitle>
           <CardDescription className="text-base">

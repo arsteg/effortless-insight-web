@@ -216,7 +216,7 @@ function PaymentMethodItem({
           </div>
           <div className="flex items-center gap-2 mt-1">
             {isExpiringSoon() && (
-              <span className="flex items-center gap-1 text-xs text-yellow-600">
+              <span className="flex items-center gap-1 text-xs text-amber-600">
                 <AlertCircle className="h-3 w-3" />
                 Expiring soon
               </span>

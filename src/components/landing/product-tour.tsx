@@ -66,13 +66,13 @@ function PhoneFrame({ children, header }: { children: React.ReactNode; header: R
 function DashboardMock() {
   const stats = [
     { label: 'Active notices', value: '12', tone: 'text-gray-900' },
-    { label: 'Due this week', value: '4', tone: 'text-orange-600' },
-    { label: 'Overdue', value: '2', tone: 'text-red-600' },
+    { label: 'Due this week', value: '4', tone: 'text-amber-600' },
+    { label: 'Overdue', value: '2', tone: 'text-coral-600' },
     { label: 'Amount at stake', value: '₹8.4L', tone: 'text-gray-900' },
   ]
   const rows = [
-    { id: 'DRC-01', client: 'Sharma Textiles', due: '3 days', tone: 'bg-red-50 text-red-700' },
-    { id: 'ASMT-10', client: 'GreenLeaf Foods', due: '12 days', tone: 'bg-orange-50 text-orange-700' },
+    { id: 'DRC-01', client: 'Sharma Textiles', due: '3 days', tone: 'bg-coral-50 text-coral-700' },
+    { id: 'ASMT-10', client: 'GreenLeaf Foods', due: '12 days', tone: 'bg-amber-50 text-amber-700' },
     { id: 'GSTR-3A', client: 'Apex Traders', due: '21 days', tone: 'bg-gray-100 text-gray-600' },
   ]
   return (
@@ -107,7 +107,7 @@ function SyncMock() {
     <BrowserFrame>
       <div className="flex items-center justify-between border-b border-gray-100 pb-3">
         <p className="font-semibold text-gray-900">Connected GSTINs</p>
-        <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700">
+        <span className="rounded-full bg-mint-50 px-2.5 py-1 text-[11px] font-semibold text-mint-700">
           Auto-sync on
         </span>
       </div>
@@ -115,7 +115,7 @@ function SyncMock() {
         <div className="rounded-xl border border-gray-100 p-3.5">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs font-semibold text-gray-800">29AAACR5055K1ZN</span>
-            <span className="flex items-center gap-1 text-[11px] font-medium text-green-700">
+            <span className="flex items-center gap-1 text-[11px] font-medium text-mint-700">
               <Check className="h-3 w-3" /> OTP verified
             </span>
           </div>
@@ -152,7 +152,7 @@ function AnalysisMock() {
           <p className="font-semibold text-gray-900">DRC-01 · Sharma Textiles</p>
           <p className="text-xs text-gray-500">Analyzed automatically after sync</p>
         </div>
-        <div className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700">
+        <div className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
           Risk: High · 72/100
         </div>
       </div>
@@ -167,8 +167,8 @@ function AnalysisMock() {
         {['Collect invoices from 3 flagged suppliers', 'Verify GSTR-2B entries for March', 'File reply before 24 August'].map(
           (item) => (
             <div key={item} className="flex items-center gap-2.5 text-sm text-gray-700">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100">
-                <Check className="h-3 w-3 text-green-600" />
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-mint-100">
+                <Check className="h-3 w-3 text-mint-600" />
               </span>
               {item}
             </div>
@@ -227,7 +227,7 @@ function DraftMock() {
         <span className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700">
           Share with CA
         </span>
-        <span className="ml-auto rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700">
+        <span className="ml-auto rounded-lg bg-mint-50 px-3 py-1.5 text-xs font-medium text-mint-700">
           Ready for CA review
         </span>
       </div>
@@ -299,7 +299,7 @@ function AnalyticsMock() {
               Avg. response time
             </p>
             <p className="mt-1 text-2xl font-bold text-gray-900">
-              4.2 days <span className="text-sm font-medium text-green-600">↓ 61%</span>
+              4.2 days <span className="text-sm font-medium text-mint-600">↓ 61%</span>
             </p>
           </div>
           <div className="rounded-xl border border-gray-100 p-4">
@@ -317,9 +317,9 @@ function AnalyticsMock() {
 
 function TeamMock() {
   const rows = [
-    { id: 'DRC-01', who: 'Rahul M.', due: '5 days', tone: 'bg-red-50 text-red-700', stage: 'Drafting reply' },
-    { id: 'ASMT-10', who: 'Priya S.', due: '12 days', tone: 'bg-orange-50 text-orange-700', stage: 'Collecting documents' },
-    { id: 'REG-03', who: 'Amit K.', due: '8 days', tone: 'bg-yellow-50 text-yellow-700', stage: 'Awaiting approval' },
+    { id: 'DRC-01', who: 'Rahul M.', due: '5 days', tone: 'bg-coral-50 text-coral-700', stage: 'Drafting reply' },
+    { id: 'ASMT-10', who: 'Priya S.', due: '12 days', tone: 'bg-amber-50 text-amber-700', stage: 'Collecting documents' },
+    { id: 'REG-03', who: 'Amit K.', due: '8 days', tone: 'bg-amber-50 text-amber-700', stage: 'Awaiting approval' },
   ]
   return (
     <BrowserFrame>
@@ -364,9 +364,9 @@ function MobileMock() {
     >
       <div className="space-y-2">
         {[
-          { id: 'DRC-01', client: 'Sharma Textiles', badge: '3 days', tone: 'bg-red-50 text-red-700' },
-          { id: 'ASMT-10', client: 'GreenLeaf Foods', badge: '12 days', tone: 'bg-orange-50 text-orange-700' },
-          { id: 'REG-17', client: 'Apex Traders', badge: 'Replied ✓', tone: 'bg-green-50 text-green-700' },
+          { id: 'DRC-01', client: 'Sharma Textiles', badge: '3 days', tone: 'bg-coral-50 text-coral-700' },
+          { id: 'ASMT-10', client: 'GreenLeaf Foods', badge: '12 days', tone: 'bg-amber-50 text-amber-700' },
+          { id: 'REG-17', client: 'Apex Traders', badge: 'Replied ✓', tone: 'bg-mint-50 text-mint-700' },
         ].map((n) => (
           <div key={n.id} className="rounded-xl border border-gray-100 p-3">
             <div className="flex items-center justify-between">
@@ -560,8 +560,8 @@ export function ProductTour() {
             <ul className="mt-6 space-y-3">
               {active.facts.map((fact) => (
                 <li key={fact} className="flex gap-3 text-[15px] leading-relaxed text-gray-700">
-                  <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
-                    <Check className="h-3 w-3 text-green-600" aria-hidden />
+                  <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-mint-100">
+                    <Check className="h-3 w-3 text-mint-600" aria-hidden />
                   </span>
                   {fact}
                 </li>
@@ -575,7 +575,7 @@ export function ProductTour() {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>
-          <div className="rounded-3xl bg-gradient-to-br from-primary-100 via-sky-50 to-indigo-100 p-4 shadow-inner md:p-7">
+          <div className="rounded-3xl bg-gradient-to-br from-primary-100 via-azure-50 to-lavender-100 p-4 shadow-inner md:p-7">
             <active.mock />
           </div>
         </div>

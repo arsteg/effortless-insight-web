@@ -212,7 +212,7 @@ export function ChatMessage({
                       onClick={handleCopy}
                     >
                       {copied ? (
-                        <Check className="h-3 w-3 text-green-500" />
+                        <Check className="h-3 w-3 text-mint-500" />
                       ) : (
                         <Copy className="h-3 w-3" />
                       )}
@@ -256,7 +256,7 @@ export function ChatMessage({
                           size="icon"
                           className={cn(
                             'h-6 w-6',
-                            feedbackGiven === 1 && 'text-green-500'
+                            feedbackGiven === 1 && 'text-mint-500'
                           )}
                           onClick={() => handleFeedback(1)}
                         >
@@ -273,7 +273,7 @@ export function ChatMessage({
                           size="icon"
                           className={cn(
                             'h-6 w-6',
-                            feedbackGiven === -1 && 'text-red-500'
+                            feedbackGiven === -1 && 'text-coral-500'
                           )}
                           onClick={() => handleFeedback(-1)}
                         >

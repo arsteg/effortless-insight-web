@@ -47,11 +47,11 @@ function getNotificationIcon(type: string, category: string) {
 function getPriorityColor(priority: string) {
   switch (priority) {
     case 'critical':
-      return 'bg-red-100 text-red-800 border-red-200'
+      return 'bg-coral-100 text-coral-800 border-coral-200'
     case 'high':
-      return 'bg-orange-100 text-orange-800 border-orange-200'
+      return 'bg-amber-100 text-amber-800 border-amber-200'
     case 'medium':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      return 'bg-amber-100 text-amber-800 border-amber-200'
     case 'low':
       return 'bg-gray-100 text-gray-800 border-gray-200'
     default:
@@ -63,11 +63,11 @@ function getPriorityColor(priority: string) {
 function getIconBackground(priority: string) {
   switch (priority) {
     case 'critical':
-      return 'bg-red-500'
+      return 'bg-coral-500'
     case 'high':
-      return 'bg-orange-500'
+      return 'bg-amber-500'
     case 'medium':
-      return 'bg-yellow-500'
+      return 'bg-amber-500'
     case 'low':
       return 'bg-gray-400'
     default:

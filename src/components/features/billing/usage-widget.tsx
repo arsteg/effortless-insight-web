@@ -119,7 +119,7 @@ function UsageMeter({ icon: Icon, label, metric }: UsageMeterProps) {
           className={cn(
             'h-2',
             percentage >= 90 && 'bg-destructive/20',
-            percentage >= 80 && percentage < 90 && 'bg-yellow-500/20'
+            percentage >= 80 && percentage < 90 && 'bg-amber-500/20'
           )}
         />
       )}

@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 
 const content: AudiencePageContent = {
   eyebrow: 'For Chartered Accountants & tax professionals',
-  headline: 'Thirty clients.',
-  headlineAccent: 'One dashboard. Zero surprises.',
+  headline: 'More clients.',
+  headlineAccent: 'Same team. Zero missed deadlines.',
   subheadline:
-    'Your clients’ notices shouldn’t live in thirty portal logins and a WhatsApp scroll. See every notice, every deadline and every draft reply for your whole practice — in one place.',
+    'EffortlessInsight watches every client’s GST portal, ranks every deadline, and drafts the first reply — so you handle more clients with the same team and finalize with your name on every filing. The busywork is ours; the judgment, the filing and the fee stay yours.',
   painPoints: [
     {
       title: 'The juggling',
@@ -42,12 +42,12 @@ const content: AudiencePageContent = {
     {
       icon: FileCheck2,
       title: 'Drafts, not blank pages',
-      body: 'Each notice arrives with a structured summary, cited GST sections, and a drafted reply. You review and refine — the first 80% is already done.',
+      body: 'Each notice arrives with a structured summary, cited GST sections, and a drafted reply. You review, refine and file — the first 80% is done, and the expertise on the final 20% stays yours. We never file anything on our own.',
     },
     {
       icon: Users,
-      title: 'Onboard clients in bulk',
-      body: 'Paste a list of client GSTINs and you’re set. Multi-state clients are grouped automatically under one business.',
+      title: 'Take on more clients, not more staff',
+      body: 'Monitoring and first drafts are automated, so each client takes minutes, not hours. Grow your book without growing your team — and never lose a client to a missed notice.',
     },
   ],
   checklist: {
@@ -75,7 +75,7 @@ const content: AudiencePageContent = {
       body: 'Start with what’s overdue, end with what’s due next month. Draft replies are waiting for your review.',
     },
   ],
-  closingLine: 'The Monday portal-check routine simply disappears.',
+  closingLine: 'The busywork disappears. Your practice grows — with your name on every filing.',
 }
 
 export default function CharteredAccountantsPage() {

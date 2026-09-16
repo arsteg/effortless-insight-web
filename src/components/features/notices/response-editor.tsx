@@ -383,7 +383,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
 
   // Get file icon based on type
   const getFileIcon = (fileType?: string) => {
-    if (fileType?.includes('pdf')) return <FileText className="h-4 w-4 text-red-500" />
+    if (fileType?.includes('pdf')) return <FileText className="h-4 w-4 text-coral-500" />
     if (fileType?.includes('image')) return <File className="h-4 w-4 text-blue-500" />
     return <File className="h-4 w-4 text-gray-500" />
   }
@@ -424,7 +424,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {response?.status === 'submitted' && (
-          <div className="flex items-center gap-2 p-4 rounded-lg bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300">
+          <div className="flex items-center gap-2 p-4 rounded-lg bg-mint-50 dark:bg-mint-900 text-mint-700 dark:text-mint-300">
             <CheckCircle className="h-5 w-5" />
             <div>
               <p className="font-medium">Response Submitted</p>
@@ -565,7 +565,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
                     variant="outline"
                     onClick={handleAutoDraft}
                     disabled={autoDraftMutation.isPending || saveDraftMutation.isPending}
-                    className="bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 dark:from-purple-950 dark:to-blue-950 dark:hover:from-purple-900 dark:hover:to-blue-900 border-purple-200 dark:border-purple-800"
+                    className="bg-gradient-to-r from-lavender-50 to-blue-50 hover:from-lavender-100 hover:to-blue-100 dark:from-lavender-900 dark:to-blue-950 dark:hover:from-lavender-900 dark:hover:to-blue-900 border-lavender-200 dark:border-lavender-800"
                   >
                     {autoDraftMutation.isPending ? (
                       <>
@@ -574,7 +574,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
                       </>
                     ) : (
                       <>
-                        <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
+                        <Sparkles className="mr-2 h-4 w-4 text-lavender-500" />
                         Auto-Draft
                       </>
                     )}
@@ -611,7 +611,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
         )}
 
         {autoDraftMutation.isPending && (
-          <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+          <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-lavender-50 dark:bg-lavender-900 text-lavender-700 dark:text-lavender-300">
             <Wand2 className="h-5 w-5 animate-pulse" />
             <p className="text-sm">
               AI is analyzing the notice and generating a professional response...
@@ -622,7 +622,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
         {response?.status === 'review' && (
           <div className="space-y-4">
             {canReview ? (
-              <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-800">
                 <div>
                   <p className="font-medium text-amber-800 dark:text-amber-200">
                     Review Required
@@ -635,14 +635,14 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
                   <Button
                     variant="outline"
                     onClick={() => setShowRejectDialog(true)}
-                    className="border-red-300 text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950"
+                    className="border-coral-300 text-coral-700 hover:bg-coral-50 dark:border-coral-700 dark:text-coral-400 dark:hover:bg-coral-900"
                   >
                     <X className="mr-2 h-4 w-4" />
                     Reject
                   </Button>
                   <Button
                     onClick={() => setShowApproveDialog(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-mint-600 hover:bg-mint-700 text-white"
                   >
                     <Check className="mr-2 h-4 w-4" />
                     Approve
@@ -700,7 +700,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-500" />
+              <Sparkles className="h-5 w-5 text-lavender-500" />
               Replace existing draft?
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -715,7 +715,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
             <AlertDialogAction
               onClick={handleConfirmAutoDraft}
               disabled={autoDraftMutation.isPending}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-lavender-600 hover:bg-lavender-700"
             >
               {autoDraftMutation.isPending ? (
                 <>
@@ -827,7 +827,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Check className="h-5 w-5 text-green-600" />
+              <Check className="h-5 w-5 text-mint-600" />
               Approve Response?
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -842,7 +842,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
             <AlertDialogAction
               onClick={handleApproveResponse}
               disabled={approveResponseMutation.isPending}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-mint-600 hover:bg-mint-700"
             >
               {approveResponseMutation.isPending ? (
                 <>
@@ -868,7 +868,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <X className="h-5 w-5 text-red-600" />
+              <X className="h-5 w-5 text-coral-600" />
               Reject Response
             </DialogTitle>
             <DialogDescription>

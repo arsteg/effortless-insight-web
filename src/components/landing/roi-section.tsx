@@ -177,11 +177,11 @@ export function RoiSection() {
             {beforeAfter.map((row) => (
               <div key={row.problem} className="grid grid-cols-2 border-b border-gray-100 last:border-b-0">
                 <div className="flex gap-2.5 px-4 py-4">
-                  <X className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-400" aria-hidden />
+                  <X className="mt-0.5 h-4 w-4 flex-shrink-0 text-coral-400" aria-hidden />
                   <p className="text-sm leading-relaxed text-gray-500">{row.problem}</p>
                 </div>
                 <div className="flex gap-2.5 border-l border-gray-100 px-4 py-4">
-                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" aria-hidden />
+                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-mint-600" aria-hidden />
                   <p className="text-sm leading-relaxed text-gray-700">{row.solution}</p>
                 </div>
               </div>
@@ -194,7 +194,7 @@ export function RoiSection() {
             <div className="mt-5 flex-1 space-y-5">
               {stakes.map((s) => (
                 <div key={s.label} className="flex items-start gap-4">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-500">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-coral-50 text-coral-500">
                     <s.icon className="h-5 w-5" aria-hidden />
                   </div>
                   <div>

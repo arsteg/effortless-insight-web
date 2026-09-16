@@ -32,9 +32,9 @@ import { cn } from '@/lib/utils'
 const STATUS_BADGES: Record<TaskStatus, string> = {
   todo: 'bg-gray-100 text-gray-800',
   in_progress: 'bg-blue-100 text-blue-800',
-  done: 'bg-green-100 text-green-800',
-  blocked: 'bg-red-100 text-red-800',
-  on_hold: 'bg-yellow-100 text-yellow-800',
+  done: 'bg-mint-100 text-mint-800',
+  blocked: 'bg-coral-100 text-coral-800',
+  on_hold: 'bg-amber-100 text-amber-800',
   archived: 'bg-gray-100 text-gray-500',
 }
 
@@ -186,7 +186,7 @@ export function TaskDependencies({ taskId, noticeId, className }: TaskDependenci
                     {dep.dependsOnTask.status.replace('_', ' ')}
                   </Badge>
                   {dep.dependsOnTask.isOverdue && dep.dependsOnTask.status !== 'done' && (
-                    <Badge variant="outline" className="shrink-0 bg-red-100 text-xs text-red-800">
+                    <Badge variant="outline" className="shrink-0 bg-coral-100 text-xs text-coral-800">
                       Overdue
                     </Badge>
                   )}

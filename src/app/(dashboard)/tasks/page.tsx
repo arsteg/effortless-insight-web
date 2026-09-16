@@ -28,19 +28,19 @@ import { useMyTasks } from '@/hooks/use-collaboration'
 import type { TaskPriority, TaskStatus } from '@/types/collaboration'
 
 const statusColors: Record<string, string> = {
-  todo: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  todo: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
   in_progress: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  done: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  blocked: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  done: 'bg-mint-100 text-mint-800 dark:bg-mint-900/30 dark:text-mint-400',
+  blocked: 'bg-coral-100 text-coral-800 dark:bg-coral-900/30 dark:text-coral-400',
   on_hold: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
-  overdue: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  overdue: 'bg-coral-100 text-coral-800 dark:bg-coral-900/30 dark:text-coral-400',
 }
 
 const priorityColors: Record<string, string> = {
   low: 'bg-gray-100 text-gray-800',
   medium: 'bg-blue-100 text-blue-800',
-  high: 'bg-orange-100 text-orange-800',
-  critical: 'bg-red-100 text-red-800',
+  high: 'bg-amber-100 text-amber-800',
+  critical: 'bg-coral-100 text-coral-800',
 }
 
 const ACTIVE_STATUSES: TaskStatus[] = ['todo', 'blocked', 'on_hold']
@@ -144,7 +144,7 @@ export default function TasksPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-4 w-4 text-mint-600" />
               Completed
             </CardTitle>
           </CardHeader>
@@ -153,7 +153,7 @@ export default function TasksPage() {
               <Skeleton className="h-8 w-12" />
             ) : (
               <>
-                <div className="text-2xl font-bold text-green-600">{summary.done}</div>
+                <div className="text-2xl font-bold text-mint-600">{summary.done}</div>
                 <p className="text-xs text-muted-foreground">Tasks done</p>
               </>
             )}
@@ -238,13 +238,13 @@ export default function TasksPage() {
                   >
                     <div className="pt-0.5">
                       {task.status === 'done' ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <CheckCircle className="h-5 w-5 text-mint-600" />
                       ) : overdue ? (
                         <AlertTriangle className="h-5 w-5 text-destructive" />
                       ) : task.status === 'in_progress' ? (
                         <PlayCircle className="h-5 w-5 text-blue-600" />
                       ) : (
-                        <Clock className="h-5 w-5 text-yellow-600" />
+                        <Clock className="h-5 w-5 text-amber-600" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">

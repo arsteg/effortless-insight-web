@@ -17,14 +17,14 @@ const audiences = [
   {
     icon: Calculator,
     title: 'Chartered Accountants',
-    body: 'Every client’s notices in one dashboard — with the deadlines that matter this week on top.',
+    body: 'Monitor every client’s notices automatically, never miss a deadline, and take on more clients without more staff.',
     wins: [
-      'Bulk-add client GSTINs in one go',
-      'Drafts ready for your review, not blank pages',
-      'Client workspaces with document requests',
+      'Every client GSTIN monitored — you’re first to know, not last',
+      'First-draft replies so you finalize in minutes and bill the same',
+      'Never lose a client to a missed notice again',
     ],
     href: '/chartered-accountants',
-    cta: 'Built for your practice',
+    cta: 'See the CA workspace',
   },
   {
     icon: Landmark,
@@ -68,7 +68,7 @@ export function AudienceRouter() {
               <ul className="mt-4 flex-1 space-y-2">
                 {audience.wins.map((win) => (
                   <li key={win} className="flex gap-2 text-sm text-gray-600">
-                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" aria-hidden />
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-mint-600" aria-hidden />
                     {win}
                   </li>
                 ))}
@@ -79,6 +79,23 @@ export function AudienceRouter() {
               </span>
             </Link>
           ))}
+        </div>
+
+        {/* CA reassurance band — names the fear (replacement) and disarms it */}
+        <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-primary-100 bg-white p-8 text-center shadow-soft">
+          <p className="eyebrow justify-center text-primary-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary-500" aria-hidden />
+            For Chartered Accountants
+          </p>
+          <h3 className="mt-3 text-xl font-semibold tracking-tight text-gray-950 md:text-2xl">
+            Built to make CAs indispensable — not optional.
+          </h3>
+          <p className="mx-auto mt-3 max-w-2xl leading-relaxed text-gray-600">
+            We automate the monitoring and the first draft. You keep the
+            judgment, the filing and the client relationship — the expert work,
+            and the fee, stay yours. More clients handled, fewer notices missed,
+            zero blank pages.
+          </p>
         </div>
       </div>
     </section>

@@ -291,7 +291,7 @@ function RegisterForm() {
       <Card>
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <CheckCircle2 className="h-16 w-16 text-green-500" />
+            <CheckCircle2 className="h-16 w-16 text-mint-500" />
           </div>
           <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
           <CardDescription className="text-base">
@@ -434,7 +434,7 @@ function RegisterForm() {
                     )}
                   </div>
                   {otpState === 'verified' ? (
-                    <p className="flex items-center gap-1.5 text-sm font-medium text-green-600">
+                    <p className="flex items-center gap-1.5 text-sm font-medium text-mint-600">
                       <ShieldCheck className="h-4 w-4" />
                       Mobile number verified
                     </p>
