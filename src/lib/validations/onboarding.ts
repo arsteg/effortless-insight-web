@@ -3,6 +3,10 @@ import { z } from 'zod'
 // GSTIN format: 2 digit state code + 10 char PAN + 1 entity code + 1 check digit
 const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
 
+// ============================================================================
+// Business Owner Onboarding Schema (GSTIN required)
+// ============================================================================
+
 export const onboardingSchema = z.object({
   name: z
     .string()
@@ -32,6 +36,41 @@ export const onboardingSchema = z.object({
 })
 
 export type OnboardingFormData = z.infer<typeof onboardingSchema>
+
+// ============================================================================
+// CA Onboarding Schema (GSTIN optional)
+// ============================================================================
+
+export const caOnboardingSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Organization name is required')
+    .min(2, 'Organization name must be at least 2 characters')
+    .max(200, 'Organization name must be less than 200 characters'),
+  legalName: z
+    .string()
+    .max(200, 'Legal name must be less than 200 characters')
+    .optional(),
+  gstin: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || val.length === 0 || (val.length === 15 && gstinRegex.test(val)),
+      'Please enter a valid GSTIN format (15 characters)'
+    ),
+  industry: z
+    .string()
+    .optional(),
+  state: z
+    .string()
+    .min(1, 'State is required'),
+  city: z
+    .string()
+    .max(100, 'City must be less than 100 characters')
+    .optional(),
+})
+
+export type CaOnboardingFormData = z.infer<typeof caOnboardingSchema>
 
 // Industry options
 export const industryOptions = [

@@ -17,6 +17,12 @@ import {
 
 type VerificationState = 'loading' | 'success' | 'error' | 'no-token'
 
+interface VerificationResult {
+  redirectUrl?: string
+  isCa?: boolean
+  needsOnboarding?: boolean
+}
+
 function VerifyEmailLoading() {
   return (
     <Card>
@@ -47,6 +53,7 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const [state, setState] = useState<VerificationState>('loading')
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const [verificationResult, setVerificationResult] = useState<VerificationResult>({})
 
   // Track if we're on client (for SSR hydration)
   const [isClient, setIsClient] = useState(false)
@@ -54,8 +61,13 @@ function VerifyEmailContent() {
   useEffect(() => { setIsClient(true) }, [])
 
   // Compute loginUrl - check localStorage only on client to avoid SSR mismatch
+  // Use the redirect URL from API response if available (for CA onboarding)
   const loginUrl = isClient
     ? (() => {
+        // If verification result has a redirect URL, encode it for the login redirect
+        if (verificationResult.redirectUrl) {
+          return `/login?redirect=${encodeURIComponent(verificationResult.redirectUrl)}`
+        }
         const pendingInvitation = localStorage.getItem('pendingInvitationUrl')
         return pendingInvitation
           ? `/login?redirect=${encodeURIComponent(pendingInvitation)}`
@@ -76,7 +88,13 @@ function VerifyEmailContent() {
 
     const verifyEmail = async () => {
       try {
-        await authApi.verifyEmail({ token })
+        const result = await authApi.verifyEmail({ token })
+        // Store verification result for redirect URL
+        setVerificationResult({
+          redirectUrl: result.redirectUrl,
+          isCa: result.isCa,
+          needsOnboarding: result.needsOnboarding,
+        })
         setState('success')
       } catch (error: unknown) {
         const message =
@@ -178,6 +196,12 @@ function VerifyEmailContent() {
   }
 
   // Success state
+  const successMessage = verificationResult.isCa && verificationResult.needsOnboarding
+    ? 'You can now log in to set up your CA practice and start managing client notices.'
+    : verificationResult.needsOnboarding
+    ? 'You can now log in to set up your organization and start using EffortlessInsight.'
+    : 'You can now log in to your account and start using EffortlessInsight.'
+
   return (
     <Card>
       <CardHeader className="space-y-1 text-center">
@@ -191,7 +215,7 @@ function VerifyEmailContent() {
       </CardHeader>
       <CardContent className="space-y-4 text-center">
         <p className="text-sm text-muted-foreground">
-          You can now log in to your account and start using EffortlessInsight.
+          {successMessage}
         </p>
         <Button asChild>
           <Link href={loginUrl}>Sign in to your account</Link>

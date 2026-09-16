@@ -79,5 +79,5 @@ const content: AudiencePageContent = {
 }
 
 export default function CharteredAccountantsPage() {
-  return <AudiencePage content={content} />
+  return <AudiencePage content={content} registerUrl="/register-ca" />
 }

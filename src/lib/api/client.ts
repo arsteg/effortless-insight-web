@@ -7,6 +7,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 const ACCESS_TOKEN_KEY = 'access_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 
+// CA context storage key (matches ca-store.ts persist key)
+const CA_CONTEXT_STORAGE_KEY = 'ca-context-storage'
+
 // Token management
 export function getAccessToken(): string | null {
   if (typeof window === 'undefined') return null
@@ -41,6 +44,20 @@ export function clearTokens(): void {
   document.cookie = `${ACCESS_TOKEN_KEY}=; path=/; max-age=0`
 }
 
+// Get CA context relationship ID if a CA has selected a client
+export function getCaContextId(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const stored = localStorage.getItem(CA_CONTEXT_STORAGE_KEY)
+    if (!stored) return null
+    const parsed = JSON.parse(stored)
+    // Zustand persist stores state in `state` property
+    return parsed?.state?.context?.selectedClientRelationshipId || null
+  } catch {
+    return null
+  }
+}
+
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
@@ -50,12 +67,19 @@ const apiClient: AxiosInstance = axios.create({
   timeout: 30000,
 })
 
-// Request interceptor - add auth token and handle FormData
+// Request interceptor - add auth token, CA context header, and handle FormData
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken()
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+
+    // Add CA context header if a CA has selected a client
+    // This allows the backend to scope requests to the selected client's data
+    const caContextId = getCaContextId()
+    if (caContextId && config.headers) {
+      config.headers['X-CA-Context'] = caContextId
     }
 
     // If the request body is FormData, remove Content-Type header
@@ -106,12 +130,19 @@ apiClient.interceptors.response.use(
 
     // Handle 402 - subscription required, trial expired, or feature not available
     if (error.response?.status === 402) {
-      const errorCode = error.response?.data?.code || error.response?.data?.errors
+      // Middleware returns `error` field, not `code` - check both
+      const errorCode = error.response?.data?.code || error.response?.data?.error || error.response?.data?.errors
 
       // Check if this is a feature access issue (not a subscription issue)
       // These should NOT redirect - let the caller handle the error
       if (errorCode === 'FEATURE_NOT_AVAILABLE') {
         // The error contains the feature info - just pass it through for UI to handle
+        return Promise.reject(error)
+      }
+
+      // Check if this is a PAYMENT_REQUIRED error (free to paid upgrade)
+      // Don't redirect - let the caller handle it to redirect to checkout with plan details
+      if (errorCode === 'PAYMENT_REQUIRED') {
         return Promise.reject(error)
       }
 

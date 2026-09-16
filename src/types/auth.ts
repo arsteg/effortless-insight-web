@@ -10,6 +10,7 @@ export interface User {
   is2faEnabled: boolean
   hasPassword: boolean
   role: UserRole
+  isCa: boolean
   organization?: UserOrganization
   organizations: UserOrganization[]
   preferences?: Record<string, unknown>
@@ -80,6 +81,13 @@ export interface ChangePasswordRequest {
 
 export interface VerifyEmailRequest {
   token: string
+}
+
+export interface VerifyEmailResponse {
+  message: string
+  redirectUrl: string
+  isCa: boolean
+  needsOnboarding: boolean
 }
 
 // Auth response types

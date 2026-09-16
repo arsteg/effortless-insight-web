@@ -18,11 +18,17 @@ export interface AudiencePageContent {
   checklist?: { title: string; items: string[] }
 }
 
+export interface AudiencePageProps {
+  content: AudiencePageContent
+  /** URL for the registration button. Defaults to '/register' */
+  registerUrl?: string
+}
+
 /**
  * Shared template for the three audience landing pages. Same visual system
  * as the homepage; only the story changes.
  */
-export function AudiencePage({ content }: { content: AudiencePageContent }) {
+export function AudiencePage({ content, registerUrl = '/register' }: AudiencePageProps) {
   return (
     <main className="min-h-screen bg-white">
       <LandingHeader />
@@ -47,7 +53,7 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
             </p>
             <div className="mt-8">
               <Button size="lg" asChild className="px-8 py-6 text-base shadow-lg shadow-primary-200/60">
-                <Link href="/register">
+                <Link href={registerUrl}>
                   Start free 14-day trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

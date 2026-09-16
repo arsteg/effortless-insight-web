@@ -12,6 +12,7 @@ import type {
   ResetPasswordRequest,
   ChangePasswordRequest,
   VerifyEmailRequest,
+  VerifyEmailResponse,
   User,
   RefreshTokenRequest,
   TokenResponse,
@@ -124,8 +125,12 @@ export const authApi = {
     return response.data.data
   },
 
-  async verifyEmail(data: VerifyEmailRequest): Promise<void> {
-    await apiClient.post('/auth/verify-email', data)
+  async verifyEmail(data: VerifyEmailRequest): Promise<VerifyEmailResponse> {
+    const response = await apiClient.post<ApiResponse<VerifyEmailResponse>>(
+      '/auth/verify-email',
+      data
+    )
+    return response.data.data
   },
 
   // Login

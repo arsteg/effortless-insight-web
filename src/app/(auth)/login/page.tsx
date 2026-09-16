@@ -59,13 +59,36 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { login, twoFactor, completeTwoFactorLogin, clearTwoFactor } = useAuthStore()
+  const { login, twoFactor, completeTwoFactorLogin, clearTwoFactor, user } = useAuthStore()
   const { toast } = useToast()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [twoFactorCode, setTwoFactorCode] = useState('')
 
-  const redirectTo = searchParams.get('redirect') || '/dashboard'
+  const redirectParam = searchParams.get('redirect')
+
+  // Determine redirect URL based on user type and organization status
+  const getRedirectUrl = (user?: { role?: string; isCa?: boolean; organization?: unknown; organizations?: unknown[] }) => {
+    // If explicit redirect provided, use it
+    if (redirectParam && redirectParam !== '/dashboard') {
+      return redirectParam
+    }
+
+    // Check if CA needs onboarding (no organization)
+    const hasOrganization = user?.organization || (user?.organizations && user.organizations.length > 0)
+    if (user?.isCa && !hasOrganization) {
+      return '/ca-onboarding'
+    }
+
+    // CAs with organizations go to regular dashboard (they have full access)
+    // CAs without organizations but going to CA portal go to /ca/clients
+    if (user?.isCa && hasOrganization) {
+      return '/dashboard'
+    }
+
+    // Default redirect
+    return redirectParam || '/dashboard'
+  }
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -91,12 +114,13 @@ function LoginForm() {
       // If 2FA is required, the login function returns without error
       // but sets twoFactor.required = true, so we don't redirect
       if (!useAuthStore.getState().twoFactor.required) {
+        const authState = useAuthStore.getState()
         toast({
           title: 'Welcome back!',
           description: 'You have successfully logged in.',
           variant: 'success',
         })
-        router.push(redirectTo)
+        router.push(getRedirectUrl(authState.user))
       }
     } catch (error: unknown) {
       const message =
@@ -121,13 +145,14 @@ function LoginForm() {
     try {
       await completeTwoFactorLogin(twoFactorCode)
 
+      const authState = useAuthStore.getState()
       toast({
         title: 'Welcome back!',
         description: 'You have successfully logged in.',
         variant: 'success',
       })
 
-      router.push(redirectTo)
+      router.push(getRedirectUrl(authState.user))
     } catch (error: unknown) {
       const message =
         error && typeof error === 'object' && 'message' in error
@@ -319,13 +344,13 @@ function LoginForm() {
           </form>
         </Form>
 
-        <OAuthButtons mode="login" disabled={isLoading} redirectTo={redirectTo} />
+        <OAuthButtons mode="login" disabled={isLoading} redirectTo={redirectParam || '/dashboard'} />
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
         <div className="text-sm text-center text-muted-foreground">
           Don&apos;t have an account?{' '}
           <Link
-            href={redirectTo !== '/dashboard' ? `/register?redirect=${encodeURIComponent(redirectTo)}` : '/register'}
+            href={redirectParam && redirectParam !== '/dashboard' ? `/register?redirect=${encodeURIComponent(redirectParam)}` : '/register'}
             className="text-primary hover:underline"
           >
             Create an account

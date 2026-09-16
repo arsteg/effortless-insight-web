@@ -4,6 +4,7 @@ import type { User, LoginRequest, RegisterRequest } from '@/types'
 import { authApi } from '@/lib/api'
 import { useSubscriptionStore } from './subscription-store'
 import { useOrganizationStore } from './organization-store'
+import { useCaStore } from './ca-store'
 import { notificationsApi } from '@/lib/api/notifications'
 import { clearTokens, getAccessToken } from '@/lib/api/client'
 
@@ -185,9 +186,10 @@ export const useAuthStore = create<AuthState>()(
           // Ignore logout errors, clear state anyway
         } finally {
           clearTokens()
-          // Clear subscription and organization stores on logout
+          // Clear subscription, organization, and CA stores on logout
           useSubscriptionStore.getState().clearSubscription()
           useOrganizationStore.getState().clearOrganizations()
+          useCaStore.getState().clearProfile()
           set({
             user: null,
             isAuthenticated: false,
@@ -224,6 +226,7 @@ export const useAuthStore = create<AuthState>()(
               email: state.user.email,
               name: state.user.name,
               role: state.user.role,
+              isCa: state.user.isCa,
             }
           : null,
         isAuthenticated: state.isAuthenticated,

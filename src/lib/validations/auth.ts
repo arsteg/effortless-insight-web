@@ -101,3 +101,59 @@ export const verifyEmailSchema = z.object({
 })
 
 export type VerifyEmailFormData = z.infer<typeof verifyEmailSchema>
+
+// CA Registration Schema
+export const caRegisterSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Name is required')
+      .min(2, 'Name must be at least 2 characters')
+      .max(100, 'Name must be less than 100 characters'),
+    email: z
+      .string()
+      .min(1, 'Email is required')
+      .email('Please enter a valid email address'),
+    password: z
+      .string()
+      .min(1, 'Password is required')
+      .min(8, 'Password must be at least 8 characters')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      )
+      .regex(
+        /[^a-zA-Z0-9]/,
+        'Password must contain at least one special character'
+      )
+      .refine(
+        (val) => new Set(val).size >= 4,
+        'Password must contain at least 4 different characters'
+      ),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+    mobile: z
+      .string()
+      .regex(
+        /^[6-9]\d{9}$/,
+        'Please enter a valid 10-digit Indian mobile number'
+      )
+      .optional()
+      .or(z.literal('')),
+    firmName: z
+      .string()
+      .max(255, 'Firm name must be less than 255 characters')
+      .optional(),
+    membershipNumber: z
+      .string()
+      .max(50, 'Membership number must be less than 50 characters')
+      .optional(),
+    acceptTerms: z.boolean().refine((val) => val === true, {
+      message: 'You must accept the terms and conditions',
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
+export type CaRegisterFormData = z.infer<typeof caRegisterSchema>

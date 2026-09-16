@@ -51,7 +51,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       if (!isAuthenticated) {
         router.push('/login')
       } else if (user && !hasOrganization) {
-        router.push('/onboarding')
+        // CAs go to CA-specific onboarding
+        router.push(user.isCa ? '/ca-onboarding' : '/onboarding')
       }
     }
   }, [isInitialized, isAuthenticated, user, hasOrganization, router])
