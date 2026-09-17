@@ -27,6 +27,8 @@ import {
   NoticesByStatusChart,
   NoticesByPriorityChart,
   ClientAttentionCard,
+  MyClientsCard,
+  PendingCaInvitationsCard,
 } from '@/components/features/dashboard'
 import { useDashboard } from '@/hooks/use-dashboard'
 import { useAuthStore } from '@/stores/auth-store'
@@ -162,6 +164,14 @@ export default function DashboardPage() {
           isLoading={isLoading}
         />
       </div>
+
+      {/* CA-as-distributor: cross-organization client portfolio (CA accounts only) */}
+      {user?.isCA && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <MyClientsCard />
+          <PendingCaInvitationsCard />
+        </div>
+      )}
 
       {/* Clients needing attention (hidden when nothing is overdue) */}
       <ClientAttentionCard />

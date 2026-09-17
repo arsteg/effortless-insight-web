@@ -12,6 +12,13 @@ import { useGstClients } from '@/hooks/use-gst-sync'
  * "Clients needing attention" — the CA's morning answer at a glance.
  * Lists clients with overdue notices (worst first); each row deep-links to
  * the Notices page pre-filtered to that client. Hidden when nothing is overdue.
+ *
+ * Scope note: "clients" here means GST-Sync GSTINs registered *within the
+ * currently selected organization* (whether that's a CA's own org or a client
+ * org they've switched into) — unrelated to the cross-organization "My
+ * Clients"/"Pending Invitations" dashboard cards, which list a CA's accepted
+ * and pending CA-as-distributor clients (see useCaClients / CaClientListItem).
+ * Do not conflate the two "client" concepts.
  */
 export function ClientAttentionCard() {
   const { data: summaries } = useGstinSummaries()

@@ -52,6 +52,7 @@ export const registerSchema = z
     acceptTerms: z.boolean().refine((val) => val === true, {
       message: 'You must accept the terms and conditions',
     }),
+    isCA: z.boolean().default(false),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',

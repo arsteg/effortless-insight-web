@@ -33,6 +33,13 @@ export const onboardingSchema = z.object({
 
 export type OnboardingFormData = z.infer<typeof onboardingSchema>
 
+// Same organization-creation fields as onboardingSchema, minus GSTIN - used to
+// accept a CA client invitation, where the GSTIN comes from the invitation
+// itself (not re-entered by the Business Owner).
+export const acceptCaClientInvitationSchema = onboardingSchema.omit({ gstin: true })
+
+export type AcceptCaClientInvitationFormData = z.infer<typeof acceptCaClientInvitationSchema>
+
 // Industry options
 export const industryOptions = [
   { value: 'manufacturing', label: 'Manufacturing' },

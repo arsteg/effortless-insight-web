@@ -94,6 +94,7 @@ function RegisterForm() {
       confirmPassword: '',
       mobile: '',
       acceptTerms: false,
+      isCA: false,
     },
   })
 
@@ -266,6 +267,7 @@ function RegisterForm() {
         mobile: data.mobile,
         acceptTerms: data.acceptTerms,
         mobileVerificationToken: verificationToken,
+        isCA: data.isCA,
       })
 
       setIsSuccess(true)
@@ -565,6 +567,37 @@ function RegisterForm() {
                     </div>
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isCA"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-2 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      id="isCA"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isLoading}
+                      className="mt-0.5"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <label
+                      htmlFor="isCA"
+                      className="text-sm font-normal cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      I&apos;m a Chartered Accountant
+                    </label>
+                    <FormDescription>
+                      Sign up as a CA to manage GST notices for your clients. Your own
+                      organization won&apos;t require a GSTIN, and once an admin enables free
+                      access you can invite clients at no cost.
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />

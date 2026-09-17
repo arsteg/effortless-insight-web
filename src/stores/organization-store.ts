@@ -34,14 +34,20 @@ export const useOrganizationStore = create<OrganizationState>()(
           const current = get().currentOrganization
           let targetOrg = current
 
+          // A CA who owns their own firm org and also has role="ca" memberships
+          // in client orgs should land on their own firm by default, not a
+          // random client - the BO/Client selector is what picks a client.
+          const defaultOrg = () =>
+            organizations.find((o) => o.role !== 'ca') ?? organizations[0]
+
           // If current org is set, verify it still exists in the list
           if (current) {
             const stillExists = organizations.find(o => o.id === current.id)
             if (!stillExists && organizations.length > 0) {
-              targetOrg = organizations[0]
+              targetOrg = defaultOrg()
             }
           } else if (organizations.length > 0) {
-            targetOrg = organizations[0]
+            targetOrg = defaultOrg()
           }
 
           // Try to call switchOrganization to ensure JWT has org_id claim
