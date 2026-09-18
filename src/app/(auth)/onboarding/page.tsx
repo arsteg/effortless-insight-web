@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Building2, CheckCircle2, AlertCircle } from 'lucide-react'
 
 import {
-  onboardingSchema,
+  getOnboardingSchema,
   type OnboardingFormData,
   industryOptions,
   stateOptions,
@@ -97,9 +97,19 @@ function OnboardingForm() {
   }, [searchParams])
 
   const startTrialMutation = useStartTrial()
+  const isCA = !!user?.isCA
+
+  // `user` (and therefore isCA) may not be hydrated from the auth store yet on
+  // first render, so the resolver is wrapped to always read the latest value
+  // via a ref rather than capturing `isCA` once at useForm's initial mount.
+  const isCARef = useRef(isCA)
+  useEffect(() => {
+    isCARef.current = isCA
+  }, [isCA])
 
   const form = useForm<OnboardingFormData>({
-    resolver: zodResolver(onboardingSchema),
+    resolver: (values, context, options) =>
+      zodResolver(getOnboardingSchema(isCARef.current))(values, context, options),
     defaultValues: {
       name: '',
       legalName: '',
@@ -160,7 +170,7 @@ function OnboardingForm() {
       await organizationsApi.create({
         name: data.name,
         legalName: data.legalName || undefined,
-        gstin: data.gstin,
+        gstin: data.gstin || undefined,
         industry: data.industry || undefined,
         state: data.state,
         city: data.city || undefined,
@@ -245,7 +255,18 @@ function OnboardingForm() {
               name="gstin"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>GSTIN *</FormLabel>
+                  <FormLabel>
+                    {isCA ? (
+                      <>
+                        GSTIN{' '}
+                        <span className="text-muted-foreground font-normal">
+                          (optional for CA accounts)
+                        </span>
+                      </>
+                    ) : (
+                      'GSTIN *'
+                    )}
+                  </FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -278,6 +299,12 @@ function OnboardingForm() {
                       )}
                     </div>
                   </FormControl>
+                  {isCA && !gstinValidation && (
+                    <FormDescription>
+                      Leave this blank if your firm doesn&apos;t have its own GSTIN — you&apos;ll
+                      invite each client&apos;s GSTIN separately from your dashboard.
+                    </FormDescription>
+                  )}
                   {gstinValidation?.isValid && gstinValidation.stateName && (
                     <FormDescription className="text-mint-600">
                       State: {gstinValidation.stateName}

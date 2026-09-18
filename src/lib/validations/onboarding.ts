@@ -3,7 +3,7 @@ import { z } from 'zod'
 // GSTIN format: 2 digit state code + 10 char PAN + 1 entity code + 1 check digit
 const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
 
-export const onboardingSchema = z.object({
+const baseOnboardingFields = {
   name: z
     .string()
     .min(1, 'Organization name is required')
@@ -12,11 +12,6 @@ export const onboardingSchema = z.object({
   legalName: z
     .string()
     .optional(),
-  gstin: z
-    .string()
-    .min(1, 'GSTIN is required')
-    .length(15, 'GSTIN must be exactly 15 characters')
-    .regex(gstinRegex, 'Please enter a valid GSTIN format'),
   industry: z
     .string()
     .optional(),
@@ -29,7 +24,38 @@ export const onboardingSchema = z.object({
   annualTurnoverRange: z
     .string()
     .optional(),
+}
+
+// GSTIN is required for a normal Business Owner. It's optional for a
+// self-registered CA creating their own firm's organization (matches the
+// backend rule in OrganizationManagementService.CreateAsync) - the CA claims
+// client GSTINs separately via the CA-client invitation flow.
+const optionalGstin = z
+  .string()
+  .optional()
+  .refine((value) => !value || value.length === 15, 'GSTIN must be exactly 15 characters')
+  .refine((value) => !value || gstinRegex.test(value), 'Please enter a valid GSTIN format')
+
+const requiredGstin = z
+  .string()
+  .min(1, 'GSTIN is required')
+  .length(15, 'GSTIN must be exactly 15 characters')
+  .regex(gstinRegex, 'Please enter a valid GSTIN format')
+
+export const onboardingSchema = z.object({
+  ...baseOnboardingFields,
+  gstin: requiredGstin,
 })
+
+export const caOnboardingSchema = z.object({
+  ...baseOnboardingFields,
+  gstin: optionalGstin,
+})
+
+/** Picks the right schema based on whether the registering user is a self-registered CA. */
+export function getOnboardingSchema(isCA: boolean) {
+  return isCA ? caOnboardingSchema : onboardingSchema
+}
 
 export type OnboardingFormData = z.infer<typeof onboardingSchema>
 

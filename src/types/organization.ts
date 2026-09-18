@@ -88,7 +88,8 @@ export interface OrganizationListResponse {
 export interface CreateOrganizationRequest {
   name: string
   legalName?: string
-  gstin: string
+  /** Required for a normal Business Owner; optional for a self-registered CA's own firm org. */
+  gstin?: string
   industry?: string
   state: string
   city?: string

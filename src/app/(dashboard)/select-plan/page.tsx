@@ -2,7 +2,8 @@
 
 import { useState, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Sparkles, Loader2, Rocket, Shield, Zap, Users } from 'lucide-react'
+import Link from 'next/link'
+import { Check, Sparkles, Loader2, Rocket, Shield, Zap, Users, Mail, Phone, BadgeCheck } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -31,6 +32,14 @@ function SelectPlanContent() {
   const { data: plans, isLoading: isLoadingPlans } = usePlans()
   const { data: subscription, isLoading: isLoadingSubscription } = useCurrentSubscription()
   const startTrial = useStartTrial()
+
+  // Self-registered CAs (ApplicationUser.IsCA) don't buy a plan for their own
+  // firm org - access is a Free CA Access grant an admin approves manually
+  // (see AdminUsersController.GrantCaAccess). Point them at how to request it
+  // instead of a self-service pricing grid they can't actually use.
+  if (user?.isCA) {
+    return <CaAccessRequestContent userEmail={user.email} />
+  }
 
   // Calculate available billing cycles (union of all plans' allowed cycles)
   const availableCycles: BillingCycle[] = plans
@@ -195,6 +204,81 @@ function SelectPlanContent() {
             </a>
           </p>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function CaAccessRequestContent({ userEmail }: { userEmail?: string }) {
+  const mailSubject = encodeURIComponent('Request: Free CA Access on EffortlessInsight')
+  const mailBody = encodeURIComponent(
+    `Hi team,\n\nI've registered as a Chartered Accountant on EffortlessInsight` +
+      (userEmail ? ` with the account ${userEmail}` : '') +
+      ` and would like to request Free CA Access so I can invite and manage client GSTINs.\n\nThanks!`
+  )
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
+      <div className="container max-w-2xl mx-auto py-16 px-4">
+        <Card className="text-center">
+          <CardHeader>
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <BadgeCheck className="h-8 w-8 text-primary" />
+            </div>
+            <Badge className="mx-auto mb-2" variant="secondary">
+              Chartered Accountant Account
+            </Badge>
+            <CardTitle className="text-2xl font-bold">
+              Free CA Access is approved by our team
+            </CardTitle>
+            <CardDescription className="text-base">
+              CA accounts don&apos;t go through self-service billing. Reach out and we&apos;ll
+              review and enable free access for your own organization, so you can start
+              inviting and managing client GSTINs right away.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-muted p-4 text-left space-y-2">
+              <h4 className="font-semibold text-sm">What happens next</h4>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">✓</span>
+                  <span>Send us a quick note (button below pre-fills one for you)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">✓</span>
+                  <span>Our team verifies your CA account and enables Free CA Access</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">✓</span>
+                  <span>You&apos;re notified and can immediately invite clients by GSTIN</span>
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-3">
+            <Button asChild className="w-full" size="lg">
+              <a href={`mailto:${COMPANY.salesEmail}?subject=${mailSubject}&body=${mailBody}`}>
+                <Mail className="mr-2 h-4 w-4" />
+                Request Free CA Access
+              </a>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <a href={`tel:${COMPANY.phoneHref}`}>
+                <Phone className="mr-2 h-4 w-4" />
+                {COMPANY.phone}
+              </a>
+            </Button>
+            <div className="text-center text-sm text-muted-foreground pt-2">
+              Prefer to browse first?{' '}
+              <Link href="/contact" className="text-primary hover:underline">
+                See all contact options
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   )
