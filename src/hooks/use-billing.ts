@@ -27,6 +27,7 @@ export const billingKeys = {
   all: ['billing'] as const,
   plans: () => [...billingKeys.all, 'plans'] as const,
   subscription: () => [...billingKeys.all, 'subscription'] as const,
+  caAccessStatus: () => [...billingKeys.all, 'caAccessStatus'] as const,
   invoices: () => [...billingKeys.all, 'invoices'] as const,
   invoicesList: (page: number, limit: number) =>
     [...billingKeys.invoices(), 'list', page, limit] as const,
@@ -79,6 +80,20 @@ export function useCurrentSubscription() {
       const response = await billingApi.getCurrentSubscription()
       return response.subscription
     },
+    retry: false,
+  })
+}
+
+/**
+ * Whether the current (self-registered CA) user has an active admin-granted
+ * Free CA Access grant. Only meaningful for isCA users - pass `enabled: false`
+ * for everyone else since they never have a grant.
+ */
+export function useCaAccessStatus(enabled: boolean) {
+  return useQuery({
+    queryKey: billingKeys.caAccessStatus(),
+    queryFn: () => billingApi.getCaAccessStatus(),
+    enabled,
     retry: false,
   })
 }

@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Loader2, AlertTriangle, CreditCard, Clock, RefreshCw } from 'lucide-react'
 
-import { useSubscriptionStore } from '@/stores'
-import { useCurrentSubscription, useResumeSubscription } from '@/hooks/use-billing'
+import { useAuthStore, useSubscriptionStore } from '@/stores'
+import { useCaAccessStatus, useCurrentSubscription, useResumeSubscription } from '@/hooks/use-billing'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -34,6 +34,9 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   const router = useRouter()
   const pathname = usePathname()
 
+  const { user } = useAuthStore()
+  const isCA = user?.isCA ?? false
+
   // Zustand store for cached state
   const {
     subscription: cachedSubscription,
@@ -50,6 +53,11 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
     error,
     refetch,
   } = useCurrentSubscription()
+
+  // Self-registered CAs never have a BillingSubscription for their own firm
+  // org (see select-plan/page.tsx) - their access comes from an admin-granted
+  // Free CA Access grant instead, so check that separately.
+  const { data: caAccessStatus, isLoading: isLoadingCaAccess } = useCaAccessStatus(isCA)
 
   // Resume subscription mutation
   const resumeSubscription = useResumeSubscription()
@@ -73,6 +81,22 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
     // Don't check on exempt routes
     if (isExemptRoute) {
       setShowBlockingUI(false)
+      return
+    }
+
+    // Self-registered CAs never have a BillingSubscription for their own firm
+    // org - GET /subscriptions/current always 404s for them, so checking
+    // `subscription` below would send every CA (granted or not) back to
+    // /select-plan forever. Check their Free CA Access grant instead.
+    if (isCA) {
+      if (isLoadingCaAccess) {
+        return
+      }
+      if (caAccessStatus?.hasActiveAccess) {
+        setShowBlockingUI(false)
+      } else if (!isLoading) {
+        router.push('/select-plan')
+      }
       return
     }
 
@@ -110,10 +134,15 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
     isExemptRoute,
     router,
     pathname,
+    isCA,
+    isLoadingCaAccess,
+    caAccessStatus,
   ])
 
-  // Handle error case - show error but allow retry
-  if (isError && !cachedSubscription && !isExemptRoute) {
+  // Handle error case - show error but allow retry. Self-registered CAs are
+  // handled entirely by the effect above (a 404 here is expected for them,
+  // not an error), so skip this generic error path for them.
+  if (isError && !cachedSubscription && !isExemptRoute && !isCA) {
     const errorMessage = error instanceof Error ? error.message : 'An error occurred'
 
     // Check if it's a "no subscription" error (404)
@@ -160,7 +189,7 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   }
 
   // Loading state - show spinner
-  if (isLoading && !cachedSubscription && !isExemptRoute) {
+  if ((isLoading || (isCA && isLoadingCaAccess)) && !cachedSubscription && !isExemptRoute) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <div className="space-y-4 text-center">

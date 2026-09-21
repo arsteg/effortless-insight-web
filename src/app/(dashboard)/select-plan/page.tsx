@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Check, Sparkles, Loader2, Rocket, Shield, Zap, Users, Mail, Phone, BadgeCheck } from 'lucide-react'
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BillingToggle } from '@/components/features/billing'
-import { usePlans, useStartTrial, useCurrentSubscription } from '@/hooks/use-billing'
+import { usePlans, useStartTrial, useCurrentSubscription, useCaAccessStatus } from '@/hooks/use-billing'
 import { useAuthStore } from '@/stores'
 import { formatAmount } from '@/lib/api/billing'
 import { cn } from '@/lib/utils'
@@ -26,6 +26,7 @@ import type { Plan, BillingCycle } from '@/types/billing'
 function SelectPlanContent() {
   const router = useRouter()
   const { user } = useAuthStore()
+  const isCA = user?.isCA ?? false
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annually')
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
 
@@ -35,10 +36,29 @@ function SelectPlanContent() {
 
   // Self-registered CAs (ApplicationUser.IsCA) don't buy a plan for their own
   // firm org - access is a Free CA Access grant an admin approves manually
-  // (see AdminUsersController.GrantCaAccess). Point them at how to request it
-  // instead of a self-service pricing grid they can't actually use.
-  if (user?.isCA) {
-    return <CaAccessRequestContent userEmail={user.email} />
+  // (see AdminUsersController.GrantCaAccess). Check whether that grant is
+  // already active before falling back to "come back once we approve you" -
+  // otherwise a CA who has already been granted access keeps seeing that
+  // message forever on every refresh/login.
+  const { data: caAccessStatus, isLoading: isLoadingCaAccess } = useCaAccessStatus(isCA)
+
+  useEffect(() => {
+    if (isCA && caAccessStatus?.hasActiveAccess) {
+      router.replace('/dashboard')
+    }
+  }, [isCA, caAccessStatus?.hasActiveAccess, router])
+
+  if (isCA) {
+    // Still checking, or access was just confirmed and we're redirecting -
+    // avoid flashing the "request access" screen in either case.
+    if (isLoadingCaAccess || caAccessStatus?.hasActiveAccess) {
+      return (
+        <div className="flex h-[50vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )
+    }
+    return <CaAccessRequestContent userEmail={user?.email} />
   }
 
   // Calculate available billing cycles (union of all plans' allowed cycles)

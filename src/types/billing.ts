@@ -87,6 +87,15 @@ export interface CurrentSubscriptionResponse {
   usage: Usage
 }
 
+/**
+ * Self-registered CAs (ApplicationUser.IsCA) never buy a plan for their own
+ * firm org, so /subscriptions/current always 404s for them - this reflects
+ * their admin-granted Free CA Access status instead (see AdminUsersController.GrantCaAccess).
+ */
+export interface CaAccessStatusResponse {
+  hasActiveAccess: boolean
+}
+
 export interface Subscription {
   id: string
   planCode: string
