@@ -25,7 +25,7 @@ import type { Plan, BillingCycle } from '@/types/billing'
 
 function SelectPlanContent() {
   const router = useRouter()
-  const { user } = useAuthStore()
+  const { user, isInitialized: isAuthInitialized } = useAuthStore()
   const isCA = user?.isCA ?? false
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annually')
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
@@ -47,6 +47,28 @@ function SelectPlanContent() {
       router.replace('/dashboard')
     }
   }, [isCA, caAccessStatus?.hasActiveAccess, router])
+
+  // Debug logging to help diagnose CA access issues
+  useEffect(() => {
+    console.log('[SelectPlan] State:', {
+      isAuthInitialized,
+      userId: user?.id,
+      isCA,
+      isLoadingCaAccess,
+      caAccessStatus,
+    })
+  }, [isAuthInitialized, user?.id, isCA, isLoadingCaAccess, caAccessStatus])
+
+  // Wait for auth to be initialized before making any decisions
+  // This prevents race conditions where user.isCA is incorrectly false
+  // during Zustand persist hydration
+  if (!isAuthInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   if (isCA) {
     // Still checking, or access was just confirmed and we're redirecting -

@@ -16,8 +16,10 @@ import {
 } from '@/lib/validations/onboarding'
 import {
   useCaClientInvitationDetails,
+  useCaClientInvitationDetailsWithContext,
   useAcceptCaClientInvitation,
   useDeclineCaClientInvitation,
+  useLinkCaClientInvitation,
 } from '@/hooks/use-ca-clients'
 import { useAuthStore } from '@/stores/auth-store'
 import { Button } from '@/components/ui/button'
@@ -64,10 +66,21 @@ export default function AcceptCaClientInvitationPage() {
   const [resultOrgName, setResultOrgName] = useState<string>('')
   const [noticeCounts, setNoticeCounts] = useState<{ merged: number; new: number } | null>(null)
 
-  const { data: invitation, isLoading: invitationLoading, error: invitationError } =
+  // Use the anonymous endpoint for initial load, then switch to the context-aware
+  // endpoint once authenticated to detect existing organizations
+  const { data: basicInvitation, isLoading: basicInvitationLoading, error: basicInvitationError } =
     useCaClientInvitationDetails(token)
+  const { data: contextInvitation, isLoading: contextInvitationLoading, error: contextInvitationError } =
+    useCaClientInvitationDetailsWithContext(token, isAuthenticated)
+
+  // Use context-aware data when authenticated, fall back to basic
+  const invitation = isAuthenticated ? contextInvitation : basicInvitation
+  const invitationLoading = isAuthenticated ? contextInvitationLoading : basicInvitationLoading
+  const invitationError = isAuthenticated ? contextInvitationError : basicInvitationError
+
   const acceptMutation = useAcceptCaClientInvitation()
   const declineMutation = useDeclineCaClientInvitation()
+  const linkMutation = useLinkCaClientInvitation()
 
   const form = useForm<AcceptCaClientInvitationFormData>({
     resolver: zodResolver(acceptCaClientInvitationSchema),
@@ -162,6 +175,37 @@ export default function AcceptCaClientInvitationPage() {
     }
   }
 
+  const handleLink = async () => {
+    const existingOrg = (invitation as { existingOrganization?: { organizationId: string } })?.existingOrganization
+    if (!existingOrg) return
+
+    setMutationState('accepting')
+    setMutationError(null)
+
+    try {
+      const result = await linkMutation.mutateAsync({
+        token,
+        data: { existingOrganizationId: existingOrg.organizationId },
+      })
+
+      setResultOrgName(result.organizationName)
+      setNoticeCounts({ merged: result.mergedNoticeCount, new: result.newNoticeCount })
+      setMutationState('accepted')
+
+      localStorage.removeItem('pendingInvitationUrl')
+      await refreshUser()
+
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2500)
+    } catch (err: unknown) {
+      const apiError = err as { code?: string; message?: string }
+      const code = apiError.code || 'UNKNOWN_ERROR'
+      setMutationError({ code, message: getErrorMessage(code) })
+      setMutationState('idle')
+    }
+  }
+
   // Derive the invitation-fetch error directly from query state - no local
   // state copy needed.
   const invitationErrorInfo: ErrorInfo | null = invitationError
@@ -207,6 +251,68 @@ export default function AcceptCaClientInvitationPage() {
   }
 
   if (mutationState === 'idle' && invitation && !mutationError) {
+    // Check if the user already has an organization with this GSTIN
+    const existingOrg = (invitation as { existingOrganization?: { organizationId: string; organizationName: string; role: string } })?.existingOrganization
+
+    // Simplified "Grant Access" UI when linking to existing organization
+    if (existingOrg) {
+      return (
+        <Card className="w-full max-w-lg">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <Building2 className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold">Grant Access</CardTitle>
+            <CardDescription className="text-base">
+              <strong>{invitation.caOrganizationName}</strong> is requesting access to help manage
+              GST notices for your organization.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {invitation.message && (
+              <div className="rounded-md border-l-4 border-primary bg-muted/50 p-3">
+                <p className="text-sm italic text-muted-foreground">&ldquo;{invitation.message}&rdquo;</p>
+              </div>
+            )}
+
+            <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Your Organization</span>
+                <span className="font-medium">{existingOrg.organizationName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">GSTIN</span>
+                <span className="font-mono text-sm">{invitation.gstin}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">CA Firm</span>
+                <span className="font-medium">{invitation.caOrganizationName}</span>
+              </div>
+            </div>
+
+            <Alert>
+              <AlertDescription className="text-sm">
+                Granting access will allow {invitation.caOrganizationName} to view and help manage
+                GST notices for this GSTIN. You remain the owner of your organization and its data.
+              </AlertDescription>
+            </Alert>
+
+            <div className="flex flex-col gap-2">
+              <Button onClick={handleLink} className="w-full">
+                Grant Access
+              </Button>
+              <Button type="button" variant="outline" onClick={handleDecline} className="w-full">
+                Decline
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    // Standard "Set up your organization" form when no existing org
     return (
       <Card className="w-full max-w-lg">
         <CardHeader className="space-y-1 text-center">
@@ -510,6 +616,12 @@ function getErrorMessage(code: string): string {
     case 'GSTIN_ALREADY_CLAIMED':
     case 'GSTIN_EXISTS':
       return 'This GSTIN is already registered with another organization.'
+    case 'ORGANIZATION_NOT_FOUND_OR_NOT_AUTHORIZED':
+      return 'Organization not found or you do not have permission.'
+    case 'GSTIN_MISMATCH':
+      return 'The organization GSTIN does not match the invitation.'
+    case 'CA_ALREADY_MEMBER':
+      return 'This CA is already a member of your organization.'
     case 'INTERNAL_ERROR':
       return 'A server error occurred. Please try again or contact support.'
     default:
@@ -530,6 +642,11 @@ function getErrorHelp(code?: string): string {
     case 'GSTIN_ALREADY_CLAIMED':
     case 'GSTIN_EXISTS':
       return 'If you believe this is a mistake, please contact your CA or support.'
+    case 'CA_ALREADY_MEMBER':
+      return 'This CA already has access to your organization.'
+    case 'ORGANIZATION_NOT_FOUND_OR_NOT_AUTHORIZED':
+    case 'GSTIN_MISMATCH':
+      return 'Please contact support if you believe this is an error.'
     default:
       return 'If the problem persists, please contact support.'
   }

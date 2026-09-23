@@ -49,7 +49,7 @@ function OnboardingForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const { user, refreshUser } = useAuthStore()
+  const { user, refreshUser, isInitialized, initialize } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [isValidatingGstin, setIsValidatingGstin] = useState(false)
   const [gstinValidation, setGstinValidation] = useState<{
@@ -98,6 +98,8 @@ function OnboardingForm() {
 
   const startTrialMutation = useStartTrial()
   const isCA = !!user?.isCA
+  console.log('user:', user)
+  console.log('isCA:', isCA)
 
   // `user` (and therefore isCA) may not be hydrated from the auth store yet on
   // first render, so the resolver is wrapped to always read the latest value
@@ -106,6 +108,12 @@ function OnboardingForm() {
   useEffect(() => {
     isCARef.current = isCA
   }, [isCA])
+
+  useEffect(() => {
+    if (!isInitialized) {
+      initialize()
+    }
+  }, [isInitialized, initialize])
 
   const form = useForm<OnboardingFormData>({
     resolver: (values, context, options) =>
@@ -232,6 +240,10 @@ function OnboardingForm() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (!isInitialized) {
+    return <OnboardingLoading />
   }
 
   return (

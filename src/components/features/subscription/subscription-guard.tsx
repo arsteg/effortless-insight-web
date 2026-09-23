@@ -6,6 +6,38 @@ import { Loader2, AlertTriangle, CreditCard, Clock, RefreshCw } from 'lucide-rea
 
 import { useAuthStore, useSubscriptionStore } from '@/stores'
 import { useCaAccessStatus, useCurrentSubscription, useResumeSubscription } from '@/hooks/use-billing'
+
+// DEBUG: Persistent logging utility that survives page redirects
+const DEBUG_LOG_KEY = 'subscription_guard_debug_logs'
+const debugLog = (message: string, data?: unknown) => {
+  const timestamp = new Date().toISOString().split('T')[1] // Just time portion
+  const logEntry = `[${timestamp}] ${message}${data ? ': ' + JSON.stringify(data) : ''}`
+
+  // Log to console
+  console.log(logEntry)
+
+  // Store in sessionStorage for persistence across redirects
+  try {
+    const existingLogs = sessionStorage.getItem(DEBUG_LOG_KEY) || ''
+    const newLogs = existingLogs + logEntry + '\n'
+    sessionStorage.setItem(DEBUG_LOG_KEY, newLogs)
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+// Call this from browser console: getLogs() or clearLogs()
+if (typeof window !== 'undefined') {
+  (window as unknown as { getLogs: () => void }).getLogs = () => {
+    const logs = sessionStorage.getItem(DEBUG_LOG_KEY) || 'No logs found'
+    console.log('=== SUBSCRIPTION GUARD DEBUG LOGS ===\n' + logs)
+    return logs
+  };
+  (window as unknown as { clearLogs: () => void }).clearLogs = () => {
+    sessionStorage.removeItem(DEBUG_LOG_KEY)
+    console.log('Logs cleared')
+  }
+}
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -64,6 +96,22 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
 
   const [showBlockingUI, setShowBlockingUI] = useState(false)
 
+  // DEBUG: Log render state
+  debugLog('[SubscriptionGuard] RENDER', {
+    pathname,
+    userId: user?.id,
+    userEmail: user?.email,
+    isCA,
+    isLoadingCaAccess,
+    caAccessStatus,
+    isLoading,
+    isStoreInitialized,
+    hasCachedSubscription: !!cachedSubscription,
+    hasFreshSubscription: !!freshSubscription,
+    isError,
+    showBlockingUI,
+  })
+
   // Check if current route is exempt from subscription check
   const isExemptRoute = SUBSCRIPTION_EXEMPT_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
@@ -78,9 +126,30 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
 
   // Handle subscription status changes
   useEffect(() => {
+    debugLog('[SubscriptionGuard] EFFECT START', {
+      pathname,
+      isExemptRoute,
+      user: user ? { id: user.id, email: user.email, isCA: user.isCA } : null,
+      isCA,
+      isLoadingCaAccess,
+      caAccessStatus,
+      isLoading,
+      isStoreInitialized,
+      hasCachedSubscription: !!cachedSubscription,
+      hasFreshSubscription: !!freshSubscription,
+    })
+
     // Don't check on exempt routes
     if (isExemptRoute) {
+      debugLog('[SubscriptionGuard] EXEMPT ROUTE - skipping checks')
       setShowBlockingUI(false)
+      return
+    }
+
+    // Wait for user to be loaded before making any redirect decisions
+    // This prevents race conditions where isCA is false during initial hydration
+    if (!user) {
+      debugLog('[SubscriptionGuard] USER NOT LOADED - waiting for hydration')
       return
     }
 
@@ -89,12 +158,18 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
     // `subscription` below would send every CA (granted or not) back to
     // /select-plan forever. Check their Free CA Access grant instead.
     if (isCA) {
+      debugLog('[SubscriptionGuard] CA USER detected', { isLoadingCaAccess, caAccessStatus })
+      // Wait for CA access check to complete - subscription query is irrelevant for CAs
       if (isLoadingCaAccess) {
+        debugLog('[SubscriptionGuard] CA ACCESS LOADING - waiting')
         return
       }
       if (caAccessStatus?.hasActiveAccess) {
+        debugLog('[SubscriptionGuard] CA HAS ACCESS - allowing')
         setShowBlockingUI(false)
-      } else if (!isLoading) {
+      } else {
+        // CA access check completed, user doesn't have active access
+        debugLog('[SubscriptionGuard] CA NO ACCESS - redirecting to /select-plan', { caAccessStatus })
         router.push('/select-plan')
       }
       return
@@ -102,17 +177,25 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
 
     // Still loading - don't show blocking UI yet
     if (isLoading && !isStoreInitialized) {
+      debugLog('[SubscriptionGuard] SUBSCRIPTION LOADING - waiting')
       return
     }
 
     // Use fresh data if available, otherwise use cached
     const subscription = freshSubscription ?? cachedSubscription
+    debugLog('[SubscriptionGuard] REGULAR USER', {
+      subscription: subscription ? { status: subscription.status, hasAccess: subscription.hasAccess } : null,
+      isLoading,
+    })
 
     // No subscription at all - redirect to plan selection
     if (!subscription) {
       // Handle 404/no subscription case
       if (!isLoading) {
+        debugLog('[SubscriptionGuard] NO SUBSCRIPTION - redirecting to /select-plan')
         router.push('/select-plan')
+      } else {
+        debugLog('[SubscriptionGuard] NO SUBSCRIPTION but still loading - waiting')
       }
       return
     }
@@ -122,11 +205,14 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
     // - Trialing subscriptions only have access if plan has trial AND trial hasn't expired
     // - Cancelled/Expired/Paused subscriptions don't have access
     if (!subscription.hasAccess) {
+      debugLog('[SubscriptionGuard] SUBSCRIPTION NO ACCESS - showing blocking UI', { status: subscription.status })
       setShowBlockingUI(true)
     } else {
+      debugLog('[SubscriptionGuard] SUBSCRIPTION HAS ACCESS - allowing')
       setShowBlockingUI(false)
     }
   }, [
+    user,
     freshSubscription,
     cachedSubscription,
     isLoading,
@@ -142,11 +228,25 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
   // Handle error case - show error but allow retry. Self-registered CAs are
   // handled entirely by the effect above (a 404 here is expected for them,
   // not an error), so skip this generic error path for them.
-  if (isError && !cachedSubscription && !isExemptRoute && !isCA) {
+  // IMPORTANT: Also wait for user to be loaded - isCA depends on user hydration.
+  // Without this check, a 404 error triggers redirect before we know if user is CA.
+  if (isError) {
+    debugLog('[SubscriptionGuard] RENDER: SUBSCRIPTION ERROR', {
+      errorMessage: error instanceof Error ? error.message : 'unknown',
+      hasCachedSubscription: !!cachedSubscription,
+      isExemptRoute,
+      user: !!user,
+      isCA,
+      willHandleError: !cachedSubscription && !isExemptRoute && !!user && !isCA,
+    })
+  }
+  if (isError && !cachedSubscription && !isExemptRoute && user && !isCA) {
     const errorMessage = error instanceof Error ? error.message : 'An error occurred'
+    debugLog('[SubscriptionGuard] RENDER: ERROR CASE', { errorMessage, isCA, userId: user?.id })
 
     // Check if it's a "no subscription" error (404)
     if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+      debugLog('[SubscriptionGuard] RENDER: 404 ERROR - redirecting to /select-plan')
       router.push('/select-plan')
       return (
         <div className="flex h-[50vh] items-center justify-center">
@@ -188,8 +288,17 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
     )
   }
 
-  // Loading state - show spinner
-  if ((isLoading || (isCA && isLoadingCaAccess)) && !cachedSubscription && !isExemptRoute) {
+  // Loading state - show spinner (also wait for user to be loaded to avoid race conditions)
+  const shouldShowLoadingSpinner = (!user || isLoading || (isCA && isLoadingCaAccess)) && !cachedSubscription && !isExemptRoute
+  if (shouldShowLoadingSpinner) {
+    debugLog('[SubscriptionGuard] RENDER: LOADING SPINNER', {
+      user: !!user,
+      isLoading,
+      isCA,
+      isLoadingCaAccess,
+      hasCachedSubscription: !!cachedSubscription,
+      isExemptRoute,
+    })
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <div className="space-y-4 text-center">
@@ -202,6 +311,7 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
 
   // Blocking UI for expired/cancelled subscriptions
   if (showBlockingUI) {
+    debugLog('[SubscriptionGuard] RENDER: BLOCKING UI')
     const subscription = freshSubscription ?? cachedSubscription
 
     const handleResume = () => {
@@ -236,11 +346,18 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
 
   // Exempt routes - render without checks
   if (isExemptRoute) {
+    debugLog('[SubscriptionGuard] RENDER: EXEMPT ROUTE - rendering children')
     return <>{children}</>
   }
 
   // Has valid subscription - render children with optional trial banner
   const subscription = freshSubscription ?? cachedSubscription
+  debugLog('[SubscriptionGuard] RENDER: SUCCESS - rendering children', {
+    subscriptionStatus: subscription?.status,
+    hasAccess: subscription?.hasAccess,
+    isCA,
+    caAccessStatus,
+  })
 
   return (
     <>

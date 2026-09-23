@@ -7,12 +7,14 @@ import { useAuthStore } from '@/stores/auth-store'
 import type {
   CreateCaClientInvitationRequest,
   AcceptCaClientInvitationRequest,
+  AcceptCaClientInvitationLinkRequest,
 } from '@/types'
 
 export const caClientKeys = {
   all: ['ca-clients'] as const,
   list: () => [...caClientKeys.all, 'list'] as const,
   invitation: (token: string) => [...caClientKeys.all, 'invitation', token] as const,
+  invitationWithContext: (token: string) => [...caClientKeys.all, 'invitation-context', token] as const,
 }
 
 /**
@@ -100,6 +102,22 @@ export function useCaClientInvitationDetails(token: string) {
     queryFn: () => caClientsApi.getInvitation(token),
     enabled: !!token,
     retry: false,
+  })
+}
+
+export function useCaClientInvitationDetailsWithContext(token: string, enabled = true) {
+  return useQuery({
+    queryKey: caClientKeys.invitationWithContext(token),
+    queryFn: () => caClientsApi.getInvitationWithContext(token),
+    enabled: !!token && enabled,
+    retry: false,
+  })
+}
+
+export function useLinkCaClientInvitation() {
+  return useMutation({
+    mutationFn: ({ token, data }: { token: string; data: AcceptCaClientInvitationLinkRequest }) =>
+      caClientsApi.linkInvitation(token, data),
   })
 }
 

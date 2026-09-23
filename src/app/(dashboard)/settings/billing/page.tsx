@@ -48,9 +48,6 @@ export default function BillingSettingsPage() {
   const [showAddSeatsModal, setShowAddSeatsModal] = useState(false)
   const [invoicePage, setInvoicePage] = useState(1)
 
-  // Non-owners have read-only access to billing
-  const canEdit = isOwner
-
   // Queries
   const { data: subscription, isLoading: isLoadingSubscription } = useCurrentSubscription()
   const { data: usage, isLoading: isLoadingUsage } = useUsage()
@@ -61,6 +58,10 @@ export default function BillingSettingsPage() {
   // Extract plans and global settings
   const plans = plansData?.plans
   const globalSettings = plansData?.globalSettings
+
+  // Non-owners have read-only access to billing
+  // Admin-granted subscriptions (CA free access) cannot be modified by the user
+  const canEdit = isOwner && !subscription?.isAdminGranted
 
   // Mutations
   const changePlan = useChangePlan()
@@ -246,7 +247,7 @@ export default function BillingSettingsPage() {
       </div>
 
       {/* Read-only banner for non-owners */}
-      {!canEdit && (
+      {!isOwner && (
         <Alert>
           <EyeOff className="h-4 w-4" />
           <AlertDescription>

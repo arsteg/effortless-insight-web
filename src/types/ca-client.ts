@@ -31,6 +31,23 @@ export interface CaClientInvitationDetails {
   message?: string
 }
 
+export interface ExistingOrganizationForGstin {
+  organizationId: string
+  organizationName: string
+  role: string
+}
+
+export interface CaClientInvitationDetailsWithContext {
+  caOrganizationName: string
+  gstin: string
+  clientDisplayName?: string
+  email: string
+  status: string
+  expiresAt: string
+  message?: string
+  existingOrganization?: ExistingOrganizationForGstin
+}
+
 /**
  * A single row in the CA's unified client list - either a "staged" prospect
  * (pre-acceptance, no organization yet) or an "active" client (already
@@ -66,6 +83,17 @@ export interface AcceptCaClientInvitationResult {
   newNoticeCount: number
   accessToken: string
   expiresIn: number
+}
+
+export interface AcceptCaClientInvitationLinkRequest {
+  existingOrganizationId: string
+}
+
+export interface AcceptCaClientInvitationLinkResult {
+  organizationId: string
+  organizationName: string
+  mergedNoticeCount: number
+  newNoticeCount: number
 }
 
 export interface UploadCaStagedNoticeResult {

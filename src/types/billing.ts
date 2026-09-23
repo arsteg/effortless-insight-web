@@ -120,6 +120,15 @@ export interface Subscription {
    * False when: cancelled, expired, or trialing without valid trial period/dates.
    */
   hasAccess: boolean
+  /**
+   * Whether this subscription was granted by an admin (e.g., CA free access).
+   * Admin-granted subscriptions cannot be modified by the user.
+   */
+  isAdminGranted?: boolean
+  /**
+   * Whether this subscription is for the CA operator plan.
+   */
+  isCaOperatorPlan?: boolean
 }
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'

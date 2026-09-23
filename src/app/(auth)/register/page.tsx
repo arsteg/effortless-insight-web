@@ -592,11 +592,11 @@ function RegisterForm() {
                     >
                       I&apos;m a Chartered Accountant
                     </label>
-                    <FormDescription>
+                    {/* <FormDescription>
                       Sign up as a CA to manage GST notices for your clients. Your own
                       organization won&apos;t require a GSTIN, and once an admin enables free
                       access you can invite clients at no cost.
-                    </FormDescription>
+                    </FormDescription> */}
                   </div>
                 </FormItem>
               )}

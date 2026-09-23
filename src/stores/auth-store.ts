@@ -128,6 +128,7 @@ export const useAuthStore = create<AuthState>()(
             user: result.user,
             isAuthenticated: true,
             isLoading: false,
+            isInitialized: true,
             twoFactor: initialTwoFactorState,
           })
         } catch (error) {
@@ -152,6 +153,7 @@ export const useAuthStore = create<AuthState>()(
             user,
             isAuthenticated: true,
             isLoading: false,
+            isInitialized: true,
             twoFactor: initialTwoFactorState,
           })
         } catch (error) {
@@ -210,6 +212,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           user,
           isAuthenticated: !!user,
+          isInitialized: true,
         })
       },
     }),
@@ -224,6 +227,7 @@ export const useAuthStore = create<AuthState>()(
               email: state.user.email,
               name: state.user.name,
               role: state.user.role,
+              isCA: state.user.isCA,
             }
           : null,
         isAuthenticated: state.isAuthenticated,

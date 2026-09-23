@@ -4,10 +4,8 @@ import { useRouter } from 'next/navigation'
 import { Users, ArrowRight, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { useCaClients } from '@/hooks/use-ca-clients'
 import { useOrganizationStore } from '@/stores'
-import { InviteCaClientDialog } from './invite-ca-client-dialog'
 
 /**
  * A CA's cross-organization client portfolio - distinct from
@@ -31,12 +29,11 @@ export function MyClientsCard() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
+      <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Users className="h-4 w-4" />
           My Clients
         </CardTitle>
-        <InviteCaClientDialog />
       </CardHeader>
       <CardContent className="space-y-2">
         {isLoading ? (
@@ -56,6 +53,9 @@ export function MyClientsCard() {
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{client.displayName}</p>
+                {client.gstin && (
+                  <p className="truncate font-mono text-xs text-muted-foreground">{client.gstin}</p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   {client.noticeCount} notice{client.noticeCount === 1 ? '' : 's'}
                 </p>

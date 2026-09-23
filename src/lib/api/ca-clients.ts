@@ -4,9 +4,12 @@ import type {
   CreateCaClientInvitationRequest,
   CaClientInvitation,
   CaClientInvitationDetails,
+  CaClientInvitationDetailsWithContext,
   CaClientListItem,
   AcceptCaClientInvitationRequest,
   AcceptCaClientInvitationResult,
+  AcceptCaClientInvitationLinkRequest,
+  AcceptCaClientInvitationLinkResult,
   UploadCaStagedNoticeResult,
 } from '@/types'
 
@@ -27,6 +30,24 @@ export const caClientsApi = {
   async getInvitation(token: string): Promise<CaClientInvitationDetails> {
     const response = await apiClient.get<ApiResponse<CaClientInvitationDetails>>(
       `/ca/clients/invitations/${token}`
+    )
+    return response.data.data
+  },
+
+  async getInvitationWithContext(token: string): Promise<CaClientInvitationDetailsWithContext> {
+    const response = await apiClient.get<ApiResponse<CaClientInvitationDetailsWithContext>>(
+      `/ca/clients/invitations/${token}/context`
+    )
+    return response.data.data
+  },
+
+  async linkInvitation(
+    token: string,
+    data: AcceptCaClientInvitationLinkRequest
+  ): Promise<AcceptCaClientInvitationLinkResult> {
+    const response = await apiClient.post<ApiResponse<AcceptCaClientInvitationLinkResult>>(
+      `/ca/clients/invitations/${token}/link`,
+      data
     )
     return response.data.data
   },
