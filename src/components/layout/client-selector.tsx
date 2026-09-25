@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useQueryClient } from '@tanstack/react-query'
 
 /**
  * A second organization-switcher, scoped to only the CA's accepted clients
@@ -31,6 +32,7 @@ import {
  */
 export function ClientSelector() {
   const router = useRouter()
+  const queryClient = useQueryClient();
   const { user } = useAuthStore()
   const { currentOrganization, switchOrganization } = useOrganizationStore()
   const { data: clients } = useCaClients()
@@ -47,6 +49,7 @@ export function ClientSelector() {
 
   const handleSelectClient = async (organizationId: string) => {
     await switchOrganization(organizationId)
+     queryClient.clear();
     router.refresh()
   }
 

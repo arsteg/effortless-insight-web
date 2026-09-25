@@ -110,7 +110,8 @@ function SelectPlanContent() {
           planCode: plan.code,
           billingCycle,
         })
-        router.push('/dashboard')
+        const pending = localStorage.getItem('pendingInvitationUrl')
+        router.push(pending && /^\/ca-invitations\/[A-Za-z0-9_-]+$/.test(pending) ? pending : '/dashboard')
       } catch {
         setSelectedPlan(null)
       }

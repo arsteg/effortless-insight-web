@@ -1,7 +1,9 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useOrganizationStore } from '@/stores/organization-store'
+import { useAuthStore } from '@/stores/auth-store'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -11,6 +13,24 @@ import { ThemeProvider } from '@/components/theme-provider'
 // public pages (audit WB-05).
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const organizationId = useOrganizationStore((state) => state.currentOrganization?.id)
+  const userId = useAuthStore((state) => state.user?.id)
+
+  return (
+    <ThemeProvider>
+      <OrganizationQueryProvider key={`${userId ?? 'anonymous'}:${organizationId ?? 'none'}`}>
+        <TooltipProvider delayDuration={0}>
+          {children}
+          <Toaster />
+        </TooltipProvider>
+      </OrganizationQueryProvider>
+    </ThemeProvider>
+  )
+}
+
+// Query keys throughout the application are relative to the current tenant.
+// A fresh boundary also resets page-local filters and selections on a switch.
+export function OrganizationQueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -38,14 +58,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       })
   )
 
-  return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider delayDuration={0}>
-          {children}
-          <Toaster />
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
-  )
+  useEffect(() => () => {
+    void queryClient.cancelQueries()
+    queryClient.clear()
+  }, [queryClient])
+
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }

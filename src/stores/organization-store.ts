@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Organization, OrganizationListItem } from '@/types'
 import { organizationsApi, authApi } from '@/lib/api'
+import { useAuthStore } from './auth-store'
+import { useSubscriptionStore } from './subscription-store'
 
 interface OrganizationState {
   currentOrganization: OrganizationListItem | null
@@ -98,8 +100,17 @@ export const useOrganizationStore = create<OrganizationState>()(
       },
 
       switchOrganization: async (orgId: string) => {
+        if (get().isLoading || get().currentOrganization?.id === orgId) return
         const { organizations } = get()
-        const org = organizations.find((o) => o.id === orgId)
+        let org = organizations.find((o) => o.id === orgId)
+
+        // A BO may have accepted a distributor invitation in another session.
+        // Refresh memberships before rejecting a newly available client organization.
+        if (!org) {
+          const response = await organizationsApi.list()
+          set({ organizations: response.organizations })
+          org = response.organizations.find((o) => o.id === orgId)
+        }
 
         if (!org) {
           throw new Error('Organization not found')
@@ -108,7 +119,10 @@ export const useOrganizationStore = create<OrganizationState>()(
         set({ isLoading: true })
         try {
           // Call API to switch organization (updates JWT)
-          await authApi.switchOrganization({ organizationId: orgId })
+          const result = await authApi.switchOrganization({ organizationId: orgId })
+          useSubscriptionStore.getState().clearSubscription()
+          const user = useAuthStore.getState().user
+          if (user) useAuthStore.getState().setUser({ ...user, organization: result.organization })
           set({
             currentOrganization: org,
             isLoading: false,

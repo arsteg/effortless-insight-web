@@ -92,6 +92,7 @@ interface MultiUploadProgress {
 }
 
 interface UseUploadMultipleNoticesOptions {
+  gstin?: string
   onSuccess?: (responses: NoticeUploadResponse[]) => void
   onError?: (error: Error) => void
   onFileComplete?: (fileName: string, response: NoticeUploadResponse) => void
@@ -137,6 +138,7 @@ export function useUploadMultipleNotices(options?: UseUploadMultipleNoticesOptio
         try {
           const formData = new FormData()
           formData.append('File', file)
+          if (options?.gstin) formData.append('Gstin', options.gstin)
 
           const response = await noticesApi.upload(formData, (progressEvent) => {
             if (progressEvent.total) {

@@ -17,13 +17,12 @@ import {
 import {
   useCaClientInvitationDetails,
   useCaClientInvitationDetailsWithContext,
-  useAcceptCaClientInvitation,
   useDeclineCaClientInvitation,
   useLinkCaClientInvitation,
 } from '@/hooks/use-ca-clients'
 import { useAuthStore } from '@/stores/auth-store'
 import { useOrganizationStore } from '@/stores/organization-store'
-import type { OrganizationRole } from '@/types'
+import { caClientsApi, organizationsApi, authApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -80,7 +79,6 @@ export default function AcceptCaClientInvitationPage() {
   const invitationLoading = isAuthenticated ? contextInvitationLoading : basicInvitationLoading
   const invitationError = isAuthenticated ? contextInvitationError : basicInvitationError
 
-  const acceptMutation = useAcceptCaClientInvitation()
   const declineMutation = useDeclineCaClientInvitation()
   const linkMutation = useLinkCaClientInvitation()
 
@@ -121,58 +119,37 @@ export default function AcceptCaClientInvitationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invitation])
 
+  const selectOrganization = async (organizationId: string) => {
+    await authApi.switchOrganization({ organizationId })
+    const { organizations } = await organizationsApi.list()
+    const organization = organizations.find((org) => org.id === organizationId)
+    if (!organization) throw new Error('Organization not found')
+    useOrganizationStore.getState().setCurrentOrganization(organization)
+    await refreshUser()
+  }
+
+  const activatePlan = async (organizationId: string) => {
+    localStorage.setItem('pendingInvitationUrl', `/ca-invitations/${token}`)
+    await selectOrganization(organizationId)
+    router.push('/select-plan')
+  }
+
   const handleAccept = async (data: AcceptCaClientInvitationFormData) => {
     setMutationState('accepting')
     setMutationError(null)
-
     try {
-      const result = await acceptMutation.mutateAsync({
-        token,
-        data: {
-          organizationName: data.name,
-          legalName: data.legalName || undefined,
-          industry: data.industry || undefined,
-          state: data.state,
-          city: data.city || undefined,
-          annualTurnoverRange: data.annualTurnoverRange || undefined,
-        },
+      const result = await caClientsApi.prepareOrganization(token, {
+        organizationName: data.name,
+        legalName: data.legalName || undefined,
+        industry: data.industry || undefined,
+        state: data.state,
+        city: data.city || undefined,
+        annualTurnoverRange: data.annualTurnoverRange || undefined,
       })
-
-      setResultOrgName(result.organizationName)
-      setNoticeCounts({ merged: result.mergedNoticeCount, new: result.newNoticeCount })
-      setMutationState('accepted')
-
-      // CRITICAL FIX: Update organization-store with the newly created org
-      // BEFORE refreshUser() triggers dashboard's fetchOrganizations().
-      // This prevents fetchOrganizations() from calling switchOrganization()
-      // to a stale/default org, which would overwrite the JWT context.
-      useOrganizationStore.getState().setCurrentOrganization({
-        id: result.organizationId,
-        name: result.organizationName,
-        role: 'owner',
-        isExternal: false,
-        noticeCount: result.mergedNoticeCount + result.newNoticeCount,
-        pendingNoticeCount: 0,
-        memberCount: 1,
-        gstinCount: 1,
-        subscriptionStatus: 'trial',
-      })
-
-      // caClientsApi.acceptInvitation already updated the stored access token
-      // (its org_id/role claims now point at the newly created organization) -
-      // there is no new refresh token here, mirroring how creating an
-      // organization while already logged in works elsewhere in the app.
-      localStorage.removeItem('pendingInvitationUrl')
-
-      await refreshUser()
-
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 2500)
+      await activatePlan(result.organizationId)
     } catch (err: unknown) {
       const apiError = err as { code?: string; message?: string }
-      const code = apiError.code || 'UNKNOWN_ERROR'
-      setMutationError({ code, message: getErrorMessage(code) })
+      setMutationError({ code: apiError.code || 'UNKNOWN_ERROR', message: apiError.message || 'Unable to prepare your organization.' })
       setMutationState('idle')
     }
   }
@@ -210,21 +187,7 @@ export default function AcceptCaClientInvitationPage() {
       setNoticeCounts({ merged: result.mergedNoticeCount, new: result.newNoticeCount })
       setMutationState('accepted')
 
-      // CRITICAL FIX: Update organization-store with the linked org
-      const existingOrgData = (invitation as { existingOrganization?: { organizationId: string; organizationName: string; role: string } })?.existingOrganization
-      if (existingOrgData) {
-        useOrganizationStore.getState().setCurrentOrganization({
-          id: result.organizationId,
-          name: result.organizationName,
-          role: existingOrgData.role as OrganizationRole,
-          isExternal: false,
-          noticeCount: result.mergedNoticeCount + result.newNoticeCount,
-          pendingNoticeCount: 0,
-          memberCount: 1,
-          gstinCount: 1,
-          subscriptionStatus: 'active',
-        })
-      }
+      await selectOrganization(result.organizationId)
 
       localStorage.removeItem('pendingInvitationUrl')
       await refreshUser()
@@ -235,7 +198,12 @@ export default function AcceptCaClientInvitationPage() {
     } catch (err: unknown) {
       const apiError = err as { code?: string; message?: string }
       const code = apiError.code || 'UNKNOWN_ERROR'
-      setMutationError({ code, message: getErrorMessage(code) })
+      if (code === 'SUBSCRIPTION_REQUIRED') {
+        try { await activatePlan(existingOrg.organizationId); return }
+        catch { setMutationError({ code, message: 'Unable to open plan selection. Please try again.' }) }
+      } else {
+        setMutationError({ code, message: apiError.message || getErrorMessage(code) })
+      }
       setMutationState('idle')
     }
   }
@@ -298,7 +266,7 @@ export default function AcceptCaClientInvitationPage() {
                 <Building2 className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold">Grant Access</CardTitle>
+            <CardTitle className="text-2xl font-bold">Accept invitation</CardTitle>
             <CardDescription className="text-base">
               <strong>{invitation.caOrganizationName}</strong> is requesting access to help manage
               GST notices for your organization.
@@ -329,13 +297,13 @@ export default function AcceptCaClientInvitationPage() {
             <Alert>
               <AlertDescription className="text-sm">
                 Granting access will allow {invitation.caOrganizationName} to view and help manage
-                GST notices for this GSTIN. You remain the owner of your organization and its data.
+                GST notices for this GSTIN. Existing CA-managed notices and related work will become owned by your organization. An active plan is required; you can activate one before accepting.
               </AlertDescription>
             </Alert>
 
             <div className="flex flex-col gap-2">
               <Button onClick={handleLink} className="w-full">
-                Grant Access
+                Accept and transfer existing work
               </Button>
               <Button type="button" variant="outline" onClick={handleDecline} className="w-full">
                 Decline
@@ -505,13 +473,13 @@ export default function AcceptCaClientInvitationPage() {
                 <AlertDescription className="text-sm">
                   You will be the owner of this organization, its GSTIN, its data, and its
                   subscription. {invitation.caOrganizationName} will have permission-based
-                  access to help manage your GST notices - nothing more.
+                  access after you activate a plan and accept the invitation. Your CA can continue working while you complete setup.
                 </AlertDescription>
               </Alert>
 
               <div className="flex flex-col gap-2">
                 <Button type="submit" className="w-full">
-                  Create Organization
+                  Create organization and choose a plan
                 </Button>
                 <Button type="button" variant="outline" onClick={handleDecline} className="w-full">
                   Decline Invitation

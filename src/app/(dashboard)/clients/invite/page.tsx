@@ -42,6 +42,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import {
   useCaClients,
+  useCreateCaProspect,
   useCreateCaClientInvitation,
   useResendCaClientInvitation,
   useCancelCaClientInvitation,
@@ -68,6 +69,7 @@ export default function InviteClientPage() {
   const { user } = useAuthStore()
   const { data: clients, isLoading: isLoadingClients } = useCaClients()
   const inviteMutation = useCreateCaClientInvitation()
+  const prospectMutation = useCreateCaProspect()
   const resendMutation = useResendCaClientInvitation()
   const cancelMutation = useCancelCaClientInvitation()
 
@@ -100,6 +102,14 @@ export default function InviteClientPage() {
       message: data.message || undefined,
     })
     form.reset()
+  }
+
+  const saveWithoutInvitation = async () => {
+    if (!await form.trigger(['gstin', 'clientDisplayName'])) return
+    try {
+      await prospectMutation.mutateAsync({ gstin: form.getValues('gstin'), clientDisplayName: form.getValues('clientDisplayName') })
+      form.reset()
+    } catch { /* mutation displays the server error */ }
   }
 
   const handleResend = (invitationId: string) => {
@@ -176,7 +186,7 @@ export default function InviteClientPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Client Email *</FormLabel>
+                      <FormLabel>Client Email (required for invitation)</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="client@example.com" {...field} />
                       </FormControl>
@@ -230,7 +240,10 @@ export default function InviteClientPage() {
                 )}
               />
 
-              <div className="flex justify-end">
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button type="button" variant="outline" onClick={saveWithoutInvitation} disabled={prospectMutation.isPending || inviteMutation.isPending}>
+                  Save client without inviting
+                </Button>
                 <Button type="submit" disabled={inviteMutation.isPending}>
                   {inviteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Send Invitation
@@ -269,11 +282,10 @@ export default function InviteClientPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Clock className="h-4 w-4" />
-                Pending Invitations
+                Prospect clients
               </CardTitle>
               <CardDescription>
-                Invitations waiting for clients to accept. You can upload notices for these GSTINs
-                while waiting.
+                Saved clients and pending invitations. You can work on these GSTINs before sending an invitation or while waiting for acceptance.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -283,7 +295,7 @@ export default function InviteClientPage() {
                 </div>
               ) : pendingClients.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                  No pending invitations. Send an invitation above to get started.
+                  Save a client above to start working, or send an invitation.
                 </p>
               ) : (
                 <Table>

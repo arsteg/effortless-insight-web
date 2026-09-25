@@ -32,6 +32,20 @@ export function useCaClients() {
   })
 }
 
+export function useCreateCaProspect() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+  return useMutation({
+    mutationFn: (data: { gstin: string; clientDisplayName?: string }) => caClientsApi.createProspect(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: caClientKeys.list() })
+      queryClient.invalidateQueries({ queryKey: ['settings'] })
+      toast({ title: 'Client saved', description: 'You can start working now and send an invitation later.', variant: 'success' })
+    },
+    onError: (error: { message?: string }) => toast({ title: 'Unable to save client', description: error.message, variant: 'destructive' }),
+  })
+}
+
 export function useCreateCaClientInvitation() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -40,6 +54,7 @@ export function useCreateCaClientInvitation() {
     mutationFn: (data: CreateCaClientInvitationRequest) => caClientsApi.createInvitation(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: caClientKeys.list() })
+      queryClient.invalidateQueries({ queryKey: ['settings'] })
       toast({
         title: 'Invitation sent',
         description: 'The client will be able to set up their organization from the link we emailed them.',
@@ -143,7 +158,7 @@ export function useUploadCaStagedNotice() {
       caClientsApi.uploadStagedNotice(prospectClientId, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: caClientKeys.list() })
-      toast({ title: 'Notice uploaded', description: 'It will be imported once the client accepts your invitation.', variant: 'success' })
+      toast({ title: 'Notice uploaded', description: 'You can manage this notice now. Ownership transfers when the client accepts your invitation.', variant: 'success' })
     },
     onError: (error: { message?: string }) => {
       toast({

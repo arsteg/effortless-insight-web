@@ -14,6 +14,10 @@ import type {
 } from '@/types'
 
 export const caClientsApi = {
+  async createProspect(data: { gstin: string; clientDisplayName?: string }): Promise<{ prospectClientId: string }> {
+    const response = await apiClient.post<ApiResponse<{ prospectClientId: string }>>('/ca/clients', data)
+    return response.data.data
+  },
   async list(): Promise<CaClientListItem[]> {
     const response = await apiClient.get<ApiResponse<CaClientListItem[]>>('/ca/clients')
     return response.data.data
@@ -61,6 +65,13 @@ export const caClientsApi = {
 
   async cancelInvitation(invitationId: string): Promise<void> {
     await apiClient.delete(`/ca/clients/invitations/${invitationId}`)
+  },
+
+  async prepareOrganization(token: string, data: AcceptCaClientInvitationRequest): Promise<{ organizationId: string; organizationName: string; role: string }> {
+    const response = await apiClient.post<ApiResponse<{ organizationId: string; organizationName: string; role: string }>>(
+      `/ca/clients/invitations/${token}/prepare`, data
+    )
+    return response.data.data
   },
 
   async acceptInvitation(
