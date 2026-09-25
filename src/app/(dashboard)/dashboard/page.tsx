@@ -174,7 +174,7 @@ export default function DashboardPage() {
       </div>
 
       {/* CA-as-distributor: pending invitations (CA accounts only) */}
-      {user?.isCA && <PendingCaInvitationsCard />}
+      {/* {user?.isCA && <PendingCaInvitationsCard />} */}
 
       {/* Clients needing attention (hidden when nothing is overdue) */}
       <ClientAttentionCard />

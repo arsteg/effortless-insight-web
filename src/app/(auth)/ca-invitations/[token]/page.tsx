@@ -22,6 +22,8 @@ import {
   useLinkCaClientInvitation,
 } from '@/hooks/use-ca-clients'
 import { useAuthStore } from '@/stores/auth-store'
+import { useOrganizationStore } from '@/stores/organization-store'
+import type { OrganizationRole } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -140,6 +142,22 @@ export default function AcceptCaClientInvitationPage() {
       setNoticeCounts({ merged: result.mergedNoticeCount, new: result.newNoticeCount })
       setMutationState('accepted')
 
+      // CRITICAL FIX: Update organization-store with the newly created org
+      // BEFORE refreshUser() triggers dashboard's fetchOrganizations().
+      // This prevents fetchOrganizations() from calling switchOrganization()
+      // to a stale/default org, which would overwrite the JWT context.
+      useOrganizationStore.getState().setCurrentOrganization({
+        id: result.organizationId,
+        name: result.organizationName,
+        role: 'owner',
+        isExternal: false,
+        noticeCount: result.mergedNoticeCount + result.newNoticeCount,
+        pendingNoticeCount: 0,
+        memberCount: 1,
+        gstinCount: 1,
+        subscriptionStatus: 'trial',
+      })
+
       // caClientsApi.acceptInvitation already updated the stored access token
       // (its org_id/role claims now point at the newly created organization) -
       // there is no new refresh token here, mirroring how creating an
@@ -191,6 +209,22 @@ export default function AcceptCaClientInvitationPage() {
       setResultOrgName(result.organizationName)
       setNoticeCounts({ merged: result.mergedNoticeCount, new: result.newNoticeCount })
       setMutationState('accepted')
+
+      // CRITICAL FIX: Update organization-store with the linked org
+      const existingOrgData = (invitation as { existingOrganization?: { organizationId: string; organizationName: string; role: string } })?.existingOrganization
+      if (existingOrgData) {
+        useOrganizationStore.getState().setCurrentOrganization({
+          id: result.organizationId,
+          name: result.organizationName,
+          role: existingOrgData.role as OrganizationRole,
+          isExternal: false,
+          noticeCount: result.mergedNoticeCount + result.newNoticeCount,
+          pendingNoticeCount: 0,
+          memberCount: 1,
+          gstinCount: 1,
+          subscriptionStatus: 'active',
+        })
+      }
 
       localStorage.removeItem('pendingInvitationUrl')
       await refreshUser()

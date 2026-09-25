@@ -43,7 +43,12 @@ export const useOrganizationStore = create<OrganizationState>()(
           // If current org is set, verify it still exists in the list
           if (current) {
             const stillExists = organizations.find(o => o.id === current.id)
-            if (!stillExists && organizations.length > 0) {
+            if (stillExists) {
+              // Use the FULL org from API, not the potentially partial persisted version.
+              // This ensures we have all fields (noticeCount, memberCount, etc.) even if
+              // the persisted org was set with minimal data (e.g., after invitation accept).
+              targetOrg = stillExists
+            } else if (organizations.length > 0) {
               targetOrg = defaultOrg()
             }
           } else if (organizations.length > 0) {
