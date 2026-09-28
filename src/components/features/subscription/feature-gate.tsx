@@ -44,20 +44,27 @@ interface FeatureGateProps {
  * Map feature codes to display names
  */
 const featureDisplayNames: Record<string, string> = {
-  [FeatureCodes.WhatsAppIntegration]: 'WhatsApp Integration',
-  [FeatureCodes.Workflows]: 'Workflows',
-  [FeatureCodes.AdvancedWorkflows]: 'Advanced Workflows',
-  [FeatureCodes.ApiAccess]: 'API Access',
+  // AI Features
+  [FeatureCodes.AiExplanation]: 'AI Explanation',
+  [FeatureCodes.DraftReply]: 'Draft Reply',
+  [FeatureCodes.WhatsAppAssistant]: 'WhatsApp Assistant',
+  [FeatureCodes.MultilingualSupport]: 'Multilingual Support',
+
+  // Team Features
+  [FeatureCodes.Collaboration]: 'Team Collaboration',
   [FeatureCodes.AdvancedAnalytics]: 'Advanced Analytics',
-  [FeatureCodes.PrioritySupport]: 'Priority Support',
-  [FeatureCodes.CustomBranding]: 'Custom Branding',
-  [FeatureCodes.SsoIntegration]: 'SSO Integration',
-  [FeatureCodes.AuditLogs]: 'Audit Logs',
+
+  // Premium Features
+  [FeatureCodes.Workflows]: 'Workflows',
   [FeatureCodes.BulkOperations]: 'Bulk Operations',
-  [FeatureCodes.AdvancedReporting]: 'Advanced Reporting',
   [FeatureCodes.DataExport]: 'Data Export',
-  [FeatureCodes.FullAiAnalysis]: 'Full AI Analysis',
-  [FeatureCodes.PriorityProcessing]: 'Priority Processing',
+
+  // CA Features
+  [FeatureCodes.CaClientManagement]: 'CA Client Management',
+
+  // Enterprise Features
+  [FeatureCodes.Sso]: 'Single Sign-On (SSO)',
+  [FeatureCodes.ApiAccess]: 'API Access',
 }
 
 function getFeatureDisplayName(featureCode: string): string {
