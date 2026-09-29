@@ -34,7 +34,7 @@ export function ExtensionSetupGuide({ onAddClient }: ExtensionSetupGuideProps) {
       action: (
         <Button variant="outline" size="sm" asChild>
           <a
-            href="https://chrome.google.com/webstore/detail/gst-notice-guard"
+            href="https://chrome.google.com/webstore/detail/effortlessinsight-gst-not/cpbepefdmjfmgcjeclkdahfdcejmebop"
             target="_blank"
             rel="noopener noreferrer"
           >

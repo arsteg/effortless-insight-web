@@ -579,9 +579,10 @@ function CheckoutContent() {
           )}
 
           <div className="space-y-4">
-            <Button asChild className="w-full">
-              <Link href="/dashboard">Go to Dashboard</Link>
-            </Button>
+            <Button className="w-full" onClick={() => {
+              const pending = localStorage.getItem('pendingInvitationUrl')
+              router.push(pending && /^\/ca-invitations\/[A-Za-z0-9_-]+$/.test(pending) ? pending : '/dashboard')
+            }}>Continue</Button>
             <Button variant="outline" asChild className="w-full">
               <Link href="/settings/billing">View Billing Details</Link>
             </Button>

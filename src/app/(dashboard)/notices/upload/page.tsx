@@ -26,6 +26,7 @@ import { useQuery } from '@tanstack/react-query'
 import { LimitExceededAlert } from '@/components/ui/limit-exceeded-alert'
 import { useUploadMultipleNotices } from '@/hooks/use-upload'
 import { usePermissions } from '@/hooks/use-permissions'
+import { useOrganization } from '@/hooks/use-settings'
 import { billingApi } from '@/lib/api/billing'
 import type { DuplicateWarning as DuplicateWarningType } from '@/types'
 
@@ -33,6 +34,8 @@ type UploadStep = 'select' | 'confirm-duplicate' | 'uploading' | 'complete' | 'e
 
 export default function UploadNoticePage() {
   const { canUploadNotices } = usePermissions()
+  const { data: organization } = useOrganization()
+  const [gstin, setGstin] = useState('')
 
   // Per-plan notice quota — warn at 80%, block at 100% (the API enforces the
   // same limit server-side with NOTICE_LIMIT_EXCEEDED; this is the UX for it).
@@ -45,42 +48,6 @@ export default function UploadNoticePage() {
   const noticesNearLimit = noticeLimit !== -1 && (usage?.notices.percentage ?? 0) >= 80
   const noticesOverLimit = noticeLimit !== -1 && (usage?.notices.used ?? 0) >= noticeLimit
 
-  // Block viewers from accessing this page
-  if (!canUploadNotices) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <Link
-            href="/notices"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
-          >
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back to Notices
-          </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Upload Notices</h1>
-        </div>
-
-        <Card className="max-w-md">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="rounded-full bg-muted p-3">
-                <ShieldAlert className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold">Access Restricted</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  You don&apos;t have permission to upload notices. Please contact your organization administrator if you need upload access.
-                </p>
-              </div>
-              <Link href="/notices" className={buttonVariants({ variant: 'default' })}>
-                View Notices
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
   const [step, setStep] = useState<UploadStep>('select')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [duplicateWarning, setDuplicateWarning] = useState<DuplicateWarningType | null>(null)
@@ -93,6 +60,7 @@ export default function UploadNoticePage() {
     error,
     reset,
   } = useUploadMultipleNotices({
+    gstin,
     onSuccess: (responses) => {
       setStep('complete')
     },
@@ -135,6 +103,42 @@ export default function UploadNoticePage() {
     setSelectedFiles([])
   }, [reset])
 
+  // Block viewers from accessing this page
+  if (!canUploadNotices) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Link
+            href="/notices"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back to Notices
+          </Link>
+          <h1 className="text-3xl font-bold tracking-tight">Upload Notices</h1>
+        </div>
+
+        <Card className="max-w-md">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="rounded-full bg-muted p-3">
+                <ShieldAlert className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Access Restricted</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  You don&apos;t have permission to upload notices. Please contact your organization administrator if you need upload access.
+                </p>
+              </div>
+              <Link href="/notices" className={buttonVariants({ variant: 'default' })}>
+                View Notices
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
   // Show progress/status view for uploading, complete, or error states
   if (step === 'uploading' || step === 'complete' || step === 'error') {
     return (
@@ -339,6 +343,17 @@ export default function UploadNoticePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Multi-File Dropzone */}
+          <div className="mb-4 space-y-2">
+            <label htmlFor="upload-gstin" className="text-sm font-medium">Client GSTIN (optional)</label>
+            <select id="upload-gstin" value={gstin} onChange={(event) => setGstin(event.target.value)}
+              className="w-full rounded-md border bg-background p-2">
+              <option value="">Detect from each document</option>
+              {organization?.gstins.map((entry) => (
+                <option key={entry.id} value={entry.gstin}>{entry.gstin}</option>
+              ))}
+            </select>
+            <p className="text-sm text-muted-foreground">Leave blank to detect the GSTIN in each document. In your CA workspace, identified notices go to the accepted BO organization or stay with the client here until acceptance. Select a GSTIN only when all files belong to that client.</p>
+          </div>
           <MultiFileDropzone onFilesChange={handleFilesChange} />
 
           {/* Upload Button */}

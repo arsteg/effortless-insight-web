@@ -36,7 +36,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       }
 
       // Allow invitation pages for authenticated users (they need to accept/decline)
-      if (pathname.startsWith('/invitations/')) {
+      if (pathname.startsWith('/invitations/') || pathname.startsWith('/ca-invitations/')) {
         return
       }
 
@@ -57,12 +57,12 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         }
 
         // If there's an invitation redirect, go there immediately
-        if (redirectTo?.startsWith('/invitations/')) {
+        if (redirectTo?.startsWith('/invitations/') || redirectTo?.startsWith('/ca-invitations/')) {
           router.push(redirectTo)
           return
         }
 
-        if (pendingInvitation?.startsWith('/invitations/')) {
+        if (pendingInvitation?.startsWith('/invitations/') || pendingInvitation?.startsWith('/ca-invitations/')) {
           router.push(pendingInvitation)
           return
         }
@@ -81,7 +81,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   if (isInitialized && isAuthenticated && user) {
     const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
     // Allow invitation pages for authenticated users
-    if (pathname.startsWith('/invitations/')) {
+    if (pathname.startsWith('/invitations/') || pathname.startsWith('/ca-invitations/')) {
       // Continue rendering - user needs to accept/decline invitation
     } else if (pathname !== '/onboarding' && hasOrganization) {
       return null

@@ -71,7 +71,7 @@ const mainNavItems: NavItem[] = [
     title: 'Reports',
     href: '/reports',
     icon: BarChart3,
-    requiredFeature: FeatureCodes.AdvancedReporting,
+    requiredFeature: FeatureCodes.AdvancedAnalytics,
   },
   {
     title: 'Calendar',

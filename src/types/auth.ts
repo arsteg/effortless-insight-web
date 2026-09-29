@@ -15,6 +15,8 @@ export interface User {
   preferences?: Record<string, unknown>
   createdAt: string
   lastLogin?: string
+  /** Self-registered Chartered Accountant account (CA-as-distributor identity). */
+  isCA?: boolean
 }
 
 export interface UserOrganization {
@@ -48,6 +50,8 @@ export interface RegisterRequest {
   acceptTerms: boolean
   /** Proof from verifySignupOtp that `mobile` passed OTP verification */
   mobileVerificationToken?: string
+  /** Self-registered Chartered Accountant signup path (CA-as-distributor). */
+  isCA?: boolean
 }
 
 export interface SignupOtpResponse {

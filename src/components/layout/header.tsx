@@ -17,6 +17,7 @@ import { useAuthStore, useOrganizationStore, useAppStore } from '@/stores'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { NotificationCenter } from '@/components/features/notifications'
+import { ClientSelector } from '@/components/layout/client-selector'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,45 +74,57 @@ export function Header() {
         <span className="hidden md:inline-block">EffortlessInsight</span>
       </Link>
 
-      {/* Organization Switcher */}
-      {organizations.length > 0 && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-4 gap-2">
-              <Building2 className="h-4 w-4" />
-              {orgLoading ? (
-                <Skeleton className="h-4 w-24" />
-              ) : (
-                <span className="max-w-[150px] truncate">
-                  {currentOrganization?.name || 'Select Organization'}
-                </span>
-              )}
-              <ChevronDown className="h-4 w-4 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel>Organizations</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {organizations.map((org) => (
-              <DropdownMenuItem
-                key={org.id}
-                onClick={() => handleSwitchOrg(org.id)}
-                className={cn(
-                  'cursor-pointer',
-                  currentOrganization?.id === org.id && 'bg-accent'
-                )}
-              >
-                <div className="flex flex-col">
-                  <span>{org.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {org.role} · {org.noticeCount} notices
-                  </span>
-                </div>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+      {/* Organization Switcher - excludes role="ca" memberships, which get
+          their own dropdown (ClientSelector) below so a CA's client list
+          isn't shown twice. */}
+      {(() => {
+        const ownOrganizations = organizations.filter((org) => org.role !== 'ca')
+        return (
+          ownOrganizations.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="ml-4 gap-2">
+                  <Building2 className="h-4 w-4" />
+                  {orgLoading ? (
+                    <Skeleton className="h-4 w-24" />
+                  ) : (
+                    <span className="max-w-[150px] truncate">
+                      {currentOrganization && currentOrganization.role !== 'ca'
+                        ? currentOrganization.name
+                        : 'Select Organization'}
+                    </span>
+                  )}
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {ownOrganizations.map((org) => (
+                  <DropdownMenuItem
+                    key={org.id}
+                    onClick={() => handleSwitchOrg(org.id)}
+                    className={cn(
+                      'cursor-pointer',
+                      currentOrganization?.id === org.id && 'bg-accent'
+                    )}
+                  >
+                    <div className="flex flex-col">
+                      <span>{org.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {org.role} · {org.noticeCount} notices
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )
+        )
+      })()}
+
+      {/* BO/Client Switcher - CA-only, scoped to accepted clients */}
+      <ClientSelector />
 
       {/* Spacer */}
       <div className="flex-1" />

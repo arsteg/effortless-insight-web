@@ -11,6 +11,7 @@ export { billingApi, formatAmount, getStatusBadgeVariant, getInvoiceStatusBadgeV
 export * as gstnApi from './gstn'
 export { aiChatApi } from './ai-chat'
 export { gstSyncApi } from './gst-sync'
+export { caClientsApi } from './ca-clients'
 
 // Unified API object for convenience
 export const api = {
@@ -26,4 +27,5 @@ export const api = {
   gstn: () => import('./gstn'),
   aiChat: () => import('./ai-chat').then((m) => m.aiChatApi),
   gstSync: () => import('./gst-sync').then((m) => m.gstSyncApi),
+  caClients: () => import('./ca-clients').then((m) => m.caClientsApi),
 }

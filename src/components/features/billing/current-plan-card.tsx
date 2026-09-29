@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Calendar, Clock, CreditCard, AlertCircle, PauseCircle } from 'lucide-react'
+import { Calendar, Clock, CreditCard, AlertCircle, PauseCircle, BadgeCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -99,6 +99,18 @@ export function CurrentPlanCard({
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* Admin-Granted CA Access Info */}
+        {subscription.isAdminGranted && (
+          <Alert className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+            <BadgeCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <AlertTitle className="text-green-800 dark:text-green-200">Free CA Access</AlertTitle>
+            <AlertDescription className="text-green-700 dark:text-green-300">
+              Your account has free access provided by the administrator.
+              Contact support for any changes.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Trial Info - No actions during trial */}
         {isTrialing && subscription.trialEnd && (
           <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
@@ -218,8 +230,8 @@ export function CurrentPlanCard({
         )}
       </CardContent>
 
-      {/* Footer with action buttons - NO buttons during trial */}
-      {!isTrialing && (
+      {/* Footer with action buttons - NO buttons during trial or for admin-granted subscriptions */}
+      {!isTrialing && !subscription.isAdminGranted && (
         <CardFooter className="flex gap-2 flex-wrap">
           {isPaused ? (
             <>

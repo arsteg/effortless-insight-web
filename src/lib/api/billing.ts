@@ -3,6 +3,7 @@ import type {
   PlansListResponse,
   Plan,
   CurrentSubscriptionResponse,
+  CaAccessStatusResponse,
   CreateSubscriptionRequest,
   CreateSubscriptionResponse,
   StartTrialRequest,
@@ -67,6 +68,18 @@ export const billingApi = {
   async getCurrentSubscription(): Promise<CurrentSubscriptionResponse> {
     const response = await apiClient.get<{ data: CurrentSubscriptionResponse }>(
       '/subscriptions/current'
+    )
+    return response.data.data
+  },
+
+  /**
+   * Check the current user's Free CA Access grant status. Self-registered CAs
+   * (isCA) never have a subscription for their own firm org, so getCurrentSubscription()
+   * always 404s for them - use this instead to know whether they have access.
+   */
+  async getCaAccessStatus(): Promise<CaAccessStatusResponse> {
+    const response = await apiClient.get<{ data: CaAccessStatusResponse }>(
+      '/subscriptions/ca-access-status'
     )
     return response.data.data
   },

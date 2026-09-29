@@ -6,23 +6,33 @@ import { useOrganizationStore } from '@/stores'
 
 /**
  * Known feature codes used in the system.
- * These should match the feature codes in the backend.
+ * These should match the feature codes in the backend (API FeatureCodes class).
+ *
+ * Clean set of 15 technical features. Core features (notice_detection, email/push
+ * notifications) are always available and not listed here.
  */
 export const FeatureCodes = {
-  WhatsAppIntegration: 'whatsapp_integration',
-  Workflows: 'workflows',
-  AdvancedWorkflows: 'advanced_workflows',
-  ApiAccess: 'api_access',
+  // AI Features
+  AiExplanation: 'ai_explanation',
+  DraftReply: 'draft_reply',
+  WhatsAppAssistant: 'whatsapp_assistant',
+  MultilingualSupport: 'multilingual_support',
+
+  // Team Features
+  Collaboration: 'collaboration',
   AdvancedAnalytics: 'advanced_analytics',
-  PrioritySupport: 'priority_support',
-  CustomBranding: 'custom_branding',
-  SsoIntegration: 'sso_integration',
-  AuditLogs: 'audit_logs',
+
+  // Premium Features
+  Workflows: 'workflows',
   BulkOperations: 'bulk_operations',
-  AdvancedReporting: 'advanced_reporting',
   DataExport: 'data_export',
-  FullAiAnalysis: 'full_ai_analysis',
-  PriorityProcessing: 'priority_processing',
+
+  // CA Features
+  CaClientManagement: 'ca_client_management',
+
+  // Enterprise Features
+  Sso: 'sso',
+  ApiAccess: 'api_access',
 } as const
 
 export type FeatureCode = typeof FeatureCodes[keyof typeof FeatureCodes]

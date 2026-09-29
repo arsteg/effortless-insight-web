@@ -48,6 +48,7 @@ export function useNoticeUpdates() {
 
     return () => {
       unsubscribe()
+      noticeUpdateService.disconnect()
     }
   }, [user?.organization?.id, queryClient, toast])
 }

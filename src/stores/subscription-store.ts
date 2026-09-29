@@ -31,6 +31,7 @@ const ACTIVE_STATUSES: SubscriptionStatus[] = ['active', 'trialing', 'past_due']
 
 // Cache duration: 5 minutes
 const CACHE_DURATION_MS = 5 * 60 * 1000
+let subscriptionRequestVersion = 0
 
 export const useSubscriptionStore = create<SubscriptionState>()(
   persist(
@@ -56,11 +57,13 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       },
 
       fetchSubscription: async () => {
+        const requestVersion = ++subscriptionRequestVersion
         set({ isLoading: true, error: null })
 
         try {
           const response = await billingApi.getCurrentSubscription()
           const subscription = response.subscription
+          if (requestVersion !== subscriptionRequestVersion) return null
 
           set({
             subscription,
@@ -72,6 +75,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
 
           return subscription
         } catch (error: unknown) {
+          if (requestVersion !== subscriptionRequestVersion) return null
           // Check if it's a "no subscription" error (404 or similar)
           const errorMessage = error instanceof Error
             ? error.message
@@ -102,6 +106,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       },
 
       setSubscription: (subscription: Subscription | null) => {
+        subscriptionRequestVersion++
         set({
           subscription,
           isInitialized: true,
@@ -110,6 +115,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       },
 
       clearSubscription: () => {
+        subscriptionRequestVersion++
         set({
           subscription: null,
           isLoading: false,

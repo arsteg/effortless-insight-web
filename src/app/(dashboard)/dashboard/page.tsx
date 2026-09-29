@@ -10,6 +10,7 @@ import {
   Upload,
   ArrowRight,
   Calendar,
+  UserPlus,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ import {
   NoticesByStatusChart,
   NoticesByPriorityChart,
   ClientAttentionCard,
+  PendingCaInvitationsCard,
 } from '@/components/features/dashboard'
 import { useDashboard } from '@/hooks/use-dashboard'
 import { useAuthStore } from '@/stores/auth-store'
@@ -114,6 +116,14 @@ export default function DashboardPage() {
               <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
+          {user?.isCA && (
+            <Button asChild variant="outline">
+              <Link href="/clients/invite">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Invite Client
+              </Link>
+            </Button>
+          )}
           <Button asChild>
             <Link href="/notices/upload">
               <Upload className="mr-2 h-4 w-4" />
@@ -162,6 +172,9 @@ export default function DashboardPage() {
           isLoading={isLoading}
         />
       </div>
+
+      {/* CA-as-distributor: pending invitations (CA accounts only) */}
+      {/* {user?.isCA && <PendingCaInvitationsCard />} */}
 
       {/* Clients needing attention (hidden when nothing is overdue) */}
       <ClientAttentionCard />
