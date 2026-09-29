@@ -46,14 +46,14 @@ export function useNotifications(filters?: NotificationFilters) {
   useEffect(() => {
     const handleEvent = (event: NotificationEvent) => {
       if (event.type === 'new' && event.notification) {
-        // Add new notification to the list
+        // Add new notification to the list (cap at 100 to prevent unbounded growth)
         queryClient.setQueryData(
           notificationKeys.list(filters),
           (old: any) => {
             if (!old) return old
             return {
               ...old,
-              notifications: [event.notification, ...old.notifications],
+              notifications: [event.notification, ...old.notifications].slice(0, 100),
               totalCount: old.totalCount + 1,
               unreadCount: old.unreadCount + 1,
             }

@@ -62,18 +62,17 @@ export function ImportNoticesDialog({
     setImportState('importing')
     setProgress(10)
 
-    try {
-      // Simulate progress for better UX
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => Math.min(prev + 10, 90))
-      }, 200)
+    // Simulate progress for better UX
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => Math.min(prev + 10, 90))
+    }, 200)
 
+    try {
       const result = await importMutation.mutateAsync({
         noticeIds: selectedNotices.map((n) => n.id),
         assignToUserId: assigneeId || undefined,
       })
 
-      clearInterval(progressInterval)
       setProgress(100)
       setImportResult(result)
       setImportState('completed')
@@ -86,6 +85,8 @@ export function ImportNoticesDialog({
         importedNotices: [],
         errors: [(error as Error).message || 'Import failed'],
       })
+    } finally {
+      clearInterval(progressInterval)
     }
   }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { noticesApi } from '@/lib/api'
 import { noticeKeys } from '@/hooks/use-notices'
@@ -238,6 +238,20 @@ export function useProcessingStatus(
 ) {
   const [status, setStatus] = useState<ProcessingStatus | undefined>()
   const [isPolling, setIsPolling] = useState(false)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isMountedRef = useRef(true)
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
+    }
+  }, [])
 
   const startPolling = useCallback(async () => {
     if (!noticeId || !options?.enabled) return
@@ -246,8 +260,15 @@ export function useProcessingStatus(
     const interval = options?.pollingInterval || 2000
 
     const poll = async () => {
+      // Abort if component unmounted
+      if (!isMountedRef.current) return
+
       try {
         const notice = await noticesApi.get(noticeId)
+
+        // Check mount status before updating state
+        if (!isMountedRef.current) return
+
         setStatus(notice.processingStatus)
 
         if (notice.processingStatus === 'completed') {
@@ -262,11 +283,15 @@ export function useProcessingStatus(
           return
         }
 
-        // Continue polling
-        setTimeout(poll, interval)
+        // Continue polling only if still mounted
+        if (isMountedRef.current) {
+          timeoutRef.current = setTimeout(poll, interval)
+        }
       } catch (error) {
-        setIsPolling(false)
-        options?.onFailed?.()
+        if (isMountedRef.current) {
+          setIsPolling(false)
+          options?.onFailed?.()
+        }
       }
     }
 

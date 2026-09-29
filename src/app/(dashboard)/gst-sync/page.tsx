@@ -53,7 +53,7 @@ export default function GstSyncPage() {
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <a
-              href="https://chrome.google.com/webstore/detail/gst-notice-guard"
+              href="https://chrome.google.com/webstore/detail/effortlessinsight-gst-not/cpbepefdmjfmgcjeclkdahfdcejmebop"
               target="_blank"
               rel="noopener noreferrer"
             >
