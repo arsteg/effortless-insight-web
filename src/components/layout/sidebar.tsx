@@ -85,6 +85,7 @@ const bottomNavItems: NavItem[] = [
     title: 'Team',
     href: '/team',
     icon: Users,
+    requiredFeature: FeatureCodes.Collaboration,
   },
   {
     title: 'Support',

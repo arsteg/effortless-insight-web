@@ -40,6 +40,8 @@ import {
   useGstClients,
   useGstNoticePdfUrl,
 } from '@/hooks/use-gst-sync'
+import { useCanAccessFeature } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import type { GstNoticeRaw, GstNoticeFilters } from '@/types/gst-sync'
 
 const PAGE_SIZE = 20
@@ -55,6 +57,7 @@ export function GstSyncedNotices() {
 
   const { data, isLoading, error, refetch } = useGstNoticesRaw(filters)
   const { data: clientsData } = useGstClients({ pageSize: 100 })
+  const hasBulkOperations = useCanAccessFeature(FeatureCodes.BulkOperations)
 
   const notices = useMemo(() => data?.items ?? [], [data?.items])
   const totalCount = data?.totalCount ?? 0
@@ -185,7 +188,7 @@ export function GstSyncedNotices() {
           )}
         </div>
 
-        {selectedIds.length > 0 && (
+        {hasBulkOperations && selectedIds.length > 0 && (
           <Button onClick={handleImportClick}>
             <Import className="mr-2 h-4 w-4" />
             Import {selectedIds.length} Notice(s)
@@ -199,14 +202,16 @@ export function GstSyncedNotices() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={
-                      notices.length > 0 && selectedIds.length === notices.length
-                    }
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
+                {hasBulkOperations && (
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={
+                        notices.length > 0 && selectedIds.length === notices.length
+                      }
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                )}
                 <TableHead>Notice ID</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>GSTIN</TableHead>
@@ -220,7 +225,7 @@ export function GstSyncedNotices() {
             <TableBody>
               {notices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
+                  <TableCell colSpan={hasBulkOperations ? 9 : 8} className="text-center py-8">
                     <p className="text-muted-foreground">
                       {filters.importStatus === 'pending'
                         ? 'No notices pending import. Synced notices will appear here.'
@@ -236,6 +241,7 @@ export function GstSyncedNotices() {
                     gstin={clientsMap.get(notice.gstClientId) ?? 'Unknown'}
                     selected={selectedIds.includes(notice.id)}
                     onSelect={(checked) => handleSelect(notice.id, checked)}
+                    showCheckbox={hasBulkOperations}
                   />
                 ))
               )}
@@ -276,20 +282,23 @@ interface NoticeRowProps {
   gstin: string
   selected: boolean
   onSelect: (checked: boolean) => void
+  showCheckbox?: boolean
 }
 
-function NoticeRow({ notice, gstin, selected, onSelect }: NoticeRowProps) {
+function NoticeRow({ notice, gstin, selected, onSelect, showCheckbox = true }: NoticeRowProps) {
   const isImported = notice.importedToNotices
 
   return (
     <TableRow>
-      <TableCell>
-        <Checkbox
-          checked={selected}
-          onCheckedChange={onSelect}
-          disabled={isImported}
-        />
-      </TableCell>
+      {showCheckbox && (
+        <TableCell>
+          <Checkbox
+            checked={selected}
+            onCheckedChange={onSelect}
+            disabled={isImported}
+          />
+        </TableCell>
+      )}
       <TableCell className="font-mono text-sm">
         {notice.portalNoticeId}
       </TableCell>
@@ -341,6 +350,11 @@ function NoticeRow({ notice, gstin, selected, onSelect }: NoticeRowProps) {
 
 function PdfDownloadButton({ noticeId }: { noticeId: string }) {
   const { data, isLoading } = useGstNoticePdfUrl(noticeId)
+  const hasDataExport = useCanAccessFeature(FeatureCodes.DataExport)
+
+  if (!hasDataExport) {
+    return null
+  }
 
   if (isLoading) {
     return (

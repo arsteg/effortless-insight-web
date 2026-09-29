@@ -40,6 +40,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle, ArrowUpRight } from 'lucide-react'
 import { useInviteMember } from '@/hooks/use-team'
 import { useCurrentSubscription } from '@/hooks/use-billing'
+import { useFeatureAccess, FeatureCodes } from '@/hooks/use-feature-access'
 import type { OrganizationRole } from '@/types'
 
 const inviteFormSchema = z.object({
@@ -72,6 +73,7 @@ export function InviteMemberDialog({ currentUserRole, planLimits }: InviteMember
   const [open, setOpen] = useState(false)
   const inviteMutation = useInviteMember()
   const { data: subscription } = useCurrentSubscription()
+  const { hasAccess: hasCollaborationAccess } = useFeatureAccess(FeatureCodes.Collaboration)
 
   // Calculate user limits from subscription or props
   // useCurrentSubscription returns Subscription directly with seats.used
@@ -124,7 +126,7 @@ export function InviteMemberDialog({ currentUserRole, planLimits }: InviteMember
     )
   }
 
-  if (!canInvite) return null
+  if (!canInvite || !hasCollaborationAccess) return null
 
   // Show disabled button with tooltip when at limit and can't add more
   const showLimitReached = isAtLimit && !canAddMoreSeats

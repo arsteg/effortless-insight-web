@@ -50,6 +50,8 @@ import {
   AlertTitle,
 } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
+import { FeatureGate } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import {
   useWhatsAppStatus,
   useRequestWhatsAppLink,
@@ -196,6 +198,7 @@ export default function WhatsAppSettingsPage() {
   }
 
   return (
+    <FeatureGate feature={FeatureCodes.WhatsAppAssistant}>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -605,5 +608,6 @@ export default function WhatsAppSettingsPage() {
         </div>
       )}
     </div>
+    </FeatureGate>
   )
 }

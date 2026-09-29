@@ -31,6 +31,8 @@ import { PriorityBadge } from './priority-badge'
 import { RiskBadge } from './risk-badge'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import { usePermissions } from '@/hooks/use-permissions'
+import { useCanAccessFeature } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import type { NoticeDetail } from '@/types'
 
 interface NoticeHeaderProps {
@@ -59,6 +61,7 @@ export function NoticeHeader({
   onDelete,
 }: NoticeHeaderProps) {
   const { canEditNotices, canDeleteNotices, canAssignNotices } = usePermissions()
+  const hasDataExport = useCanAccessFeature(FeatureCodes.DataExport)
 
   if (isLoading) {
     return <NoticeHeaderSkeleton />
@@ -99,13 +102,13 @@ export function NoticeHeader({
               Edit
             </Button>
           )}
-          {onDownload && (
+          {hasDataExport && onDownload && (
             <Button variant="outline" size="sm" onClick={onDownload}>
               <Download className="mr-2 h-4 w-4" />
               Download
             </Button>
           )}
-          {onExportSummary && (
+          {hasDataExport && onExportSummary && (
             <Button
               variant="outline"
               size="sm"

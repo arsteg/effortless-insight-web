@@ -30,6 +30,8 @@ import {
 } from '@/components/features/notices'
 import { useNotices, useDeleteNotice, useBulkDeleteNotices, useArchiveNotice, useExportNotices } from '@/hooks/use-notices'
 import { useNoticeUpdates } from '@/hooks/use-notice-updates'
+import { useCanAccessFeature } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import type { NoticeFilters as NoticeFiltersType, Notice } from '@/types'
 
 const DEFAULT_PAGE_SIZE = 10
@@ -77,6 +79,10 @@ function NoticesPageInner() {
   const bulkDeleteMutation = useBulkDeleteNotices()
   const archiveMutation = useArchiveNotice()
   const exportMutation = useExportNotices()
+
+  // Feature access
+  const hasBulkOperations = useCanAccessFeature(FeatureCodes.BulkOperations)
+  const hasDataExport = useCanAccessFeature(FeatureCodes.DataExport)
 
   // Handlers
   const handleFiltersChange = useCallback((newFilters: NoticeFiltersType) => {
@@ -141,7 +147,7 @@ function NoticesPageInner() {
           </p>
         </div>
         <div className="flex gap-2">
-          {selectedIds.length > 0 && (
+          {hasBulkOperations && selectedIds.length > 0 && (
             <>
               <Button
                 variant="outline"
@@ -161,28 +167,30 @@ function NoticesPageInner() {
               </Button>
             </>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={exportMutation.isPending}>
-                <Download className="mr-2 h-4 w-4" />
-                {exportMutation.isPending ? 'Exporting...' : 'Export'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExport('csv')}>
-                <FileText className="mr-2 h-4 w-4" />
-                Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('xlsx')}>
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Export as Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                <File className="mr-2 h-4 w-4" />
-                Export as PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {hasDataExport && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={exportMutation.isPending}>
+                  <Download className="mr-2 h-4 w-4" />
+                  {exportMutation.isPending ? 'Exporting...' : 'Export'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleExport('csv')}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('xlsx')}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export as Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                  <File className="mr-2 h-4 w-4" />
+                  Export as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <Button asChild>
             <Link href="/notices/upload">
               <Upload className="mr-2 h-4 w-4" />
@@ -224,8 +232,8 @@ function NoticesPageInner() {
         sortBy={filters.sortBy}
         sortDesc={filters.sortDesc}
         onSortChange={handleSortChange}
-        selectedIds={selectedIds}
-        onSelectionChange={setSelectedIds}
+        selectedIds={hasBulkOperations ? selectedIds : undefined}
+        onSelectionChange={hasBulkOperations ? setSelectedIds : undefined}
         onAssign={handleAssign}
         onArchive={(notice) => archiveMutation.mutate({ id: notice.id })}
         onDelete={setDeleteNotice}

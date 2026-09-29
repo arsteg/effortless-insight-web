@@ -8,7 +8,7 @@ import { useOrganizationStore } from '@/stores'
  * Known feature codes used in the system.
  * These should match the feature codes in the backend (API FeatureCodes class).
  *
- * Clean set of 15 technical features. Core features (notice_detection, email/push
+ * Clean set of 11 technical features. Core features (notice_detection, email/push
  * notifications) are always available and not listed here.
  */
 export const FeatureCodes = {
@@ -16,7 +16,6 @@ export const FeatureCodes = {
   AiExplanation: 'ai_explanation',
   DraftReply: 'draft_reply',
   WhatsAppAssistant: 'whatsapp_assistant',
-  MultilingualSupport: 'multilingual_support',
 
   // Team Features
   Collaboration: 'collaboration',
@@ -26,13 +25,6 @@ export const FeatureCodes = {
   Workflows: 'workflows',
   BulkOperations: 'bulk_operations',
   DataExport: 'data_export',
-
-  // CA Features
-  CaClientManagement: 'ca_client_management',
-
-  // Enterprise Features
-  Sso: 'sso',
-  ApiAccess: 'api_access',
 } as const
 
 export type FeatureCode = typeof FeatureCodes[keyof typeof FeatureCodes]
@@ -91,7 +83,7 @@ export function useFeatureAccess(featureCode: FeatureCode | string) {
  * ```tsx
  * const { hasAllAccess, hasAnyAccess, featureAccess } = useMultipleFeatureAccess([
  *   FeatureCodes.Workflows,
- *   FeatureCodes.ApiAccess,
+ *   FeatureCodes.BulkOperations,
  * ])
  * ```
  */

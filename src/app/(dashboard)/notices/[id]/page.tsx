@@ -29,6 +29,7 @@ import {
 import { TaskList } from '@/components/features/tasks'
 import { ActivityFeed } from '@/components/features/activity/activity-feed'
 import { AIChatPanel } from '@/components/features/ai-chat'
+import { FeatureGate } from '@/components/features/subscription/feature-gate'
 import { CommentList } from '@/components/features/comments'
 import { DocumentRequestPanel } from '@/components/features/document-requests/document-request-panel'
 import { WorkflowPanel } from '@/components/features/workflow'
@@ -42,6 +43,7 @@ import {
 import { useWorkflowPanel } from '@/hooks/use-workflow'
 import { useMembers } from '@/hooks/use-team'
 import { usePermissions } from '@/hooks/use-permissions'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import { noticesApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import type { NoticeActivity } from '@/components/features/notices/activity-timeline'
@@ -211,13 +213,15 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="analysis" className="mt-6">
-          <AIAnalysisView
-            report={notice?.aiReport}
-            processingStatus={notice?.processingStatus}
-            isLoading={isLoadingNotice}
-            onRetry={handleRetryAnalysis}
-            isRetrying={isRetrying}
-          />
+          <FeatureGate feature={FeatureCodes.AiExplanation}>
+            <AIAnalysisView
+              report={notice?.aiReport}
+              processingStatus={notice?.processingStatus}
+              isLoading={isLoadingNotice}
+              onRetry={handleRetryAnalysis}
+              isRetrying={isRetrying}
+            />
+          </FeatureGate>
         </TabsContent>
 
         <TabsContent value="similar" className="mt-6">

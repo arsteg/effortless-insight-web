@@ -60,6 +60,8 @@ import {
 } from '@/components/ui/tooltip'
 import { useToast } from '@/hooks/use-toast'
 import { usePermissions } from '@/hooks/use-permissions'
+import { FeatureCodes } from '@/hooks/use-feature-access'
+import { FeatureGate } from '@/components/features/subscription/feature-gate'
 import { noticesApi } from '@/lib/api'
 import {
   useAttachments,
@@ -558,33 +560,35 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
 
         {canEdit && (
           <div className="flex gap-2 justify-between">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={handleAutoDraft}
-                    disabled={autoDraftMutation.isPending || saveDraftMutation.isPending}
-                    className="bg-gradient-to-r from-lavender-50 to-blue-50 hover:from-lavender-100 hover:to-blue-100 dark:from-lavender-900 dark:to-blue-950 dark:hover:from-lavender-900 dark:hover:to-blue-900 border-lavender-200 dark:border-lavender-800"
-                  >
-                    {autoDraftMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="mr-2 h-4 w-4 text-lavender-500" />
-                        Auto-Draft
-                      </>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Generate an AI-powered draft response based on the notice content</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <FeatureGate feature={FeatureCodes.DraftReply} hideWhenUnavailable>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={handleAutoDraft}
+                      disabled={autoDraftMutation.isPending || saveDraftMutation.isPending}
+                      className="bg-gradient-to-r from-lavender-50 to-blue-50 hover:from-lavender-100 hover:to-blue-100 dark:from-lavender-900 dark:to-blue-950 dark:hover:from-lavender-900 dark:hover:to-blue-900 border-lavender-200 dark:border-lavender-800"
+                    >
+                      {autoDraftMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4 text-lavender-500" />
+                          Auto-Draft
+                        </>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Generate an AI-powered draft response based on the notice content</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </FeatureGate>
 
             <div className="flex gap-2">
               <Button

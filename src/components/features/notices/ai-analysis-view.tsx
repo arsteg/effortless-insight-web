@@ -17,6 +17,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
 import { RiskBadge } from './risk-badge'
 import { AIDisclaimer } from './ai-disclaimer'
+import { FeatureGate } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import { cn } from '@/lib/utils'
 import type { NoticeAiReport, ProcessingStatus } from '@/types'
 

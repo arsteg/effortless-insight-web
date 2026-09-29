@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, ShieldCheck, Fingerprint, MapPin } from 'lucide-react'
+import { ArrowRight, ShieldCheck, Fingerprint, MapPin, Play, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -81,6 +81,35 @@ export function Hero() {
             <p className="mt-3.5 text-sm text-gray-500">
               No credit card. No sales call. Cancel anytime.
             </p>
+
+            <div className="mt-7">
+              <p className="text-sm font-medium text-gray-600">Get the mobile app</p>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.arsteg.effortlessinsightapp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Download EffortlessInsight for Android on Google Play (opens in a new tab)"
+                  className="inline-flex min-h-14 items-center gap-3 rounded-xl bg-gray-950 px-5 py-2.5 text-white transition-colors hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
+                >
+                  <Play className="h-6 w-6" fill="currentColor" aria-hidden="true" />
+                  <span>
+                    <span className="block text-[10px] font-medium uppercase tracking-wider">Get it on</span>
+                    <span className="block text-lg font-semibold leading-tight">Google Play</span>
+                  </span>
+                </a>
+                <div
+                  className="inline-flex min-h-14 items-center gap-3 rounded-xl border border-gray-200 bg-white/70 px-5 py-2.5 text-gray-500"
+                  aria-label="iOS app coming soon on the App Store"
+                >
+                  <Smartphone className="h-6 w-6" aria-hidden="true" />
+                  <span>
+                    <span className="block text-[10px] font-medium uppercase tracking-wider">iOS · Coming soon</span>
+                    <span className="block text-lg font-semibold leading-tight">App Store</span>
+                  </span>
+                </div>
+              </div>
+            </div>
 
             {/* Trust strip — one line, three facts */}
             <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2.5 border-t border-gray-100 pt-6 text-sm text-gray-600">

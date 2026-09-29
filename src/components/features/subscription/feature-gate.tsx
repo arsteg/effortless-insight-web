@@ -48,7 +48,6 @@ const featureDisplayNames: Record<string, string> = {
   [FeatureCodes.AiExplanation]: 'AI Explanation',
   [FeatureCodes.DraftReply]: 'Draft Reply',
   [FeatureCodes.WhatsAppAssistant]: 'WhatsApp Assistant',
-  [FeatureCodes.MultilingualSupport]: 'Multilingual Support',
 
   // Team Features
   [FeatureCodes.Collaboration]: 'Team Collaboration',
@@ -58,13 +57,6 @@ const featureDisplayNames: Record<string, string> = {
   [FeatureCodes.Workflows]: 'Workflows',
   [FeatureCodes.BulkOperations]: 'Bulk Operations',
   [FeatureCodes.DataExport]: 'Data Export',
-
-  // CA Features
-  [FeatureCodes.CaClientManagement]: 'CA Client Management',
-
-  // Enterprise Features
-  [FeatureCodes.Sso]: 'Single Sign-On (SSO)',
-  [FeatureCodes.ApiAccess]: 'API Access',
 }
 
 function getFeatureDisplayName(featureCode: string): string {
@@ -112,8 +104,8 @@ function DefaultUpgradePrompt({ featureName }: { featureName: string }) {
  *
  * @example Hide content when feature unavailable:
  * ```tsx
- * <FeatureGate feature={FeatureCodes.ApiAccess} hideWhenUnavailable>
- *   <ApiKeySection />
+ * <FeatureGate feature={FeatureCodes.DataExport} hideWhenUnavailable>
+ *   <ExportSection />
  * </FeatureGate>
  * ```
  *
