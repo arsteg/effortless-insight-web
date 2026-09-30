@@ -33,6 +33,8 @@ export function useNotices(filters: NoticeFilters = {}) {
     queryKey: noticeKeys.list(filters),
     queryFn: () => noticesApi.list(filters),
     staleTime: 30 * 1000,
+    // Recover missed hub events, including notices outside the current filter.
+    refetchInterval: 15000,
   })
 }
 
@@ -42,6 +44,11 @@ export function useNotice(id: string) {
     queryKey: noticeKeys.detail(id),
     queryFn: () => noticesApi.get(id),
     enabled: !!id,
+    refetchInterval: (query) => {
+      const notice = query.state.data
+      return notice && (notice.status === 'uploaded' || notice.status === 'processing' ||
+        notice.processingStatus === 'retrying') ? 5000 : false
+    },
   })
 }
 

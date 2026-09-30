@@ -70,21 +70,35 @@ apiClient.interceptors.request.use(
 )
 
 // Response interceptor - handle errors and token refresh
-let isRefreshing = false
-let failedQueue: Array<{
-  resolve: (token: string) => void
-  reject: (error: unknown) => void
-}> = []
+// REST and SignalR must share refreshes because refresh tokens rotate.
+let refreshPromise: Promise<string> | null = null
 
-const processQueue = (error: unknown, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error)
-    } else if (token) {
-      prom.resolve(token)
-    }
-  })
-  failedQueue = []
+export function refreshAccessToken(): Promise<string> {
+  if (refreshPromise) return refreshPromise
+  refreshPromise = (async () => {
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) throw new Error('No refresh token available')
+    const response = await axios.post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
+      `${API_BASE_URL}/api/v1/auth/refresh`, { refreshToken }, { timeout: 30000 }
+    )
+    const tokens = response.data.data
+    setTokens(tokens.accessToken, tokens.refreshToken)
+    return tokens.accessToken
+  })().finally(() => { refreshPromise = null })
+  return refreshPromise
+}
+
+/** Obtain a fresh token before negotiating or reconnecting a hub. */
+export async function getRealtimeAccessToken(): Promise<string> {
+  const token = getAccessToken()
+  if (!token) return ''
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+    if (typeof payload.exp === 'number' && payload.exp * 1000 > Date.now() + 60000) return token
+  } catch {
+    // Refresh malformed tokens rather than repeatedly negotiating with them.
+  }
+  return refreshAccessToken()
 }
 
 apiClient.interceptors.response.use(
@@ -146,45 +160,19 @@ apiClient.interceptors.response.use(
 
     // Handle 401 - attempt token refresh (but not for auth endpoints)
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then((token) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`
-            }
-            return apiClient(originalRequest)
-          })
-          .catch((err) => Promise.reject(err))
-      }
-
       originalRequest._retry = true
-      isRefreshing = true
-
-      const refreshToken = getRefreshToken()
-      if (!refreshToken) {
+      if (!getRefreshToken()) {
         clearTokens()
         window.location.href = '/login'
         return Promise.reject(error)
       }
-
       try {
-        const response = await axios.post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
-          `${API_BASE_URL}/api/v1/auth/refresh`,
-          { refreshToken }
-        )
-
-        const { accessToken, refreshToken: newRefreshToken } = response.data.data
-        setTokens(accessToken, newRefreshToken)
-        processQueue(null, accessToken)
-
+        const accessToken = await refreshAccessToken()
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${accessToken}`
         }
         return apiClient(originalRequest)
       } catch (refreshError) {
-        processQueue(refreshError, null)
         // Only clear tokens and redirect on actual auth errors (401/403), not network errors
         const refreshStatus = (refreshError as AxiosError)?.response?.status
         if (refreshStatus === 401 || refreshStatus === 403) {
@@ -193,8 +181,6 @@ apiClient.interceptors.response.use(
         }
         // For network errors, just reject - user can retry when connection is restored
         return Promise.reject(refreshError)
-      } finally {
-        isRefreshing = false
       }
     }
 

@@ -1,3 +1,4 @@
+import { getRealtimeAccessToken } from '@/lib/api/client'
 import * as signalR from '@microsoft/signalr'
 import type { Notification, NotificationEvent } from '@/types/notification'
 
@@ -54,7 +55,7 @@ class NotificationService {
 
       this.connection = new signalR.HubConnectionBuilder()
         .withUrl(`${baseUrl}/hubs/notifications`, {
-          accessTokenFactory: () => token,
+          accessTokenFactory: getRealtimeAccessToken,
           transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
         })
         .withAutomaticReconnect({

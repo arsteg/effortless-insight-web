@@ -1,5 +1,5 @@
 import * as signalR from '@microsoft/signalr'
-import { getAccessToken } from '@/lib/api/client'
+import { getRealtimeAccessToken } from '@/lib/api/client'
 
 export interface NoticeStatusEvent {
   noticeId: string
@@ -13,136 +13,113 @@ export interface NoticeStatusEvent {
 
 type NoticeUpdateCallback = (event: NoticeStatusEvent) => void
 
-class NoticeUpdateService {
+export class NoticeUpdateService {
   private connection: signalR.HubConnection | null = null
   private callbacks = new Set<NoticeUpdateCallback>()
-  private isConnecting = false
-  private currentOrganizationId: string | null = null
-  private shouldConnect = false // Track if connection is desired (for React Strict Mode)
-  private connectionPromise: Promise<void> | null = null
-  private pendingOrganizationId: string | null = null
+  private consumers = 0
+  private organizationId: string | null = null
+  private joinedOrganizationId: string | null = null
+  private operations: Promise<void> = Promise.resolve()
+  private disconnectTimer: ReturnType<typeof setTimeout> | null = null
+  private retryTimer: ReturnType<typeof setTimeout> | null = null
+  private retryCount = 0
 
-  async connect(organizationId: string): Promise<void> {
-    this.shouldConnect = true
-    this.pendingOrganizationId = organizationId
+  connect(organizationId: string): Promise<void> {
+    this.consumers++
+    this.organizationId = organizationId
+    if (this.disconnectTimer) clearTimeout(this.disconnectTimer)
+    this.disconnectTimer = null
+    return this.enqueue(() => this.ensureConnected())
+  }
 
-    if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      if (this.currentOrganizationId !== organizationId) {
-        await this.switchOrganization(organizationId)
+  private enqueue(operation: () => Promise<void>): Promise<void> {
+    const pending = this.operations.then(operation)
+    this.operations = pending.catch(() => {})
+    return pending
+  }
+
+  private scheduleRetry(): void {
+    if (!this.consumers || this.retryTimer) return
+    const delay = Math.min(1000 * 2 ** Math.min(this.retryCount++, 5), 30000)
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null
+      void this.enqueue(() => this.ensureConnected()).catch(() => {})
+    }, delay)
+  }
+
+  private async joinOrganization(connection: signalR.HubConnection): Promise<void> {
+    while (this.organizationId && this.joinedOrganizationId !== this.organizationId) {
+      const organizationId = this.organizationId
+      if (this.joinedOrganizationId) {
+        await connection.invoke('LeaveOrganization', this.joinedOrganizationId)
       }
-      return
-    }
-
-    // If already connecting, wait for that connection attempt
-    if (this.connectionPromise) {
-      return this.connectionPromise
-    }
-
-    this.connectionPromise = this.doConnect(organizationId)
-    try {
-      await this.connectionPromise
-    } finally {
-      this.connectionPromise = null
+      await connection.invoke('JoinOrganization', organizationId)
+      this.joinedOrganizationId = organizationId
     }
   }
 
-  private async doConnect(organizationId: string): Promise<void> {
-    if (this.isConnecting) return
-    this.isConnecting = true
-
-    try {
-      const token = getAccessToken()
-      if (!token) {
-        console.warn('No access token for NoticeHub')
-        this.isConnecting = false
-        return
-      }
-
-      // Check if connection was cancelled before we start
-      if (!this.shouldConnect) {
-        this.isConnecting = false
-        return
-      }
-
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || ''
-
-      this.connection = new signalR.HubConnectionBuilder()
+  private async ensureConnected(): Promise<void> {
+    if (!this.consumers) return
+    if (!this.connection) {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      const connection = new signalR.HubConnectionBuilder()
         .withUrl(`${baseUrl}/hubs/notices`, {
-          accessTokenFactory: () => token,
-          transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
+          accessTokenFactory: getRealtimeAccessToken,
         })
-        .withAutomaticReconnect({
-          nextRetryDelayInMilliseconds: (retryContext) => {
-            if (retryContext.previousRetryCount >= 5) return null
-            return Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 30000)
-          },
-        })
+        .withAutomaticReconnect([0, 2000, 10000, 30000])
         .configureLogging(signalR.LogLevel.Warning)
         .build()
-
-      this.connection.on('NoticeStatusChanged', (event: NoticeStatusEvent) => {
-        this.notifySubscribers(event)
+      connection.on('NoticeStatusChanged', (event: NoticeStatusEvent) => {
+        this.callbacks.forEach((callback) => callback(event))
       })
-
-      this.connection.onreconnected(async () => {
-        if (this.currentOrganizationId) {
-          await this.connection?.invoke('JoinOrganization', this.currentOrganizationId)
-        }
+      connection.onreconnected(() => {
+        this.joinedOrganizationId = null
+        void this.enqueue(() => this.ensureConnected()).catch(() => {})
       })
-
-      // Check again if connection was cancelled during setup
-      if (!this.shouldConnect) {
-        this.connection = null
-        this.isConnecting = false
-        return
+      connection.onclose(() => {
+        this.joinedOrganizationId = null
+        this.scheduleRetry()
+      })
+      this.connection = connection
+    }
+    const connection = this.connection
+    try {
+      if (connection.state === signalR.HubConnectionState.Disconnected) {
+        await connection.start()
       }
-
-      await this.connection.start()
-      await this.connection.invoke('JoinOrganization', organizationId)
-      this.currentOrganizationId = organizationId
-      this.isConnecting = false
+      if (connection.state === signalR.HubConnectionState.Connected) {
+        await this.joinOrganization(connection)
+        this.retryCount = 0
+      }
     } catch (error) {
-      this.isConnecting = false
-      // Don't log or throw if the connection was intentionally stopped
-      // This happens in React Strict Mode during development
-      if (this.shouldConnect) {
-        console.error('Failed to connect to NoticeHub:', error)
-        throw error
-      }
+      this.scheduleRetry()
+      throw error
     }
-  }
-
-  private async switchOrganization(newOrgId: string): Promise<void> {
-    if (this.currentOrganizationId) {
-      await this.connection?.invoke('LeaveOrganization', this.currentOrganizationId)
-    }
-    await this.connection?.invoke('JoinOrganization', newOrgId)
-    this.currentOrganizationId = newOrgId
   }
 
   subscribe(callback: NoticeUpdateCallback): () => void {
     this.callbacks.add(callback)
-    return () => this.callbacks.delete(callback)
-  }
-
-  private notifySubscribers(event: NoticeStatusEvent): void {
-    this.callbacks.forEach((cb) => cb(event))
+    return () => { this.callbacks.delete(callback) }
   }
 
   async disconnect(): Promise<void> {
-    this.shouldConnect = false
-    this.isConnecting = false
-
-    if (this.connection) {
-      try {
-        await this.connection.stop()
-      } catch {
-        // Ignore errors when stopping - connection may already be stopped
-        // or may be in a state where stop() throws (e.g., during negotiation)
-      }
-      this.connection = null
-      this.currentOrganizationId = null
-    }
+    this.consumers = Math.max(0, this.consumers - 1)
+    if (this.consumers) return
+    if (this.disconnectTimer) clearTimeout(this.disconnectTimer)
+    // Strict Mode and route transitions can immediately acquire the connection again.
+    this.disconnectTimer = setTimeout(() => {
+      this.disconnectTimer = null
+      void this.enqueue(async () => {
+        if (this.consumers) return
+        if (this.retryTimer) clearTimeout(this.retryTimer)
+        this.retryTimer = null
+        const connection = this.connection
+        this.connection = null
+        this.joinedOrganizationId = null
+        this.organizationId = null
+        await connection?.stop()
+      }).catch(() => {})
+    }, 1000)
   }
 }
 
