@@ -37,6 +37,7 @@ export interface Notice {
   daysRemaining?: number
   taxAmount?: number
   penaltyAmount?: number
+  interestAmount?: number
   status: NoticeStatus
   priority: NoticePriority
   processingStatus?: ProcessingStatus

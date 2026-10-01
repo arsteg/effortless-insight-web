@@ -119,6 +119,8 @@ export function MentionAutocomplete({
       <div className="py-1">
         {filteredUsers.map((user, index) => (
           <button
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
             key={user.id}
             className={cn(
               'flex w-full items-center gap-2 px-3 py-2 text-left text-sm',
@@ -199,8 +201,11 @@ export function parseMentions(text: string): { userId: string; username: string;
 
 // Utility to render text with clickable mentions
 export function renderTextWithMentions(text: string): string {
-  // Convert @[Name](userId) format to styled spans
-  return text.replace(
+  // Escape user text before inserting the trusted mention markup.
+  const escaped = text.replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[character]!)
+  return escaped.replace(
     /@\[([^\]]+)\]\(([^)]+)\)/g,
     '<span class="text-primary font-medium cursor-pointer hover:underline">@$1</span>'
   )
