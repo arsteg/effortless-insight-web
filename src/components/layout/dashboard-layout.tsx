@@ -9,6 +9,7 @@ import { Sidebar } from './sidebar'
 import { Toaster } from '@/components/ui/toaster'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SubscriptionGuard } from '@/components/features/subscription'
+import { AssistantLauncher, AssistantPanel } from '@/components/features/assistant'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -87,6 +88,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <SubscriptionGuard>{children}</SubscriptionGuard>
         </main>
       </div>
+      <AssistantLauncher />
+      <AssistantPanel />
       <Toaster />
     </div>
   )

@@ -332,7 +332,7 @@ function isUrlSafe(url: string): boolean {
 }
 
 // Simple markdown-like formatting without external dependencies
-function FormattedContent({ content }: { content: string }) {
+export function FormattedContent({ content }: { content: string }) {
   // Process the content line by line
   const lines = content.split('\n')
   const elements: React.ReactNode[] = []
