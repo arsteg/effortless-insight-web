@@ -14,6 +14,7 @@ import {
   timeTrackingApi,
 } from '@/services/collaboration'
 import { useToast } from '@/hooks/use-toast'
+import { getValidationErrorMessage } from '@/lib/api/error-utils'
 import type {
   CreateTaskRequest,
   UpdateTaskRequest,
@@ -88,10 +89,7 @@ export function useCreateTask(noticeId: string) {
       queryClient.invalidateQueries({ queryKey: ['activity', noticeId] })
     },
     onError: (error: unknown) => {
-      const apiError = error as { message?: string; errors?: Record<string, string[]> }
-      const message = apiError.errors?.DueDate?.[0]
-        || apiError.message
-        || 'Failed to create task'
+      const message = getValidationErrorMessage(error, 'Failed to create task')
       toast({
         title: 'Error',
         description: message,
