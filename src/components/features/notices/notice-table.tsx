@@ -259,6 +259,11 @@ export function NoticeTable({
                     +{formatCurrency(notice.penaltyAmount)} penalty
                   </div>
                 )}
+                {notice.interestAmount !== undefined && notice.interestAmount > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    +{formatCurrency(notice.interestAmount)} interest
+                  </div>
+                )}
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-1">
