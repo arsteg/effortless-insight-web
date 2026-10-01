@@ -15,9 +15,8 @@ import { cn } from '@/lib/utils'
 import {
   MentionAutocomplete,
   useMentionAutocomplete,
-  insertMention,
-  parseMentions,
 } from './mention-autocomplete'
+import { decodeMentionDraft, editMentionDraft, selectDraftMention, encodeMentionDraft } from './mention-draft'
 import { ALLOWED_REACTIONS } from '@/types/collaboration'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { CommentVisibility } from '@/types/collaboration'
@@ -58,11 +57,19 @@ export function CommentForm({
   className,
 }: CommentFormProps) {
   const { canComment } = usePermissions()
-  const [content, setContent] = useState(initialContent)
+  const [draft, setDraft] = useState(() => decodeMentionDraft(initialContent))
+  const content = draft.text
+  const setContent = (text: string) => setDraft(current => editMentionDraft(current, text))
   const [visibility, setVisibility] = useState<CommentVisibility>(defaultVisibility)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const mention = useMentionAutocomplete(availableUsers)
+
+  // Reset content when initialContent changes (for edit mode)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when switching the comment being edited
+    setDraft(decodeMentionDraft(initialContent))
+  }, [initialContent])
 
   // Show read-only message for viewers
   if (!canComment) {
@@ -76,20 +83,11 @@ export function CommentForm({
     )
   }
 
-  // Reset content when initialContent changes (for edit mode)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when switching the comment being edited
-    setContent(initialContent)
-  }, [initialContent])
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!content.trim()) return
 
-    // Extract mentions from content
-    const mentions = parseMentions(content)
-
-    onSubmit(content.trim(), showVisibilityToggle ? visibility : undefined)
+    onSubmit(encodeMentionDraft(draft).trim(), showVisibilityToggle ? visibility : undefined)
     // Note: Form content is cleared by parent component on success via key prop
     // This preserves content if the submission fails
   }
@@ -101,7 +99,7 @@ export function CommentForm({
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault()
       if (content.trim()) {
-        onSubmit(content.trim(), showVisibilityToggle ? visibility : undefined)
+        onSubmit(encodeMentionDraft(draft).trim(), showVisibilityToggle ? visibility : undefined)
         // Note: Form content is cleared by parent component on success via key prop
       }
     }
@@ -149,14 +147,9 @@ export function CommentForm({
     if (mention.mentionStartIndex === null || !textareaRef.current) return
 
     const cursorPosition = textareaRef.current.selectionStart
-    const { newText, newCursorPosition } = insertMention(
-      content,
-      mention.mentionStartIndex,
-      cursorPosition,
-      user
-    )
-
-    setContent(newText)
+    const nextDraft = selectDraftMention(draft, mention.mentionStartIndex, cursorPosition, user)
+    const newCursorPosition = mention.mentionStartIndex + user.name.length + 2
+    setDraft(nextDraft)
     mention.closeAutocomplete()
 
     // Focus and set cursor position after state update
@@ -180,6 +173,7 @@ export function CommentForm({
     const newContent = before + (needsSpace ? ' @' : '@') + after
 
     setContent(newContent)
+    mention.openAutocomplete(cursorPosition + (needsSpace ? 1 : 0), { top: 40, left: 0 })
 
     // Focus and trigger autocomplete
     setTimeout(() => {
@@ -188,9 +182,6 @@ export function CommentForm({
         textareaRef.current.focus()
         textareaRef.current.setSelectionRange(newPosition, newPosition)
 
-        // Trigger change event to open autocomplete
-        const event = new Event('input', { bubbles: true })
-        textareaRef.current.dispatchEvent(event)
       }
     }, 0)
   }
