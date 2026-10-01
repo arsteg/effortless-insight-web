@@ -5,7 +5,7 @@ import { useAssistantStore } from '@/stores/assistant-store'
 import { useFeatureAccess } from '@/hooks/use-feature-access'
 
 jest.mock('@/hooks/use-feature-access', () => ({
-  FeatureCodes: { AiExplanation: 'ai_explanation' },
+  FeatureCodes: { AskAi: 'ask_ai' },
   useFeatureAccess: jest.fn(),
 }))
 
@@ -17,18 +17,19 @@ describe('AssistantLauncher', () => {
     useAssistantStore.setState({ isOpen: false })
   })
 
-  it('renders the Ask AI pill for paid plans and opens the panel', () => {
+  it('renders the Ask AI pill when Ask AI is enabled and opens the panel', () => {
     useFeatureAccessMock.mockReturnValue({ hasAccess: true, isLoading: false })
     render(<AssistantLauncher />)
 
     const button = screen.getByTestId('assistant-launcher')
     expect(button).toHaveTextContent('Ask AI')
+    expect(useFeatureAccessMock).toHaveBeenCalledWith('ask_ai')
 
     fireEvent.click(button)
     expect(useAssistantStore.getState().isOpen).toBe(true)
   })
 
-  it('is hidden on plans without AI features (free plan)', () => {
+  it('is hidden on plans without Ask AI', () => {
     useFeatureAccessMock.mockReturnValue({ hasAccess: false, isLoading: false })
     render(<AssistantLauncher />)
     expect(screen.queryByTestId('assistant-launcher')).not.toBeInTheDocument()

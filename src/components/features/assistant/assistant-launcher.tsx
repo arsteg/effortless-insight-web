@@ -9,12 +9,12 @@ import { FeatureCodes, useFeatureAccess } from '@/hooks/use-feature-access'
 /**
  * Floating launcher for the EI Assistant — a labeled "Ask AI" pill fixed at
  * the bottom-right corner. Hidden while the panel is open, and hidden
- * entirely on plans without AI features (free "Notify Only"): AI turns cost
+ * entirely on plans without the Ask AI feature: AI turns cost
  * money, and the backend enforces the same gate server-side.
  */
 export function AssistantLauncher() {
   const { isOpen, open } = useAssistantStore()
-  const { hasAccess, isLoading } = useFeatureAccess(FeatureCodes.AiExplanation)
+  const { hasAccess, isLoading } = useFeatureAccess(FeatureCodes.AskAi)
 
   if (isOpen || isLoading || !hasAccess) return null
 

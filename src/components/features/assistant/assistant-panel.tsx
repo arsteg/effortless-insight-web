@@ -54,9 +54,9 @@ export function AssistantPanel() {
   const { isOpen, close, activeConversationId, setActiveConversationId, speakReplies, setSpeakReplies } =
     useAssistantStore()
   // Same plan gate as the launcher (and the backend); belt-and-braces.
-  const { hasAccess } = useFeatureAccess(FeatureCodes.AiExplanation)
-  const conversationsQuery = useAssistantConversations(isOpen)
-  const conversationQuery = useAssistantConversation(activeConversationId)
+  const { hasAccess, isLoading } = useFeatureAccess(FeatureCodes.AskAi)
+  const conversationsQuery = useAssistantConversations(isOpen && hasAccess)
+  const conversationQuery = useAssistantConversation(hasAccess ? activeConversationId : null)
   const deleteConversation = useDeleteAssistantConversation()
   const { turn, sendMessage, stop, dismissError } = useAssistantChat()
 
@@ -82,16 +82,27 @@ export function AssistantPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
+  useEffect(() => {
+    if (!isLoading && !hasAccess && isOpen) {
+      stop()
+      stopSpeaking()
+      voice.stop()
+      close()
+      setActiveConversationId(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasAccess, isLoading, isOpen])
+
   const handleSend = () => {
     const content = input.trim()
-    if (!content || turn.isStreaming) return
+    if (!hasAccess || !content || turn.isStreaming) return
     setInput('')
     void sendMessage(content, (finalContent) => {
       if (speakReplies) speakText(finalContent)
     })
   }
 
-  // After all hooks: plans without AI features never render the panel.
+  // After all hooks: plans without Ask AI never render the panel.
   if (!hasAccess) return null
 
   return (
