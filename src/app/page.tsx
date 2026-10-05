@@ -12,6 +12,7 @@ import {
   SecuritySection,
   RoiSection,
   SocialProof,
+  ComparisonSection,
   PricingPreview,
   FaqSection,
   CTASection,
@@ -142,6 +143,7 @@ export default function Home() {
       <Reveal><SecuritySection /></Reveal>
       <Reveal><RoiSection /></Reveal>
       <Reveal><SocialProof /></Reveal>
+      <Reveal><ComparisonSection /></Reveal>
       <Reveal><PricingPreview /></Reveal>
       <Reveal><FaqSection /></Reveal>
       <Reveal><CTASection /></Reveal>

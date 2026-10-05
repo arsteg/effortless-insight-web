@@ -13,6 +13,7 @@ import { useOrganizationStore } from '@/stores'
  */
 export const FeatureCodes = {
   // AI Features
+  AskAi: 'ask_ai',
   AiExplanation: 'ai_explanation',
   DraftReply: 'draft_reply',
   WhatsAppAssistant: 'whatsapp_assistant',
