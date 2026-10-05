@@ -4,7 +4,7 @@
  */
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage, Messaging, MessagePayload } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, isSupported, Messaging, MessagePayload } from 'firebase/messaging';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -22,6 +22,30 @@ const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 // Singleton instances
 let firebaseApp: FirebaseApp | null = null;
 let messagingInstance: Messaging | null = null;
+
+// Cache the async support result so we don't re-run the checks repeatedly.
+let messagingSupported: boolean | null = null;
+
+/**
+ * Authoritative check for FCM web-push support. Firebase's isSupported() covers
+ * cases the coarse `'Notification' in window` check misses — notably IndexedDB
+ * availability (Firefox/Safari private mode) and iOS Safari outside an installed
+ * PWA, where getMessaging() would otherwise throw or never deliver (audit WB-06).
+ */
+export async function isMessagingSupported(): Promise<boolean> {
+  if (messagingSupported !== null) return messagingSupported;
+
+  let supported = false;
+  if (typeof window !== 'undefined' && isFirebaseConfigured()) {
+    try {
+      supported = await isSupported();
+    } catch {
+      supported = false;
+    }
+  }
+  messagingSupported = supported;
+  return supported;
+}
 
 /**
  * Check if Firebase is properly configured
@@ -56,7 +80,6 @@ export function initializeFirebaseApp(): FirebaseApp | null {
   try {
     if (getApps().length === 0) {
       firebaseApp = initializeApp(firebaseConfig);
-      console.log('Firebase app initialized');
     } else {
       firebaseApp = getApps()[0];
     }
@@ -100,7 +123,25 @@ export function getFirebaseMessaging(): Messaging | null {
 }
 
 /**
- * Register service worker and send Firebase config
+ * Build the service-worker URL with the (public) Firebase config as query
+ * params. The worker reads these from its own URL on every startup, so it can
+ * initialize and handle background push even when no page is open to message it
+ * (audit WB-01). The config is stable across loads, so the URL is stable and
+ * the browser does not treat each registration as a different worker.
+ */
+function buildServiceWorkerUrl(): string {
+  const params = new URLSearchParams();
+  if (firebaseConfig.apiKey) params.set('apiKey', firebaseConfig.apiKey);
+  if (firebaseConfig.authDomain) params.set('authDomain', firebaseConfig.authDomain);
+  if (firebaseConfig.projectId) params.set('projectId', firebaseConfig.projectId);
+  if (firebaseConfig.storageBucket) params.set('storageBucket', firebaseConfig.storageBucket);
+  if (firebaseConfig.messagingSenderId) params.set('messagingSenderId', firebaseConfig.messagingSenderId);
+  if (firebaseConfig.appId) params.set('appId', firebaseConfig.appId);
+  return `/firebase-messaging-sw.js?${params.toString()}`;
+}
+
+/**
+ * Register the Firebase messaging service worker.
  */
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
@@ -108,23 +149,28 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     return null;
   }
 
+  if (!isFirebaseConfigured()) {
+    console.warn('Firebase is not configured; skipping service worker registration.');
+    return null;
+  }
+
   try {
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+    // Config travels in the URL so the worker is self-sufficient on respawn.
+    const registration = await navigator.serviceWorker.register(buildServiceWorkerUrl(), {
       scope: '/',
     });
 
     // Wait for the service worker to be ready
     await navigator.serviceWorker.ready;
 
-    // Send Firebase config to service worker
-    if (registration.active && isFirebaseConfigured()) {
+    // Same-session fallback for any already-active worker without URL params.
+    if (registration.active) {
       registration.active.postMessage({
         type: 'FIREBASE_CONFIG',
         config: firebaseConfig,
       });
     }
 
-    console.log('Service worker registered successfully');
     return registration;
   } catch (error) {
     console.error('Error registering service worker:', error);
@@ -166,6 +212,11 @@ export async function getFCMToken(): Promise<string | null> {
     return null;
   }
 
+  if (!(await isMessagingSupported())) {
+    console.warn('FCM web push is not supported in this browser');
+    return null;
+  }
+
   const messaging = getFirebaseMessaging();
   if (!messaging) {
     return null;
@@ -193,7 +244,6 @@ export async function getFCMToken(): Promise<string | null> {
     });
 
     if (token) {
-      console.log('FCM token obtained successfully');
       return token;
     } else {
       console.warn('No FCM token available');
@@ -214,8 +264,7 @@ export function onForegroundMessage(callback: (payload: MessagePayload) => void)
     return null;
   }
 
-  const unsubscribe = onMessage(messaging, (payload) => {
-    console.log('Foreground message received:', payload);
+  const unsubscribe = onMessage(messaging, (payload: MessagePayload) => {
     callback(payload);
   });
 

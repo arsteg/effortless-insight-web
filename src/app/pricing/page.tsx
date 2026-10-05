@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BillingToggle, PlanComparison } from '@/components/features/billing'
+import { COMPANY } from '@/lib/company'
 import { usePlans } from '@/hooks/use-billing'
 import { formatAmount } from '@/lib/api/billing'
 import type { BillingCycle, Plan } from '@/types/billing'
@@ -19,9 +20,34 @@ export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annually')
   const { data: plans, isLoading } = usePlans()
 
+  // Calculate available billing cycles (union of all plans' allowed cycles)
+  const availableCycles: BillingCycle[] = plans
+    ? Array.from(new Set(plans.flatMap(p => p.allowedBillingCycles || ['monthly', 'annually'])))
+    : ['monthly', 'annually']
+
   const handleSelectPlan = (planCode: string) => {
-    router.push(`/checkout?plan=${planCode}&billing=${billingCycle}`)
+    // Store plan selection in localStorage so it persists through registration/email verification
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selected_plan', JSON.stringify({
+        planCode,
+        billingCycle,
+        timestamp: Date.now()
+      }))
+    }
+
+    // Redirect to register with plan selection in URL
+    router.push(`/register?plan=${planCode}&billing=${billingCycle}`)
   }
+
+  // Calculate average annual discount from plans with both monthly and annual pricing
+  const averageAnnualDiscount = plans && plans.length > 0
+    ? Math.round(
+        plans
+          .filter(p => p.pricing.monthly && p.pricing.annually && p.pricing.annualDiscount)
+          .reduce((sum, p) => sum + (p.pricing.annualDiscount || 0), 0) /
+        (plans.filter(p => p.pricing.monthly && p.pricing.annually).length || 1)
+      )
+    : undefined
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
@@ -70,7 +96,8 @@ export default function PricingPage() {
           <BillingToggle
             value={billingCycle}
             onChange={setBillingCycle}
-            annualDiscount={20}
+            allowedCycles={availableCycles}
+            annualDiscount={averageAnnualDiscount}
           />
         </div>
 
@@ -94,7 +121,7 @@ export default function PricingPage() {
               </Card>
             ))}
           </div>
-        ) : plans ? (
+        ) : plans && plans.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {plans.map((plan) => (
               <PricingCard
@@ -105,7 +132,9 @@ export default function PricingPage() {
               />
             ))}
           </div>
-        ) : null}
+        ) : (
+          <EmptyPlansState />
+        )}
       </section>
 
       {/* Features Comparison */}
@@ -140,15 +169,15 @@ export default function PricingPage() {
           />
           <FAQItem
             question="Is there a discount for annual billing?"
-            answer="Yes! When you choose annual billing, you save 20% compared to monthly billing. That's like getting 2+ months free!"
+            answer={`Yes — annual billing gives you 2 months free${averageAnnualDiscount ? ` (about ${averageAnnualDiscount}% less than paying monthly)` : ''}. The exact yearly price is shown on each plan card above.`}
           />
           <FAQItem
-            question="What happens when I exceed my plan limits?"
-            answer="We'll notify you when you're approaching your limits. You can upgrade your plan anytime to get more capacity. We never cut off access abruptly."
+            question="What happens when I reach my plan's notice limit?"
+            answer="New notices wait until you upgrade or your next monthly cycle begins — everything already in your account (notices, deadlines, documents, history) stays fully accessible. Upgrades take effect immediately."
           />
           <FAQItem
             question="Do you offer refunds?"
-            answer="We offer a 7-day money-back guarantee on all paid plans. If you're not satisfied, contact us within 7 days of your first payment for a full refund."
+            answer="Instead of a money-back scheme, we let you try everything free for 14 days before paying — no card needed. After that you can cancel anytime and your plan simply doesn't renew. Duplicate charges and billing errors are always refunded in full; see our Refund Policy for details."
           />
         </div>
       </section>
@@ -182,6 +211,9 @@ export default function PricingPage() {
               <Link href="/terms" className="text-sm text-gray-500 hover:text-gray-700">
                 Terms of Service
               </Link>
+              <Link href="/refund" className="text-sm text-gray-500 hover:text-gray-700">
+                Refund Policy
+              </Link>
               <Link href="/contact" className="text-sm text-gray-500 hover:text-gray-700">
                 Contact Us
               </Link>
@@ -196,6 +228,26 @@ export default function PricingPage() {
   )
 }
 
+/** Get price for a specific billing cycle */
+function getPriceForCycle(pricing: Plan['pricing'], cycle: BillingCycle): number | null | undefined {
+  switch (cycle) {
+    case 'weekly': return pricing.weekly
+    case 'monthly': return pricing.monthly
+    case 'annually': return pricing.annually
+    default: return pricing.annually
+  }
+}
+
+/** Get cycle label for display */
+function getCycleLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'weekly': return 'week'
+    case 'monthly': return 'month'
+    case 'annually': return 'year'
+    default: return 'year'
+  }
+}
+
 function PricingCard({
   plan,
   billingCycle,
@@ -205,10 +257,31 @@ function PricingCard({
   billingCycle: BillingCycle
   onSelect: (planCode: string) => void
 }) {
-  const price = billingCycle === 'annually' ? plan.pricing.annually : plan.pricing.monthly
-  const isFreePlan = price === 0
+  const price = getPriceForCycle(plan.pricing, billingCycle)
+  const isFreePlan = price === 0 || price === null
 
   const features = getTopFeatures(plan)
+
+  // Determine button text based on plan type
+  const getButtonText = () => {
+    // Contact Sales plans
+    if (plan.contactSales) {
+      return 'Contact Sales'
+    }
+
+    // Free plan
+    if (isFreePlan) {
+      return 'Start Free'
+    }
+
+    // Paid plans with trial
+    if (plan.trialDays > 0) {
+      return 'Start Free Trial'
+    }
+
+    // Paid plans without trial
+    return 'Get Started'
+  }
 
   return (
     <Card
@@ -241,8 +314,14 @@ function PricingCard({
               </span>
               {!isFreePlan && (
                 <span className="text-muted-foreground">
-                  /{billingCycle === 'annually' ? 'year' : 'month'}
+                  /{getCycleLabel(billingCycle)}
                 </span>
+              )}
+              {/* Per-seat pricing info */}
+              {plan.limits.additionalUsersAllowed && plan.pricing.perSeat && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  +{formatAmount(getPriceForCycle(plan.pricing.perSeat as Plan['pricing'], billingCycle) || 0)}/user/{getCycleLabel(billingCycle)}
+                </p>
               )}
             </div>
           )}
@@ -261,7 +340,7 @@ function PricingCard({
       <CardFooter>
         {plan.contactSales ? (
           <Button className="w-full" variant="outline" asChild>
-            <a href="mailto:sales@effortlessinsight.com">Contact Sales</a>
+            <a href={`mailto:${COMPANY.salesEmail}`}>Contact Sales</a>
           </Button>
         ) : (
           <Button
@@ -269,7 +348,7 @@ function PricingCard({
             variant={plan.isPopular ? 'default' : 'outline'}
             onClick={() => onSelect(plan.code)}
           >
-            {isFreePlan ? 'Get Started' : 'Start Free Trial'}
+            {getButtonText()}
           </Button>
         )}
       </CardFooter>
@@ -286,8 +365,64 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
   )
 }
 
+function EmptyPlansState() {
+  return (
+    <div className="max-w-md mx-auto">
+      <Card className="text-center py-12">
+        <CardContent>
+          <div className="mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            Pricing is taking a moment to load
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Our plan catalog couldn&apos;t be reached just now. Retry in a few
+            seconds, or write to us and we&apos;ll send the current plans and
+            prices directly.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </Button>
+            <Button asChild>
+              <a href={`mailto:${COMPANY.salesEmail}`}>Contact Sales</a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 function getTopFeatures(plan: Plan): string[] {
   const features: string[] = []
+
+  // GSTIN Limits (prominent)
+  if (plan.limits.gstinsAllowed === -1) {
+    features.push('Unlimited GSTINs')
+  } else if (plan.limits.gstinsAllowed === 1) {
+    features.push('1 GSTIN')
+  } else {
+    features.push(`Up to ${plan.limits.gstinsAllowed} GSTINs`)
+  }
 
   // Add limits
   if (plan.limits.noticesPerMonth === -1) {
@@ -299,16 +434,26 @@ function getTopFeatures(plan: Plan): string[] {
   if (plan.limits.users === -1) {
     features.push('Unlimited team members')
   } else {
-    features.push(`${plan.limits.users} team member${plan.limits.users > 1 ? 's' : ''}`)
+    const userText = `${plan.limits.users} team member${plan.limits.users > 1 ? 's' : ''}`
+    if (plan.limits.additionalUsersAllowed) {
+      features.push(`${userText} (add more seats)`)
+    } else {
+      features.push(userText)
+    }
   }
 
-  features.push(`${plan.limits.storageGb === -1 ? 'Unlimited' : plan.limits.storageGb + 'GB'} storage`)
-
-  // Add key features
-  if (plan.features.includes('full_ai_analysis')) {
+  // AI Features (new feature codes)
+  if (plan.features.includes('ai_explanation') && plan.features.includes('draft_reply')) {
+    features.push('AI explanations + draft replies')
+  } else if (plan.features.includes('full_ai_analysis')) {
     features.push('Full AI analysis')
-  } else {
-    features.push('Basic AI analysis')
+  } else if (!plan.features.includes('ai_explanation')) {
+    features.push('Notice detection only')
+  }
+
+  // WhatsApp
+  if (plan.features.includes('whatsapp_assistant')) {
+    features.push('WhatsApp assistant')
   }
 
   if (plan.features.includes('priority_support')) {

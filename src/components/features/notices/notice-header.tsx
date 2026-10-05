@@ -4,6 +4,7 @@ import Link from 'next/link'
 import {
   ArrowLeft,
   Download,
+  FileDown,
   MoreHorizontal,
   UserPlus,
   Archive,
@@ -12,6 +13,7 @@ import {
   Calendar,
   Building2,
   FileText,
+  Pencil,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,15 +26,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { StatusBadge } from './status-badge'
+import { StatusDropdown } from './status-dropdown'
 import { PriorityBadge } from './priority-badge'
 import { RiskBadge } from './risk-badge'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
+import { usePermissions } from '@/hooks/use-permissions'
+import { useCanAccessFeature } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import type { NoticeDetail } from '@/types'
 
 interface NoticeHeaderProps {
   notice?: NoticeDetail
   isLoading?: boolean
+  canChangeStatus?: boolean
   onDownload?: () => void
+  onExportSummary?: () => void
+  isExportingSummary?: boolean
+  onEdit?: () => void
   onAssign?: () => void
   onArchive?: () => void
   onDelete?: () => void
@@ -41,11 +51,18 @@ interface NoticeHeaderProps {
 export function NoticeHeader({
   notice,
   isLoading = false,
+  canChangeStatus = true,
   onDownload,
+  onExportSummary,
+  isExportingSummary = false,
+  onEdit,
   onAssign,
   onArchive,
   onDelete,
 }: NoticeHeaderProps) {
+  const { canEditNotices, canDeleteNotices, canAssignNotices } = usePermissions()
+  const hasDataExport = useCanAccessFeature(FeatureCodes.DataExport)
+
   if (isLoading) {
     return <NoticeHeaderSkeleton />
   }
@@ -61,10 +78,10 @@ export function NoticeHeader({
 
   const getDeadlineColor = () => {
     if (!notice.daysRemaining) return ''
-    if (notice.daysRemaining < 0) return 'text-red-600 dark:text-red-400'
-    if (notice.daysRemaining <= 3) return 'text-red-600 dark:text-red-400'
-    if (notice.daysRemaining <= 7) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-green-600 dark:text-green-400'
+    if (notice.daysRemaining < 0) return 'text-coral-600 dark:text-coral-400'
+    if (notice.daysRemaining <= 3) return 'text-coral-600 dark:text-coral-400'
+    if (notice.daysRemaining <= 7) return 'text-amber-600 dark:text-amber-400'
+    return 'text-mint-600 dark:text-mint-400'
   }
 
   return (
@@ -79,43 +96,65 @@ export function NoticeHeader({
           Back to Notices
         </Link>
         <div className="flex items-center gap-2">
-          {onDownload && (
+          {onEdit && canEditNotices && (
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          )}
+          {hasDataExport && onDownload && (
             <Button variant="outline" size="sm" onClick={onDownload}>
               <Download className="mr-2 h-4 w-4" />
               Download
             </Button>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {onAssign && (
-                <DropdownMenuItem onClick={onAssign}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Assign
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              {onArchive && (
-                <DropdownMenuItem onClick={onArchive}>
-                  <Archive className="mr-2 h-4 w-4" />
-                  Archive
-                </DropdownMenuItem>
-              )}
-              {onDelete && (
-                <DropdownMenuItem
-                  onClick={onDelete}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {hasDataExport && onExportSummary && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onExportSummary}
+              disabled={isExportingSummary}
+            >
+              <FileDown className="mr-2 h-4 w-4" />
+              {isExportingSummary ? 'Exporting...' : 'Export Summary'}
+            </Button>
+          )}
+          {/* Only show dropdown menu if user has any permissions for the actions */}
+          {(canAssignNotices || canEditNotices || canDeleteNotices) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onAssign && canAssignNotices && (
+                  <DropdownMenuItem onClick={onAssign}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Assign
+                  </DropdownMenuItem>
+                )}
+                {canAssignNotices && (canEditNotices || canDeleteNotices) && (
+                  <DropdownMenuSeparator />
+                )}
+                {onArchive && canEditNotices && (
+                  <DropdownMenuItem onClick={onArchive}>
+                    <Archive className="mr-2 h-4 w-4" />
+                    Archive
+                  </DropdownMenuItem>
+                )}
+                {onDelete && canDeleteNotices && (
+                  <DropdownMenuItem
+                    onClick={onDelete}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
@@ -123,10 +162,17 @@ export function NoticeHeader({
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight nums md:text-3xl">
               {notice.noticeNumber || `Notice #${notice.id.slice(0, 8)}`}
             </h1>
-            <StatusBadge status={notice.status} />
+            {canChangeStatus ? (
+              <StatusDropdown
+                noticeId={notice.id}
+                currentStatus={notice.status}
+              />
+            ) : (
+              <StatusBadge status={notice.status} />
+            )}
             <PriorityBadge priority={notice.priority} />
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -159,11 +205,11 @@ export function NoticeHeader({
         </div>
 
         {/* Right side - Amount and Deadline */}
-        <div className="flex flex-col gap-3 rounded-lg border bg-muted/30 p-4 md:min-w-[200px]">
+        <div className="flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-card md:min-w-[220px]">
           {/* Total Amount */}
           <div>
-            <p className="text-xs text-muted-foreground">Total Demand</p>
-            <p className="text-2xl font-bold">{formatCurrency(totalAmount)}</p>
+            <p className="eyebrow text-muted-foreground">Total Demand</p>
+            <p className="mt-1 text-2xl font-bold nums">{formatCurrency(totalAmount)}</p>
             {(notice.taxAmount || notice.penaltyAmount || notice.interestAmount) && (
               <div className="mt-1 text-xs text-muted-foreground">
                 {notice.taxAmount && <span>Tax: {formatCurrency(notice.taxAmount)}</span>}
@@ -244,7 +290,7 @@ function NoticeHeaderSkeleton() {
           </div>
           <Skeleton className="h-4 w-64" />
         </div>
-        <div className="rounded-lg border bg-muted/30 p-4 md:min-w-[200px]">
+        <div className="rounded-2xl border bg-card p-5 shadow-card md:min-w-[220px]">
           <Skeleton className="h-3 w-20 mb-1" />
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-3 w-full mt-2" />

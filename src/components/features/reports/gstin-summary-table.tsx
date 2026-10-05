@@ -90,10 +90,10 @@ export function GstinSummaryTable({ data, isLoading }: GstinSummaryTableProps) {
                 </TableCell>
                 <TableCell className="text-right">{item.activeNotices}</TableCell>
                 <TableCell className="text-right">{item.resolvedNotices}</TableCell>
-                <TableCell className="text-right text-orange-600">
+                <TableCell className="text-right text-amber-600">
                   {formatCurrency(item.pendingAmount)}
                 </TableCell>
-                <TableCell className="text-right text-green-600">
+                <TableCell className="text-right text-mint-600">
                   {formatCurrency(item.resolvedAmount)}
                 </TableCell>
               </TableRow>

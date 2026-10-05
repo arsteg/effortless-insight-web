@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, RefreshCw, Link2, Settings2, History, Zap } from 'lucide-react';
+import { ArrowLeft, EyeOff, RefreshCw, Link2, Settings2, History, Zap } from 'lucide-react';
 
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +15,15 @@ import { GstnOtpDialog } from '@/components/features/gstn/gstn-otp-dialog';
 import { GstnSettingsDialog } from '@/components/features/gstn/gstn-settings-dialog';
 import { GstnSyncHistoryDialog } from '@/components/features/gstn/gstn-sync-history-dialog';
 import { GstnDisconnectDialog } from '@/components/features/gstn/gstn-disconnect-dialog';
+import { usePermissions } from '@/hooks/use-permissions';
 import type { GstnConnection } from '@/types/gstn';
 
 export default function IntegrationsPage() {
   const { data, isLoading, error, refetch } = useGstnConnections();
+  const { isAdmin } = usePermissions();
+
+  // Non-admins have read-only access
+  const canEdit = isAdmin;
 
   // Dialog states
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
@@ -73,6 +79,16 @@ export default function IntegrationsPage() {
           Refresh
         </Button>
       </div>
+
+      {/* Read-only banner for non-admins */}
+      {!canEdit && (
+        <Alert>
+          <EyeOff className="h-4 w-4" />
+          <AlertDescription>
+            You have view-only access to integration settings. Contact your administrator to make changes.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Info Card */}
       <Card className="border-primary/20 bg-primary/5">
@@ -148,10 +164,10 @@ export default function IntegrationsPage() {
               <GstnConnectionCard
                 key={connection.organizationGstinId}
                 connection={connection}
-                onConnectInitiated={handleConnectInitiated}
-                onSettings={handleSettings}
+                onConnectInitiated={canEdit ? handleConnectInitiated : undefined}
+                onSettings={canEdit ? handleSettings : undefined}
                 onHistory={handleHistory}
-                onDisconnect={handleDisconnect}
+                onDisconnect={canEdit ? handleDisconnect : undefined}
               />
             ))}
           </div>

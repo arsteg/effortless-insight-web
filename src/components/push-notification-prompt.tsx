@@ -31,7 +31,7 @@ export function PushNotificationPrompt({
   onEnabled,
 }: PushNotificationPromptProps) {
   const [isVisible, setIsVisible] = useState(false)
-  const { status, isSupported, isLoading, registerToken } = usePushNotifications()
+  const { status, isSupported, isLoading, error, registerToken } = usePushNotifications()
 
   // Check if we should show the prompt
   useEffect(() => {
@@ -39,8 +39,13 @@ export function PushNotificationPrompt({
       return
     }
 
-    // Don't show if already registered or denied
-    if (status === 'registered' || status === 'permission-denied') {
+    // Don't show if already registered, denied, or push can't work at all
+    if (
+      status === 'registered' ||
+      status === 'permission-denied' ||
+      status === 'not-configured' ||
+      status === 'unsupported'
+    ) {
       return
     }
 
@@ -101,7 +106,13 @@ export function PushNotificationPrompt({
     onDismiss?.()
   }
 
-  if (!isVisible || status === 'registered' || !isSupported) {
+  if (
+    !isVisible ||
+    status === 'registered' ||
+    status === 'not-configured' ||
+    status === 'unsupported' ||
+    !isSupported
+  ) {
     return null
   }
 
@@ -139,6 +150,7 @@ export function PushNotificationPrompt({
                 Later
               </Button>
             </div>
+            {error && <p className="text-xs text-destructive mt-2">{error}</p>}
           </div>
           <button
             onClick={handleDismiss}
@@ -184,6 +196,7 @@ export function PushNotificationPrompt({
               )}
             </Button>
           </div>
+          {error && <p className="text-xs text-destructive mt-3">{error}</p>}
           <button
             onClick={handleRemindLater}
             className="text-sm text-muted-foreground hover:text-foreground mt-3"
@@ -231,21 +244,21 @@ export function PushNotificationStatus({ className }: { className?: string }) {
       case 'registered':
         return {
           icon: CheckCircle,
-          iconClass: 'text-green-500',
+          iconClass: 'text-mint-500',
           title: 'Push Notifications Enabled',
           description: 'You will receive push notifications on this device.',
         }
       case 'permission-granted':
         return {
           icon: Bell,
-          iconClass: 'text-yellow-500',
+          iconClass: 'text-amber-500',
           title: 'Ready to Enable',
           description: 'Click to enable push notifications on this device.',
         }
       case 'permission-denied':
         return {
           icon: BellOff,
-          iconClass: 'text-red-500',
+          iconClass: 'text-coral-500',
           title: 'Notifications Blocked',
           description: 'Enable notifications in your browser settings.',
         }

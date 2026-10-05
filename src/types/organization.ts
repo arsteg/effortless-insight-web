@@ -88,7 +88,8 @@ export interface OrganizationListResponse {
 export interface CreateOrganizationRequest {
   name: string
   legalName?: string
-  gstin: string
+  /** Required for a normal Business Owner; optional for a self-registered CA's own firm org. */
+  gstin?: string
   industry?: string
   state: string
   city?: string
@@ -194,4 +195,16 @@ export interface Invitation {
 export interface InvitationListResponse {
   invitations: Invitation[]
   total: number
+}
+
+// Accept invitation response
+export interface AcceptInvitationResponse {
+  message: string
+  organization: {
+    id: string
+    name: string
+    role: OrganizationRole
+  }
+  accessToken: string
+  refreshToken: string
 }

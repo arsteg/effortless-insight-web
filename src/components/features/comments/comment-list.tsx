@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { MessageSquare, RefreshCw } from 'lucide-react'
+import { MessageSquare, RefreshCw, AlertCircle } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CommentItem } from './comment-item'
 import { CommentForm } from './comment-form'
 import {
@@ -43,7 +44,9 @@ export function CommentList({
   className,
 }: CommentListProps) {
   const { user } = useAuthStore()
-  const { data, isLoading, refetch } = useComments(noticeId, {
+  const [formKey, setFormKey] = useState(0)
+
+  const { data, isLoading, error, refetch } = useComments(noticeId, {
     includeReplies: true,
     sortOrder: 'desc',
   })
@@ -57,10 +60,15 @@ export function CommentList({
   const comments = data?.comments ?? []
 
   const handleCreate = (content: string, visibility?: CommentVisibility) => {
-    createMutation.mutate({
-      content,
-      visibility,
-    })
+    createMutation.mutate(
+      { content, visibility },
+      {
+        onSuccess: () => {
+          // Reset form by incrementing the key
+          setFormKey((k) => k + 1)
+        },
+      }
+    )
   }
 
   const handleReply = (
@@ -107,6 +115,29 @@ export function CommentList({
     return <CommentListSkeleton showHeader={showHeader} className={className} />
   }
 
+  if (error) {
+    return (
+      <Card className={className}>
+        {showHeader && (
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg">Comments</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+        )}
+        <CardContent className={showHeader ? '' : 'pt-6'}>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Failed to load comments. Please try refreshing the page or click the refresh button.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className={className}>
       {showHeader && (
@@ -127,6 +158,7 @@ export function CommentList({
       <CardContent className={showHeader ? '' : 'pt-6'}>
         {/* Comment form */}
         <CommentForm
+          key={formKey}
           onSubmit={handleCreate}
           availableUsers={availableUsers}
           isLoading={createMutation.isPending}
@@ -144,6 +176,7 @@ export function CommentList({
                   key={comment.id}
                   comment={comment}
                   currentUserId={user?.id}
+                  currentUserRole={user?.role}
                   availableUsers={availableUsers}
                   onReply={handleReply}
                   onEdit={handleEdit}

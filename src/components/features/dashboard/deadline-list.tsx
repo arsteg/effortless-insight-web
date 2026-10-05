@@ -57,30 +57,30 @@ interface DeadlineItemRowProps {
 function DeadlineItemRow({ deadline }: DeadlineItemRowProps) {
   const getUrgencyStyles = () => {
     if (deadline.isOverdue || deadline.daysRemaining < 0) {
-      return 'border-l-4 border-l-red-500 bg-red-50 dark:bg-red-950/20'
+      return 'border-l-4 border-l-coral-500 bg-coral-50 dark:bg-coral-900/20'
     }
     if (deadline.daysRemaining <= 3) {
-      return 'border-l-4 border-l-red-500'
+      return 'border-l-4 border-l-coral-500'
     }
     if (deadline.daysRemaining <= 7) {
-      return 'border-l-4 border-l-yellow-500'
+      return 'border-l-4 border-l-amber-500'
     }
-    return 'border-l-4 border-l-green-500'
+    return 'border-l-4 border-l-mint-500'
   }
 
   const getDaysLabel = () => {
     if (deadline.isOverdue || deadline.daysRemaining < 0) {
       return (
-        <span className="text-red-500 font-medium">
+        <span className="text-coral-500 font-medium">
           Overdue by {Math.abs(deadline.daysRemaining)} day{Math.abs(deadline.daysRemaining) !== 1 ? 's' : ''}
         </span>
       )
     }
     if (deadline.daysRemaining === 0) {
-      return <span className="text-red-500 font-medium">Due today</span>
+      return <span className="text-coral-500 font-medium">Due today</span>
     }
     if (deadline.daysRemaining === 1) {
-      return <span className="text-yellow-600 font-medium">Due tomorrow</span>
+      return <span className="text-amber-600 font-medium">Due tomorrow</span>
     }
     return (
       <span className="text-muted-foreground">
@@ -138,7 +138,7 @@ function DeadlineItemRow({ deadline }: DeadlineItemRowProps) {
           <div className="mt-2 flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
               {deadline.isOverdue || deadline.daysRemaining < 0 ? (
-                <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                <AlertTriangle className="h-3.5 w-3.5 text-coral-500" />
               ) : (
                 <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               )}

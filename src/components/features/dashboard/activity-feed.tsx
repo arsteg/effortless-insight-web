@@ -71,22 +71,22 @@ function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
       return <Upload className="h-4 w-4 text-blue-500" />
     }
     if (type.includes('assign')) {
-      return <UserPlus className="h-4 w-4 text-purple-500" />
+      return <UserPlus className="h-4 w-4 text-lavender-500" />
     }
     if (type.includes('status') || type.includes('update')) {
-      return <RefreshCw className="h-4 w-4 text-orange-500" />
+      return <RefreshCw className="h-4 w-4 text-amber-500" />
     }
     if (type.includes('complete') || type.includes('done')) {
-      return <CheckCircle2 className="h-4 w-4 text-green-500" />
+      return <CheckCircle2 className="h-4 w-4 text-mint-500" />
     }
     if (type.includes('comment')) {
       return <MessageSquare className="h-4 w-4 text-cyan-500" />
     }
     if (type.includes('response') || type.includes('submit')) {
-      return <Send className="h-4 w-4 text-indigo-500" />
+      return <Send className="h-4 w-4 text-lavender-500" />
     }
     if (type.includes('deadline') || type.includes('reminder')) {
-      return <Bell className="h-4 w-4 text-yellow-500" />
+      return <Bell className="h-4 w-4 text-amber-500" />
     }
     return <Activity className="h-4 w-4 text-muted-foreground" />
   }

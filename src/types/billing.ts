@@ -14,19 +14,25 @@ export interface Plan {
   isPopular: boolean
   trialDays: number
   contactSales: boolean
+  /** Allowed billing cycles for this plan (e.g., ["weekly", "monthly", "annually"]) */
+  allowedBillingCycles: BillingCycle[]
+  /** Default billing cycle when user doesn't specify */
+  defaultBillingCycle: BillingCycle
 }
 
 export interface PlanPricing {
-  monthly?: number
-  annually?: number
+  weekly?: number | null
+  monthly?: number | null
+  annually?: number | null
   currency: string
-  annualDiscount?: number
-  perSeat?: PerSeatPricing
+  annualDiscount?: number | null
+  perSeat?: PerSeatPricing | null
 }
 
 export interface PerSeatPricing {
-  monthly?: number
-  annually?: number
+  weekly?: number | null
+  monthly?: number | null
+  annually?: number | null
 }
 
 export interface PlanLimits {
@@ -37,6 +43,8 @@ export interface PlanLimits {
   additionalUsersAllowed: boolean
   apiCalls: number
   apiCallsPerMonth?: number
+  /** Maximum GSTINs allowed. -1 for unlimited */
+  gstinsAllowed: number
 }
 
 export interface AddOn {
@@ -50,6 +58,24 @@ export interface AddOn {
 export interface PlansListResponse {
   plans: Plan[]
   addOns?: AddOn[]
+  globalSettings?: GlobalBillingSettings
+}
+
+/**
+ * Global billing settings controlled by admin.
+ */
+export interface GlobalBillingSettings {
+  /**
+   * Whether additional seats/per-seat pricing is enabled globally.
+   * When false, the "Add Seats" feature should be hidden from UI.
+   */
+  additionalSeatsEnabled: boolean
+
+  /**
+   * Whether plan downgrades are allowed.
+   * When false, users can only upgrade to higher plans.
+   */
+  downgradesAllowed: boolean
 }
 
 // ============================================================================
@@ -59,6 +85,15 @@ export interface PlansListResponse {
 export interface CurrentSubscriptionResponse {
   subscription: Subscription
   usage: Usage
+}
+
+/**
+ * Self-registered CAs (ApplicationUser.IsCA) never buy a plan for their own
+ * firm org, so /subscriptions/current always 404s for them - this reflects
+ * their admin-granted Free CA Access status instead (see AdminUsersController.GrantCaAccess).
+ */
+export interface CaAccessStatusResponse {
+  hasActiveAccess: boolean
 }
 
 export interface Subscription {
@@ -71,16 +106,33 @@ export interface Subscription {
   currentPeriodEnd: string
   cancelAtPeriodEnd: boolean
   trialEnd?: string
+  isTrialing: boolean
+  trialDaysRemaining?: number
   seats: Seats
   pricing: SubscriptionPricing
   nextBillingDate: string
   paymentMethod?: PaymentMethodSummary
   razorpaySubscriptionId?: string
   scheduledChange?: ScheduledChange
+  hasUsedTrial: boolean
+  /**
+   * Whether the subscription grants access to the application.
+   * False when: cancelled, expired, or trialing without valid trial period/dates.
+   */
+  hasAccess: boolean
+  /**
+   * Whether this subscription was granted by an admin (e.g., CA free access).
+   * Admin-granted subscriptions cannot be modified by the user.
+   */
+  isAdminGranted?: boolean
+  /**
+   * Whether this subscription is for the CA operator plan.
+   */
+  isCaOperatorPlan?: boolean
 }
 
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired' | 'paused'
-export type BillingCycle = 'monthly' | 'annually'
+export type BillingCycle = 'weekly' | 'monthly' | 'annually'
 
 export interface Seats {
   included: number
@@ -161,6 +213,11 @@ export interface CreateSubscriptionRequest {
   autoRenew: boolean
 }
 
+export interface StartTrialRequest {
+  planCode: string
+  billingCycle: BillingCycle
+}
+
 export interface BillingDetailsRequest {
   organizationName: string
   gstin?: string
@@ -175,8 +232,26 @@ export interface BillingDetailsRequest {
 
 export interface CreateSubscriptionResponse {
   subscriptionId: string
-  razorpayOrder: RazorpayOrder
-  checkoutOptions: CheckoutOptions
+  razorpayOrder?: RazorpayOrder | null
+  checkoutOptions?: CheckoutOptions | null
+  isFreePlan?: boolean
+  subscription?: Subscription | null
+  /** Razorpay subscription details for recurring billing setup (true auto-recurring) */
+  razorpaySubscription?: RazorpaySubscriptionCheckout | null
+}
+
+/** Details for Razorpay subscription checkout (for true auto-recurring billing) */
+export interface RazorpaySubscriptionCheckout {
+  /** Razorpay subscription ID (starts with sub_) */
+  subscriptionId: string
+  /** Razorpay public key for checkout */
+  key: string
+  /** Subscription status (created, authenticated, active, etc.) */
+  status: string
+  /** Short URL for customer to complete mandate authentication if needed */
+  shortUrl?: string | null
+  /** Number of trial days before first charge */
+  trialDays: number
 }
 
 export interface RazorpayOrder {
@@ -218,6 +293,13 @@ export interface VerifyPaymentRequest {
   razorpaySignature: string
 }
 
+/** Request for verifying subscription-based payments (true auto-recurring) */
+export interface VerifySubscriptionPaymentRequest {
+  razorpayPaymentId: string
+  razorpaySubscriptionId: string
+  razorpaySignature: string
+}
+
 export interface VerifyPaymentResponse {
   success: boolean
   subscription: SubscriptionActivated
@@ -245,19 +327,79 @@ export interface ChangePlanRequest {
   newPlanCode: string
   billingCycle: BillingCycle
   additionalSeats?: number
-  effectiveDate: 'immediate' | 'period_end'
 }
 
 export interface ChangePlanResponse {
-  type: 'upgrade' | 'downgrade'
+  type: string // Always "changed" - plan changes are immediate with prorated end date
   prorationAmount?: number
   newPlanAmount?: number
   totalDue?: number
-  effectiveImmediately: boolean
+  effectiveImmediately: boolean // Always true
   razorpayOrder?: RazorpayOrder
   scheduledPlanCode?: string
-  effectiveDate?: string
+  effectiveDate?: string // New subscription end date after proration
   message?: string
+}
+
+// ============================================================================
+// Plan Change Validation Types
+// ============================================================================
+
+export interface ValidatePlanChangeRequest {
+  newPlanCode: string
+  billingCycle?: BillingCycle // Required for proration preview
+  additionalSeats?: number
+}
+
+export interface PlanChangeValidationResult {
+  canChange: boolean
+  blockers?: PlanChangeBlocker[]
+  featuresToLose?: string[]
+  featuresToGain?: string[]
+  activeFeaturesToLose?: string[] // Features currently in use that will be lost - shows warning but doesn't block
+  limitsComparison?: PlanLimitsComparison
+  prorationPreview?: ProrationPreview // Preview of how billing period will change
+}
+
+/**
+ * Preview of how proration will affect the billing period.
+ * Shows how the remaining value is converted between plans.
+ */
+export interface ProrationPreview {
+  isUpgrade: boolean // true if new plan is more expensive per day
+  currentDailyRate: number // Current plan's daily rate in base currency
+  newDailyRate: number // New plan's daily rate in base currency
+  remainingDays: number // Days left in current billing period
+  remainingValue: number // Monetary value remaining from current period
+  currentPeriodEnd: string // Current subscription end date
+  newPeriodEnd: string // New end date after proration
+  newPeriodDays: number // Number of days in new prorated period
+  currentPlanName: string
+  newPlanName: string
+  currentBillingCycle: BillingCycle
+  newBillingCycle: BillingCycle
+}
+
+export interface PlanChangeBlocker {
+  type: 'users' | 'storage' | 'organizations' | 'notices' | 'api_calls' | 'additional_seats' | 'feature'
+  message: string
+  currentUsage: number
+  newLimit: number
+  excessAmount: number
+}
+
+export interface PlanLimitsComparison {
+  users: LimitChange
+  storage: LimitChange
+  notices: LimitChange
+  apiCalls: LimitChange
+  organizations: LimitChange
+}
+
+export interface LimitChange {
+  current: number
+  new: number
+  direction: 'increase' | 'decrease' | 'same'
 }
 
 // ============================================================================
@@ -316,6 +458,19 @@ export interface AddSeatsResponse {
   totalSeats: number
   prorationAmount: number
   razorpayOrder?: RazorpayOrder
+}
+
+export interface VerifySeatsPaymentRequest {
+  razorpayOrderId: string
+  razorpayPaymentId: string
+  razorpaySignature: string
+  additionalSeats: number
+}
+
+export interface VerifySeatsPaymentResponse {
+  success: boolean
+  totalSeats: number
+  invoice?: InvoiceSummary
 }
 
 // ============================================================================
@@ -467,7 +622,7 @@ export interface UsageCheckResponse {
 
 declare global {
   interface Window {
-    Razorpay?: new (options: RazorpayCheckoutOptions) => RazorpayInstance
+    Razorpay?: new (options: RazorpayCheckoutOptions | RazorpaySubscriptionCheckoutOptions) => RazorpayInstance
   }
 }
 
@@ -492,9 +647,35 @@ export interface RazorpayCheckoutOptions {
   }
 }
 
+/** Razorpay checkout options for subscription/recurring billing */
+export interface RazorpaySubscriptionCheckoutOptions {
+  key: string
+  subscription_id: string
+  name: string
+  description: string
+  prefill?: {
+    name?: string
+    email?: string
+    contact?: string
+  }
+  theme?: {
+    color?: string
+  }
+  handler: (response: RazorpaySubscriptionResponse) => void
+  modal?: {
+    ondismiss?: () => void
+  }
+}
+
 export interface RazorpayPaymentResponse {
   razorpay_payment_id: string
   razorpay_order_id: string
+  razorpay_signature: string
+}
+
+export interface RazorpaySubscriptionResponse {
+  razorpay_payment_id: string
+  razorpay_subscription_id: string
   razorpay_signature: string
 }
 

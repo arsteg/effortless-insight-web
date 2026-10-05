@@ -84,8 +84,8 @@ export function DocumentsManager({
         <CardContent>
           {noticeFileUrl ? (
             <div className="flex items-center gap-3 rounded-lg border p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
-                <FileText className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-coral-100 dark:bg-coral-900/30">
+                <FileText className="h-5 w-5 text-coral-600 dark:text-coral-400" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">Notice Document</p>
@@ -197,13 +197,13 @@ function AttachmentItem({ attachment, onDownload, onDelete }: AttachmentItemProp
   const getFileIcon = () => {
     const type = attachment.fileType?.toLowerCase() || ''
     if (type.includes('pdf')) {
-      return <FileText className="h-5 w-5 text-red-600 dark:text-red-400" />
+      return <FileText className="h-5 w-5 text-coral-600 dark:text-coral-400" />
     }
     if (type.includes('image') || type.includes('png') || type.includes('jpg')) {
       return <ImageIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
     }
     if (type.includes('excel') || type.includes('spreadsheet') || type.includes('csv')) {
-      return <FileSpreadsheet className="h-5 w-5 text-green-600 dark:text-green-400" />
+      return <FileSpreadsheet className="h-5 w-5 text-mint-600 dark:text-mint-400" />
     }
     return <File className="h-5 w-5 text-muted-foreground" />
   }

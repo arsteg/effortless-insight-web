@@ -3,6 +3,10 @@ const nextConfig = {
   reactStrictMode: true,
   // Enable standalone output for Docker
   output: "standalone",
+  experimental: {
+    // Reduce compiler memory when running the Webpack development server.
+    webpackMemoryOptimizations: true,
+  },
   images: {
     remotePatterns: [
       {

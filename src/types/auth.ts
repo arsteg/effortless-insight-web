@@ -8,12 +8,15 @@ export interface User {
   emailVerified: boolean
   mobileVerified: boolean
   is2faEnabled: boolean
+  hasPassword: boolean
   role: UserRole
   organization?: UserOrganization
   organizations: UserOrganization[]
   preferences?: Record<string, unknown>
   createdAt: string
   lastLogin?: string
+  /** Self-registered Chartered Accountant account (CA-as-distributor identity). */
+  isCA?: boolean
 }
 
 export interface UserOrganization {
@@ -45,6 +48,22 @@ export interface RegisterRequest {
   name: string
   mobile?: string
   acceptTerms: boolean
+  /** Proof from verifySignupOtp that `mobile` passed OTP verification */
+  mobileVerificationToken?: string
+  /** Self-registered Chartered Accountant signup path (CA-as-distributor). */
+  isCA?: boolean
+}
+
+export interface SignupOtpResponse {
+  message: string
+  maskedMobile: string
+  expiresIn: number
+  retryAfter: number
+}
+
+export interface MobileVerificationResponse {
+  verificationToken: string
+  expiresIn: number
 }
 
 export interface ForgotPasswordRequest {

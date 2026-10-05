@@ -35,9 +35,39 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         return
       }
 
+      // Allow invitation pages for authenticated users (they need to accept/decline)
+      if (pathname.startsWith('/invitations/') || pathname.startsWith('/ca-invitations/')) {
+        return
+      }
+
       // If on other auth pages (login, register, etc.) and authenticated
       if (pathname !== '/onboarding') {
-        // Redirect to onboarding if no organization, otherwise to dashboard
+        // Check if there's a pending invitation - either in URL or localStorage
+        const urlParams = new URLSearchParams(window.location.search)
+        const redirectTo = urlParams.get('redirect')
+        // Use localStorage since email verification link opens in a new tab
+        const pendingInvitation = typeof window !== 'undefined'
+          ? localStorage.getItem('pendingInvitationUrl')
+          : null
+
+        // If on login/register page with redirect param, let those pages handle it
+        // This prevents race conditions between those pages and auth-layout redirects
+        if ((pathname === '/login' || pathname === '/register') && redirectTo) {
+          return
+        }
+
+        // If there's an invitation redirect, go there immediately
+        if (redirectTo?.startsWith('/invitations/') || redirectTo?.startsWith('/ca-invitations/')) {
+          router.push(redirectTo)
+          return
+        }
+
+        if (pendingInvitation?.startsWith('/invitations/') || pendingInvitation?.startsWith('/ca-invitations/')) {
+          router.push(pendingInvitation)
+          return
+        }
+
+        // No pending invitation - redirect based on organization status
         if (!hasOrganization) {
           router.push('/onboarding')
         } else {
@@ -47,10 +77,13 @@ export function AuthLayout({ children }: AuthLayoutProps) {
     }
   }, [isInitialized, isAuthenticated, user, pathname, router])
 
-  // Don't render auth pages (except onboarding) if authenticated with organization
+  // Don't render auth pages (except onboarding and invitations) if authenticated with organization
   if (isInitialized && isAuthenticated && user) {
     const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
-    if (pathname !== '/onboarding' && hasOrganization) {
+    // Allow invitation pages for authenticated users
+    if (pathname.startsWith('/invitations/') || pathname.startsWith('/ca-invitations/')) {
+      // Continue rendering - user needs to accept/decline invitation
+    } else if (pathname !== '/onboarding' && hasOrganization) {
       return null
     }
     // Allow onboarding page for authenticated users without organization
@@ -62,7 +95,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="flex h-16 items-center px-4 md:px-6 border-b">
+      <header className="flex h-16 items-center px-4 md:px-6 border-b border-border/70 bg-card/60 backdrop-blur-xl">
         <Link href="/" className="flex items-center gap-3 font-semibold">
           <Image
             src="/logo.svg"
@@ -75,9 +108,17 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         </Link>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 flex items-center justify-center p-4 md:p-6 bg-muted/30">
-        <div className="w-full max-w-md">
+      {/* Main content — calm, warm backdrop with soft pastel depth */}
+      <main className="relative flex-1 flex items-center justify-center overflow-hidden p-4 md:p-6 bg-gradient-to-b from-background to-secondary/50">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-32 -left-24 h-[420px] w-[420px] rounded-full bg-azure-200/30 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-32 -right-24 h-[420px] w-[420px] rounded-full bg-lavender-200/30 blur-3xl"
+        />
+        <div className="relative w-full max-w-md">
           {children}
         </div>
       </main>

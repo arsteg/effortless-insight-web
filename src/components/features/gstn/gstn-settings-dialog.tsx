@@ -52,6 +52,7 @@ export function GstnSettingsDialog({
 
   // Reset form when connection changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional form reset when a different connection is shown
     setAutoSyncEnabled(connection.autoSyncEnabled);
     setSyncIntervalHours(connection.syncIntervalHours);
   }, [connection]);

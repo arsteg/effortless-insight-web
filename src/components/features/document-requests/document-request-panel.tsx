@@ -144,8 +144,8 @@ function MyPendingRequestsView() {
         <RequestGroupCard
           title="Overdue"
           icon={<AlertTriangle className="h-5 w-5" />}
-          iconColor="text-red-500"
-          badgeColor="bg-red-100 text-red-800"
+          iconColor="text-coral-500"
+          badgeColor="bg-coral-100 text-coral-800"
           requests={requestGroups.overdue}
         />
       )}
@@ -166,8 +166,8 @@ function MyPendingRequestsView() {
         <RequestGroupCard
           title="Resubmit Needed"
           icon={<RotateCcw className="h-5 w-5" />}
-          iconColor="text-orange-500"
-          badgeColor="bg-orange-100 text-orange-800"
+          iconColor="text-amber-500"
+          badgeColor="bg-amber-100 text-amber-800"
           requests={requestGroups.resubmitNeeded}
         />
       )}

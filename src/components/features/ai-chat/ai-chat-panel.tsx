@@ -56,14 +56,16 @@ export function AIChatPanel({ noticeId, className }: AIChatPanelProps) {
   // Streaming hook
   const {
     sendMessage: streamSendMessage,
+    editMessage: streamEditMessage,
     stopStreaming,
     isStreaming,
   } = useStreamingMessage()
 
-  // Auto-select first conversation or create new one
+  // Auto-select first conversation when the async list arrives and none is active
   useEffect(() => {
     if (conversationsData?.conversations && conversationsData.conversations.length > 0) {
       if (!activeConversationId) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync of selection with async-loaded conversation list
         setActiveConversationId(conversationsData.conversations[0].id)
       }
     }
@@ -127,6 +129,14 @@ export function AIChatPanel({ noticeId, className }: AIChatPanelProps) {
       regenerateMessage.mutate(messageId)
     },
     [regenerateMessage]
+  )
+
+  const handleEditMessage = useCallback(
+    async (messageId: string, newContent: string) => {
+      if (!activeConversationId) return
+      await streamEditMessage(activeConversationId, messageId, newContent)
+    },
+    [activeConversationId, streamEditMessage]
   )
 
   const handleFeedback = useCallback(
@@ -234,6 +244,7 @@ export function AIChatPanel({ noticeId, className }: AIChatPanelProps) {
                 isStreaming={isStreaming}
                 onRegenerate={handleRegenerate}
                 onFeedback={handleFeedback}
+                onEditMessage={handleEditMessage}
                 isRegenerating={regenerateMessage.isPending}
                 className="flex-1"
               />

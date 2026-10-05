@@ -57,14 +57,14 @@ export function CouponInput({
 
   if (appliedCoupon?.valid) {
     return (
-      <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+      <div className="flex items-center justify-between p-3 bg-mint-50 dark:bg-mint-900 border border-mint-200 dark:border-mint-800 rounded-lg">
         <div className="flex items-center gap-2">
-          <Check className="h-4 w-4 text-green-600" />
+          <Check className="h-4 w-4 text-mint-600" />
           <div>
-            <p className="text-sm font-medium text-green-700 dark:text-green-300">
+            <p className="text-sm font-medium text-mint-700 dark:text-mint-300">
               {appliedCoupon.couponCode}
             </p>
-            <p className="text-xs text-green-600 dark:text-green-400">
+            <p className="text-xs text-mint-600 dark:text-mint-400">
               {appliedCoupon.discountType === 'percentage'
                 ? `${appliedCoupon.discountValue}% off`
                 : `${formatAmount(appliedCoupon.discountValue || 0)} off`}
@@ -75,7 +75,7 @@ export function CouponInput({
           variant="ghost"
           size="sm"
           onClick={onRemove}
-          className="text-green-700 hover:text-green-800 hover:bg-green-100"
+          className="text-mint-700 hover:text-mint-800 hover:bg-mint-100"
         >
           <X className="h-4 w-4" />
         </Button>

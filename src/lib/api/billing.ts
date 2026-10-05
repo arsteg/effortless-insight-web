@@ -3,12 +3,17 @@ import type {
   PlansListResponse,
   Plan,
   CurrentSubscriptionResponse,
+  CaAccessStatusResponse,
   CreateSubscriptionRequest,
   CreateSubscriptionResponse,
+  StartTrialRequest,
   VerifyPaymentRequest,
   VerifyPaymentResponse,
+  VerifySubscriptionPaymentRequest,
   ChangePlanRequest,
   ChangePlanResponse,
+  ValidatePlanChangeRequest,
+  PlanChangeValidationResult,
   CancelSubscriptionRequest,
   CancelSubscriptionResponse,
   PauseSubscriptionRequest,
@@ -16,6 +21,8 @@ import type {
   ResumeSubscriptionResponse,
   AddSeatsRequest,
   AddSeatsResponse,
+  VerifySeatsPaymentRequest,
+  VerifySeatsPaymentResponse,
   Subscription,
   InvoiceListResponse,
   InvoiceDetail,
@@ -66,6 +73,38 @@ export const billingApi = {
   },
 
   /**
+   * Check the current user's Free CA Access grant status. Self-registered CAs
+   * (isCA) never have a subscription for their own firm org, so getCurrentSubscription()
+   * always 404s for them - use this instead to know whether they have access.
+   */
+  async getCaAccessStatus(): Promise<CaAccessStatusResponse> {
+    const response = await apiClient.get<{ data: CaAccessStatusResponse }>(
+      '/subscriptions/ca-access-status'
+    )
+    return response.data.data
+  },
+
+  /**
+   * Get available features for current organization
+   */
+  async getAvailableFeatures(): Promise<string[]> {
+    const response = await apiClient.get<{ data: { features: string[] } }>(
+      '/subscriptions/features'
+    )
+    return response.data.data.features
+  },
+
+  /**
+   * Check if a specific feature is available
+   */
+  async checkFeatureAccess(featureCode: string): Promise<boolean> {
+    const response = await apiClient.get<{ data: { featureCode: string; hasAccess: boolean } }>(
+      `/subscriptions/features/${featureCode}`
+    )
+    return response.data.data.hasAccess
+  },
+
+  /**
    * Create a new subscription (initiate checkout)
    */
   async createSubscription(
@@ -79,11 +118,50 @@ export const billingApi = {
   },
 
   /**
-   * Verify payment and activate subscription
+   * Start a free trial for a plan
+   */
+  async startTrial(data: StartTrialRequest): Promise<Subscription> {
+    const response = await apiClient.post<{ data: Subscription }>(
+      '/subscriptions/trial',
+      data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Verify payment and activate subscription (order-based checkout)
    */
   async verifyPayment(data: VerifyPaymentRequest): Promise<VerifyPaymentResponse> {
     const response = await apiClient.post<{ data: VerifyPaymentResponse }>(
       '/subscriptions/verify',
+      data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Verify subscription payment and activate subscription (subscription-based checkout)
+   * Used for true auto-recurring billing with mandate/token registration
+   */
+  async verifySubscriptionPayment(
+    data: VerifySubscriptionPaymentRequest
+  ): Promise<VerifyPaymentResponse> {
+    const response = await apiClient.post<{ data: VerifyPaymentResponse }>(
+      '/subscriptions/verify-subscription',
+      data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Validate a plan change before executing it
+   * Returns validation result with any blockers that would prevent the change
+   */
+  async validatePlanChange(
+    data: ValidatePlanChangeRequest
+  ): Promise<PlanChangeValidationResult> {
+    const response = await apiClient.post<{ data: PlanChangeValidationResult }>(
+      '/subscriptions/current/plan/validate',
       data
     )
     return response.data.data
@@ -119,6 +197,17 @@ export const billingApi = {
   async addSeats(data: AddSeatsRequest): Promise<AddSeatsResponse> {
     const response = await apiClient.post<{ data: AddSeatsResponse }>(
       '/subscriptions/current/seats',
+      data
+    )
+    return response.data.data
+  },
+
+  /**
+   * Verify seats payment and apply additional seats
+   */
+  async verifySeatsPayment(data: VerifySeatsPaymentRequest): Promise<VerifySeatsPaymentResponse> {
+    const response = await apiClient.post<{ data: VerifySeatsPaymentResponse }>(
+      '/subscriptions/current/seats/verify',
       data
     )
     return response.data.data
@@ -300,7 +389,7 @@ export function getStatusBadgeVariant(
   switch (status) {
     case 'active':
       return 'default'
-    case 'trialing':
+    case 'trial':
       return 'secondary'
     case 'paused':
       return 'outline'

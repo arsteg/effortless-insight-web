@@ -1,10 +1,13 @@
 import { apiClient, setTokens, clearTokens } from './client'
+import { track } from '@/lib/analytics'
 import type {
   ApiResponse,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  SignupOtpResponse,
+  MobileVerificationResponse,
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangePasswordRequest,
@@ -20,11 +23,24 @@ import type {
 
 export interface TwoFactorSetupResponse {
   secret: string
-  qrCodeUri: string
+  qrCodeDataUrl: string
 }
 
 export interface TwoFactorVerifySetupResponse {
   recoveryCodes: string[]
+}
+
+export interface TwoFactorLoginRequest {
+  partialToken: string
+  code: string
+}
+
+export interface TwoFactorLoginResponse {
+  accessToken: string
+  refreshToken: string
+  tokenType: string
+  expiresIn: number
+  backupCodeUsed: boolean
 }
 
 // OAuth types
@@ -79,6 +95,32 @@ export const authApi = {
   // Registration & verification
   async register(data: RegisterRequest): Promise<RegisterResponse> {
     const response = await apiClient.post<ApiResponse<RegisterResponse>>('/auth/register', data)
+    track('signup_completed')
+    return response.data.data
+  },
+
+  // Signup mobile OTP (backend enforces verification before account creation)
+  async requestSignupOtp(mobile: string): Promise<SignupOtpResponse> {
+    const response = await apiClient.post<ApiResponse<SignupOtpResponse>>(
+      '/auth/signup/otp/request',
+      { mobile }
+    )
+    track('signup_started')
+    return response.data.data
+  },
+
+  async verifySignupOtp(
+    mobile: string,
+    otp: string,
+    details?: { name?: string; email?: string }
+  ): Promise<MobileVerificationResponse> {
+    const response = await apiClient.post<ApiResponse<MobileVerificationResponse>>(
+      '/auth/signup/otp/verify',
+      // name/email let the backend record the lead for admin follow-up if
+      // the visitor verifies but never completes registration
+      { mobile, otp, name: details?.name || undefined, email: details?.email || undefined, source: 'web' }
+    )
+    track('signup_mobile_verified')
     return response.data.data
   },
 
@@ -97,12 +139,15 @@ export const authApi = {
     // Store tokens if login successful (not 2FA required)
     if ('accessToken' in result) {
       setTokens(result.accessToken, result.refreshToken)
+      track('login')
     }
 
     return result
   },
 
   async logout(): Promise<void> {
+    // Before clearTokens so the event flushes while still authenticated
+    track('logout')
     try {
       await apiClient.post('/auth/logout')
     } finally {
@@ -172,8 +217,19 @@ export const authApi = {
     return response.data.data
   },
 
-  async disable2fa(password: string): Promise<void> {
-    await apiClient.delete('/auth/2fa', { data: { password } })
+  async disable2fa(request: { password?: string; code: string }): Promise<void> {
+    await apiClient.delete('/auth/2fa', { data: request })
+  },
+
+  async login2fa(partialToken: string, code: string): Promise<TwoFactorLoginResponse> {
+    const response = await apiClient.post<ApiResponse<TwoFactorLoginResponse>>(
+      '/auth/2fa/login',
+      { partialToken, code }
+    )
+    const result = response.data.data
+    setTokens(result.accessToken, result.refreshToken)
+    track('login', { name: '2fa' })
+    return result
   },
 
   // OAuth
@@ -210,6 +266,7 @@ export const authApi = {
     // Store tokens if login successful (not 2FA required)
     if ('accessToken' in result) {
       setTokens(result.accessToken, result.refreshToken)
+      track('login', { name: 'oauth' })
     }
 
     return result

@@ -12,6 +12,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { useGstClients } from '@/hooks/use-gst-sync'
 import type { NoticeFilters as NoticeFiltersType, NoticeStatus, NoticePriority } from '@/types'
 
 interface NoticeFiltersProps {
@@ -44,10 +54,47 @@ export function NoticeFilters({
   isLoading = false,
 }: NoticeFiltersProps) {
   const [searchValue, setSearchValue] = useState(filters.search || '')
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
+
+  // Connected GSTINs power the client filter (a CA sees one entry per client).
+  const { data: gstClientsData } = useGstClients({ pageSize: 100 })
+  const gstinOptions = (gstClientsData?.items ?? []).map((client) => ({
+    gstin: client.gstin,
+    label: client.tradeName || client.legalName || client.clientName || client.gstin,
+  }))
+
+  const gstinLabel = (gstin: string) =>
+    gstinOptions.find((o) => o.gstin === gstin)?.label || gstin
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onFiltersChange({ ...filters, search: searchValue || undefined, page: 1 })
+  }
+
+  const handleGstinChange = (value: string) => {
+    onFiltersChange({
+      ...filters,
+      gstin: value === 'all' ? undefined : value,
+      page: 1,
+    })
+  }
+
+  const toggleOverdue = () => {
+    onFiltersChange({
+      ...filters,
+      overdue: filters.overdue ? undefined : true,
+      dueWithinDays: undefined,
+      page: 1,
+    })
+  }
+
+  const toggleDueThisWeek = () => {
+    onFiltersChange({
+      ...filters,
+      dueWithinDays: filters.dueWithinDays ? undefined : 7,
+      overdue: undefined,
+      page: 1,
+    })
   }
 
   const handleStatusChange = (value: string) => {
@@ -68,7 +115,18 @@ export function NoticeFilters({
 
   const clearFilters = () => {
     setSearchValue('')
-    onFiltersChange({ page: 1, pageSize: filters.pageSize })
+    onFiltersChange({
+      page: 1,
+      pageSize: filters.pageSize,
+      status: undefined,
+      priority: undefined,
+      search: undefined,
+      noticeType: undefined,
+      gstin: undefined,
+      pan: undefined,
+      overdue: undefined,
+      dueWithinDays: undefined,
+    })
   }
 
   const activeFilterCount = [
@@ -77,10 +135,35 @@ export function NoticeFilters({
     filters.search,
     filters.noticeType,
     filters.gstin,
+    filters.pan,
+    filters.overdue,
+    filters.dueWithinDays,
   ].filter(Boolean).length
 
   return (
     <div className="space-y-4">
+      {/* Deadline quick chips — the two questions a CA asks every morning */}
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant={filters.overdue ? 'destructive' : 'outline'}
+          onClick={toggleOverdue}
+          disabled={isLoading}
+        >
+          Overdue
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={filters.dueWithinDays ? 'default' : 'outline'}
+          onClick={toggleDueThisWeek}
+          disabled={isLoading}
+        >
+          Due this week
+        </Button>
+      </div>
+
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1">
@@ -96,6 +179,30 @@ export function NoticeFilters({
             />
           </div>
         </form>
+
+        {/* GSTIN / Client Filter — only shown when the org has connected GSTINs */}
+        {gstinOptions.length > 0 && (
+          <Select
+            value={filters.gstin || 'all'}
+            onValueChange={handleGstinChange}
+            disabled={isLoading}
+          >
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue placeholder="GSTIN" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All GSTINs</SelectItem>
+              {gstinOptions.map((option) => (
+                <SelectItem key={option.gstin} value={option.gstin}>
+                  <span className="flex flex-col items-start">
+                    <span>{option.label}</span>
+                    <span className="text-xs text-muted-foreground">{option.gstin}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {/* Status Filter */}
         <Select
@@ -140,7 +247,7 @@ export function NoticeFilters({
           <Button
             variant="ghost"
             size="sm"
-            onClick={clearFilters}
+            onClick={() => setShowClearConfirm(true)}
             className="gap-1"
           >
             <X className="h-4 w-4" />
@@ -164,6 +271,18 @@ export function NoticeFilters({
               }}
             />
           )}
+          {filters.gstin && (
+            <FilterTag
+              label={`Client: ${gstinLabel(filters.gstin)}`}
+              onRemove={() => onFiltersChange({ ...filters, gstin: undefined, page: 1 })}
+            />
+          )}
+          {filters.pan && (
+            <FilterTag
+              label={`Client (all GSTINs): PAN ${filters.pan}`}
+              onRemove={() => onFiltersChange({ ...filters, pan: undefined, page: 1 })}
+            />
+          )}
           {filters.status && (
             <FilterTag
               label={`Status: ${STATUS_OPTIONS.find((o) => o.value === filters.status)?.label}`}
@@ -178,6 +297,28 @@ export function NoticeFilters({
           )}
         </div>
       )}
+
+      <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear all filters?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove {activeFilterCount} active filter{activeFilterCount > 1 ? 's' : ''} and show all notices.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              onClick={() => {
+                clearFilters()
+                setShowClearConfirm(false)
+              }}
+            >
+              Clear filters
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

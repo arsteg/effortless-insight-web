@@ -35,7 +35,7 @@ export function SourceBadge({ source, showLabel = false }: SourceBadgeProps) {
       icon: Zap,
       label: 'GST Portal',
       tooltip: 'Auto-fetched from GST Portal',
-      className: 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100',
+      className: 'bg-mint-50 text-mint-700 border-mint-200 hover:bg-mint-100',
     },
   };
 

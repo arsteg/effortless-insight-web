@@ -36,37 +36,40 @@ export function UploadProgress({
   onRetry,
   onUploadAnother,
 }: UploadProgressProps) {
-  const [state, setState] = useState<UploadState>('uploading')
-  const [progressValue, setProgressValue] = useState(0)
+  // State is fully derived from props
+  const state: UploadState = error
+    ? 'error'
+    : isUploading
+      ? 'uploading'
+      : uploadResponse
+        ? processingStatus === 'completed'
+          ? 'success'
+          : processingStatus === 'failed'
+            ? 'error'
+            : 'processing'
+        : 'uploading'
+
+  // Auto-advance creep for visual feedback during processing
+  const [processingCreep, setProcessingCreep] = useState(0)
 
   useEffect(() => {
-    if (error) {
-      setState('error')
-    } else if (isUploading) {
-      setState('uploading')
-      setProgressValue(uploadProgress)
-    } else if (uploadResponse) {
-      if (processingStatus === 'completed') {
-        setState('success')
-        setProgressValue(100)
-      } else if (processingStatus === 'failed') {
-        setState('error')
-      } else {
-        setState('processing')
-        setProgressValue(getProcessingProgress(processingStatus))
-      }
+    if (state !== 'processing') {
+      return
     }
-  }, [isUploading, uploadProgress, uploadResponse, processingStatus, error])
+    const timer = setInterval(() => {
+      setProcessingCreep((prev) => prev + 1)
+    }, 500)
+    return () => clearInterval(timer)
+  }, [state])
 
-  // Auto-advance progress for visual feedback during processing
-  useEffect(() => {
-    if (state === 'processing' && progressValue < 95) {
-      const timer = setInterval(() => {
-        setProgressValue((prev) => Math.min(prev + 1, 95))
-      }, 500)
-      return () => clearInterval(timer)
-    }
-  }, [state, progressValue])
+  const progressValue =
+    state === 'uploading'
+      ? uploadProgress
+      : state === 'success'
+        ? 100
+        : state === 'processing'
+          ? Math.min(getProcessingProgress(processingStatus) + processingCreep, 95)
+          : 0
 
   return (
     <Card className="max-w-md mx-auto">
@@ -77,22 +80,22 @@ export function UploadProgress({
             className={cn(
               'flex h-16 w-16 items-center justify-center rounded-full mb-4',
               state === 'uploading' && 'bg-blue-100 dark:bg-blue-900/30',
-              state === 'processing' && 'bg-yellow-100 dark:bg-yellow-900/30',
-              state === 'success' && 'bg-green-100 dark:bg-green-900/30',
-              state === 'error' && 'bg-red-100 dark:bg-red-900/30'
+              state === 'processing' && 'bg-amber-100 dark:bg-amber-900/30',
+              state === 'success' && 'bg-mint-100 dark:bg-mint-900/30',
+              state === 'error' && 'bg-coral-100 dark:bg-coral-900/30'
             )}
           >
             {state === 'uploading' && (
               <Loader2 className="h-8 w-8 text-blue-600 dark:text-blue-400 animate-spin" />
             )}
             {state === 'processing' && (
-              <Loader2 className="h-8 w-8 text-yellow-600 dark:text-yellow-400 animate-spin" />
+              <Loader2 className="h-8 w-8 text-amber-600 dark:text-amber-400 animate-spin" />
             )}
             {state === 'success' && (
-              <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+              <CheckCircle2 className="h-8 w-8 text-mint-600 dark:text-mint-400" />
             )}
             {state === 'error' && (
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+              <AlertCircle className="h-8 w-8 text-coral-600 dark:text-coral-400" />
             )}
           </div>
 
@@ -180,6 +183,7 @@ function getProcessingProgress(status?: ProcessingStatus): number {
     analyzing: 92,
     completed: 100,
     failed: 0,
+    retrying: 60,
   }
   return progress[status] || 50
 }
@@ -194,6 +198,7 @@ function getProcessingMessage(status?: ProcessingStatus): string {
     analyzing: 'Running AI analysis...',
     completed: 'Analysis complete!',
     failed: 'Processing failed.',
+    retrying: 'Retrying processing...',
   }
   return messages[status] || 'Processing...'
 }

@@ -24,30 +24,30 @@ const SLA_CONFIG: Record<SlaStatus, {
 }> = {
   on_track: {
     label: 'On Track',
-    bgClass: 'bg-green-50',
-    textClass: 'text-green-700',
-    borderClass: 'border-green-200',
+    bgClass: 'bg-mint-50',
+    textClass: 'text-mint-700',
+    borderClass: 'border-mint-200',
     icon: CheckCircle,
   },
   warning: {
     label: 'Warning',
-    bgClass: 'bg-yellow-50',
-    textClass: 'text-yellow-700',
-    borderClass: 'border-yellow-200',
+    bgClass: 'bg-amber-50',
+    textClass: 'text-amber-700',
+    borderClass: 'border-amber-200',
     icon: Clock,
   },
   at_risk: {
     label: 'At Risk',
-    bgClass: 'bg-orange-50',
-    textClass: 'text-orange-700',
-    borderClass: 'border-orange-200',
+    bgClass: 'bg-amber-50',
+    textClass: 'text-amber-700',
+    borderClass: 'border-amber-200',
     icon: AlertTriangle,
   },
   breached: {
     label: 'Breached',
-    bgClass: 'bg-red-50',
-    textClass: 'text-red-700',
-    borderClass: 'border-red-200',
+    bgClass: 'bg-coral-50',
+    textClass: 'text-coral-700',
+    borderClass: 'border-coral-200',
     icon: AlertCircle,
   },
   paused: {
@@ -146,13 +146,13 @@ export function SlaProgress({ percentConsumed, status, className }: SlaProgressP
   const getProgressColor = () => {
     switch (status) {
       case 'on_track':
-        return 'bg-green-500';
+        return 'bg-mint-500';
       case 'warning':
-        return 'bg-yellow-500';
+        return 'bg-amber-500';
       case 'at_risk':
-        return 'bg-orange-500';
+        return 'bg-amber-500';
       case 'breached':
-        return 'bg-red-500';
+        return 'bg-coral-500';
       case 'paused':
         return 'bg-gray-400';
       default:

@@ -24,6 +24,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -51,6 +61,7 @@ interface MentionUser {
 interface CommentItemProps {
   comment: Comment
   currentUserId?: string
+  currentUserRole?: string
   availableUsers?: MentionUser[]
   onReply: (parentId: string, content: string, visibility?: CommentVisibility) => void
   onEdit: (commentId: string, content: string) => void
@@ -115,6 +126,7 @@ function ReactionButton({
 export function CommentItem({
   comment,
   currentUserId,
+  currentUserRole,
   availableUsers = [],
   onReply,
   onEdit,
@@ -130,11 +142,17 @@ export function CommentItem({
   const [isEditMode, setIsEditMode] = useState(false)
   const [editContent, setEditContent] = useState(comment.content)
   const [showReactionPicker, setShowReactionPicker] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
-  const isOwnComment = comment.author.id === currentUserId
+  // Compare IDs case-insensitively (GUIDs may have different casing)
+  const isOwnComment = currentUserId
+    ? comment.author.id.toLowerCase() === currentUserId.toLowerCase()
+    : false
+  // Admins and managers can delete any comment
+  const isAdmin = currentUserRole === 'admin' || currentUserRole === 'owner' || currentUserRole === 'manager'
   const canReply = depth < MAX_DEPTH && !comment.isDeleted
   const canEdit = isOwnComment && !comment.isDeleted
-  const canDelete = isOwnComment && !comment.isDeleted
+  const canDelete = (isOwnComment || isAdmin) && !comment.isDeleted
 
   const handleReply = (content: string, visibility?: CommentVisibility) => {
     onReply(comment.id, content, visibility)
@@ -291,40 +309,31 @@ export function CommentItem({
                 </Button>
               )}
 
-              {/* More Actions */}
-              {(canEdit || canDelete) && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    {canEdit && (
-                      <DropdownMenuItem onClick={() => setIsEditMode(true)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                    )}
-                    {canDelete && (
-                      <>
-                        {canEdit && <DropdownMenuSeparator />}
-                        <DropdownMenuItem
-                          onClick={() => onDelete(comment.id)}
-                          className="text-destructive focus:text-destructive"
-                          disabled={isDeleting}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              {/* Edit Button */}
+              {canEdit && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setIsEditMode(true)}
+                  title="Edit comment"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+
+              {/* Delete Button */}
+              {canDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={isDeleting}
+                  title="Delete comment"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               )}
             </div>
           )}
@@ -352,6 +361,7 @@ export function CommentItem({
                   key={reply.id}
                   comment={reply}
                   currentUserId={currentUserId}
+                  currentUserRole={currentUserRole}
                   availableUsers={availableUsers}
                   onReply={onReply}
                   onEdit={onEdit}
@@ -368,6 +378,31 @@ export function CommentItem({
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this comment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onDelete(comment.id)
+                setShowDeleteDialog(false)
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

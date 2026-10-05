@@ -16,11 +16,15 @@ const badgeVariants = cva(
           'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
         outline: 'text-foreground',
         success:
-          'border-transparent bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+          'border-transparent bg-mint-50 text-mint-700 dark:bg-mint-500/15 dark:text-mint-300',
         warning:
-          'border-transparent bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+          'border-transparent bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
         danger:
-          'border-transparent bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+          'border-transparent bg-coral-50 text-coral-700 dark:bg-coral-500/15 dark:text-coral-300',
+        info:
+          'border-transparent bg-azure-50 text-azure-700 dark:bg-azure-500/15 dark:text-azure-300',
+        ai:
+          'border-transparent bg-lavender-50 text-lavender-700 dark:bg-lavender-500/15 dark:text-lavender-300',
       },
     },
     defaultVariants: {

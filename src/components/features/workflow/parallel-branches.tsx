@@ -112,6 +112,7 @@ function BranchCard({ branch, onComplete }: BranchCardProps) {
           'flex items-center justify-center w-8 h-8 rounded-full',
           statusColor
         )}>
+          {/* eslint-disable-next-line react-hooks/static-components -- icon selected from static lucide components, not created during render */}
           <StatusIcon className="h-4 w-4" />
         </div>
         <div>
@@ -163,11 +164,11 @@ function SyncPointIndicator({ syncPoint }: SyncPointIndicatorProps) {
   return (
     <div className={cn(
       'flex items-center gap-3 p-3 rounded-lg border-2 border-dashed',
-      isReady ? 'border-green-300 bg-green-50' : 'border-gray-300 bg-gray-50'
+      isReady ? 'border-mint-300 bg-mint-50' : 'border-gray-300 bg-gray-50'
     )}>
       <div className={cn(
         'flex items-center justify-center w-10 h-10 rounded-full',
-        isReady ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'
+        isReady ? 'bg-mint-100 text-mint-600' : 'bg-gray-100 text-gray-500'
       )}>
         <GitMerge className="h-5 w-5" />
       </div>
@@ -184,7 +185,7 @@ function SyncPointIndicator({ syncPoint }: SyncPointIndicatorProps) {
         </p>
       </div>
       {isReady && (
-        <Check className="h-5 w-5 text-green-600" />
+        <Check className="h-5 w-5 text-mint-600" />
       )}
     </div>
   );
@@ -240,13 +241,13 @@ function getStatusColor(status: string): string {
     case 'active':
       return 'bg-blue-100 text-blue-600';
     case 'completed':
-      return 'bg-green-100 text-green-600';
+      return 'bg-mint-100 text-mint-600';
     case 'cancelled':
-      return 'bg-red-100 text-red-600';
+      return 'bg-coral-100 text-coral-600';
     case 'paused':
-      return 'bg-yellow-100 text-yellow-600';
+      return 'bg-amber-100 text-amber-600';
     case 'waiting_at_join':
-      return 'bg-purple-100 text-purple-600';
+      return 'bg-lavender-100 text-lavender-600';
     default:
       return 'bg-gray-100 text-gray-600';
   }
@@ -316,6 +317,7 @@ function StageInstanceCard({ instance, onComplete }: StageInstanceCardProps) {
             'flex items-center justify-center w-8 h-8 rounded-full',
             statusColor
           )}>
+            {/* eslint-disable-next-line react-hooks/static-components -- icon selected from static lucide components, not created during render */}
             <StatusIcon className="h-4 w-4" />
           </div>
           <div>

@@ -7,6 +7,8 @@ import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   CheckoutSteps,
   BillingToggle,
@@ -15,17 +17,49 @@ import {
   OrderSummary,
   CouponInput,
 } from '@/components/features/billing'
+import { formatAmount } from '@/lib/api/billing'
 import type { CheckoutStep, BillingDetailsFormValues } from '@/components/features/billing'
 import {
-  usePlans,
+  usePlansWithSettings,
   useCurrentSubscription,
   useCreateSubscription,
   useVerifyPayment,
+  useVerifySubscriptionPayment,
   useValidateCoupon,
   useRazorpayCheckout,
 } from '@/hooks/use-billing'
 import { useOrganization } from '@/hooks/use-settings'
 import type { BillingCycle, CouponValidation } from '@/types/billing'
+
+/** Get cycle label for display */
+function getCycleLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'weekly': return 'Weekly'
+    case 'monthly': return 'Monthly'
+    case 'annually': return 'Annual'
+    default: return 'Annual'
+  }
+}
+
+/** Get short cycle label for display */
+function getShortCycleLabel(cycle: BillingCycle): string {
+  switch (cycle) {
+    case 'weekly': return 'week'
+    case 'monthly': return 'month'
+    case 'annually': return 'year'
+    default: return 'year'
+  }
+}
+
+/** Get price for a specific billing cycle */
+function getPriceForCycle(pricing: { weekly?: number | null; monthly?: number | null; annually?: number | null }, cycle: BillingCycle): number | null | undefined {
+  switch (cycle) {
+    case 'weekly': return pricing.weekly
+    case 'monthly': return pricing.monthly
+    case 'annually': return pricing.annually
+    default: return pricing.annually
+  }
+}
 
 function CheckoutContent() {
   const router = useRouter()
@@ -41,27 +75,37 @@ function CheckoutContent() {
     (searchParams.get('billing') as BillingCycle) || 'annually'
   )
   const [billingDetails, setBillingDetails] = useState<BillingDetailsFormValues | null>(null)
-  const [additionalSeats] = useState(0)
+  const [additionalSeats, setAdditionalSeats] = useState(0)
   const [coupon, setCoupon] = useState<CouponValidation | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
   // Queries
-  const { data: plans, isLoading: isLoadingPlans } = usePlans()
+  const { data: plansData, isLoading: isLoadingPlans } = usePlansWithSettings()
   const { data: subscription } = useCurrentSubscription()
   const { data: organization } = useOrganization()
+
+  // Extract plans and global settings
+  const plans = plansData?.plans
+  const globalSettings = plansData?.globalSettings
 
   // Mutations
   const createSubscription = useCreateSubscription()
   const verifyPayment = useVerifyPayment()
+  const verifySubscriptionPayment = useVerifySubscriptionPayment()
   const validateCoupon = useValidateCoupon()
-  const { openCheckout } = useRazorpayCheckout()
+  const { openCheckout, openSubscriptionCheckout } = useRazorpayCheckout()
 
   // Get selected plan
   const selectedPlan = plans?.find((p) => p.code === selectedPlanCode)
 
-  // Handle plan selection from URL
+  // Check if user is upgrading from trial
+  const isUpgradingFromTrial = subscription?.isTrialing === true
+
+  // Handle plan selection from URL: advances the wizard once the async plan
+  // list resolves and confirms the plan code from the URL is valid.
   useEffect(() => {
     if (selectedPlanCode && selectedPlan) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync of wizard state with async-loaded plan data
       setCompletedSteps(['plan'])
       setCurrentStep('billing')
     }
@@ -129,39 +173,98 @@ function CheckoutContent() {
         autoRenew: true,
       })
 
-      // Open Razorpay checkout
-      await openCheckout(
-        {
-          key: orderResponse.razorpayOrder.key,
-          amount: orderResponse.razorpayOrder.amount,
-          currency: orderResponse.razorpayOrder.currency,
-          name: 'EffortlessInsight',
-          description: `${selectedPlan.displayName} - ${billingCycle === 'annually' ? 'Annual' : 'Monthly'}`,
-          orderId: orderResponse.razorpayOrder.id,
-          prefill: {
-            name: billingDetails.companyName,
-            email: billingDetails.billingEmail,
-            contact: billingDetails.phone,
-          },
-          theme: {
-            color: '#7C3AED',
-          },
-        },
-        async (response) => {
-          // Verify payment
-          await verifyPayment.mutateAsync({
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpayOrderId: response.razorpay_order_id,
-            razorpaySignature: response.razorpay_signature,
-          })
+      // Check if this is a free plan (no payment required)
+      if (orderResponse.isFreePlan) {
+        setCompletedSteps(['plan', 'billing', 'payment'])
+        setCurrentStep('confirmation')
+        setIsProcessing(false)
+        return
+      }
 
-          setCompletedSteps(['plan', 'billing', 'payment'])
-          setCurrentStep('confirmation')
-        },
-        () => {
+      // Check if this is a subscription-based checkout (true auto-recurring)
+      if (orderResponse.razorpaySubscription) {
+        // Use subscription checkout for auto-recurring billing
+        // This opens Razorpay checkout for mandate authorization
+        // - For plans with trial: User authorizes payment method, no immediate charge
+        // - For plans without trial: User pays immediately
+        const checkoutOpened = await openSubscriptionCheckout(
+          {
+            key: orderResponse.razorpaySubscription.key,
+            subscriptionId: orderResponse.razorpaySubscription.subscriptionId,
+            name: 'EffortlessInsight',
+            description: `${selectedPlan.displayName} - ${getCycleLabel(billingCycle)} (Auto-Renewal)`,
+            prefill: {
+              name: billingDetails.companyName,
+              email: billingDetails.billingEmail,
+              contact: billingDetails.phone,
+            },
+            theme: {
+              color: '#7C3AED',
+            },
+          },
+          async (response) => {
+            try {
+              // Verify subscription payment/authorization
+              await verifySubscriptionPayment.mutateAsync({
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySubscriptionId: response.razorpay_subscription_id,
+                razorpaySignature: response.razorpay_signature,
+              })
+
+              setCompletedSteps(['plan', 'billing', 'payment'])
+              setCurrentStep('confirmation')
+            } finally {
+              setIsProcessing(false)
+            }
+          },
+          () => {
+            // User dismissed checkout
+            setIsProcessing(false)
+          }
+        )
+
+        // If checkout failed to open (e.g., Razorpay script load failed)
+        if (!checkoutOpened) {
           setIsProcessing(false)
         }
-      )
+        return
+      }
+
+      // Fall back to order-based checkout (legacy flow)
+      if (orderResponse.razorpayOrder && orderResponse.checkoutOptions) {
+        await openCheckout(
+          {
+            key: orderResponse.razorpayOrder.key,
+            amount: orderResponse.razorpayOrder.amount,
+            currency: orderResponse.razorpayOrder.currency,
+            name: 'EffortlessInsight',
+            description: `${selectedPlan.displayName} - ${getCycleLabel(billingCycle)}`,
+            orderId: orderResponse.razorpayOrder.id,
+            prefill: {
+              name: billingDetails.companyName,
+              email: billingDetails.billingEmail,
+              contact: billingDetails.phone,
+            },
+            theme: {
+              color: '#7C3AED',
+            },
+          },
+          async (response) => {
+            // Verify payment
+            await verifyPayment.mutateAsync({
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature,
+            })
+
+            setCompletedSteps(['plan', 'billing', 'payment'])
+            setCurrentStep('confirmation')
+          },
+          () => {
+            setIsProcessing(false)
+          }
+        )
+      }
     } catch {
       setIsProcessing(false)
     }
@@ -238,7 +341,68 @@ function CheckoutContent() {
 
       {currentStep === 'billing' && selectedPlan && (
         <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Additional Seats Selector - only shown if:
+                1. Plan allows additional users
+                2. Plan has per-seat pricing configured
+                3. Global setting for additional seats is enabled (admin control) */}
+            {globalSettings?.additionalSeatsEnabled !== false &&
+             selectedPlan.limits.additionalUsersAllowed &&
+             selectedPlan.pricing.perSeat && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Additional Team Members</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Your plan includes {selectedPlan.limits.users} user{selectedPlan.limits.users !== 1 ? 's' : ''}.
+                      You can add extra seats at{' '}
+                      {formatAmount(
+                        getPriceForCycle(selectedPlan.pricing.perSeat!, billingCycle) || 0
+                      )}
+                      /{getShortCycleLabel(billingCycle)} per user.
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <Label htmlFor="additionalSeats">Additional seats:</Label>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setAdditionalSeats(Math.max(0, additionalSeats - 1))}
+                          disabled={additionalSeats === 0}
+                        >
+                          -
+                        </Button>
+                        <Input
+                          id="additionalSeats"
+                          type="number"
+                          min={0}
+                          value={additionalSeats}
+                          onChange={(e) => setAdditionalSeats(Math.max(0, parseInt(e.target.value) || 0))}
+                          className="w-20 text-center"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setAdditionalSeats(additionalSeats + 1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+                    {additionalSeats > 0 && (
+                      <p className="text-sm font-medium text-primary">
+                        Total team size: {selectedPlan.limits.users + additionalSeats} users
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <BillingDetailsForm
               defaultValues={billingDetails || undefined}
               organizationName={organization?.name}
@@ -254,6 +418,7 @@ function CheckoutContent() {
               plan={selectedPlan}
               billingCycle={billingCycle}
               additionalSeats={additionalSeats}
+              isUpgradingFromTrial={isUpgradingFromTrial}
             />
           </div>
         </div>
@@ -273,7 +438,7 @@ function CheckoutContent() {
                   <div>
                     <h3 className="font-semibold">{selectedPlan.displayName} Plan</h3>
                     <p className="text-sm text-muted-foreground">
-                      {billingCycle === 'annually' ? 'Annual' : 'Monthly'} billing
+                      {getCycleLabel(billingCycle)} billing
                     </p>
                   </div>
                   <Button variant="link" onClick={handleBackToBilling}>
@@ -317,6 +482,16 @@ function CheckoutContent() {
                   />
                 </div>
 
+                {/* Trial Notice */}
+                {selectedPlan.trialDays > 0 && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>{selectedPlan.trialDays}-day free trial:</strong> You will be asked to
+                      authorize a payment method. No charge will be made until your trial ends.
+                    </p>
+                  </div>
+                )}
+
                 {/* Pay Button */}
                 <Button
                   className="w-full"
@@ -329,6 +504,8 @@ function CheckoutContent() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Processing...
                     </>
+                  ) : selectedPlan.trialDays > 0 ? (
+                    'Start Free Trial'
                   ) : (
                     'Pay Now'
                   )}
@@ -343,6 +520,15 @@ function CheckoutContent() {
                   <Link href="/privacy" className="underline">
                     Privacy Policy
                   </Link>
+                  {selectedPlan.trialDays > 0 && (
+                    <>
+                      . After your trial, you will be charged{' '}
+                      {formatAmount(
+                        getPriceForCycle(selectedPlan.pricing, billingCycle) || 0
+                      )}
+                      /{getShortCycleLabel(billingCycle)}.
+                    </>
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -356,6 +542,7 @@ function CheckoutContent() {
               coupon={coupon}
               companyState={billingDetails.state}
               companyGstin={billingDetails.gstin}
+              isUpgradingFromTrial={isUpgradingFromTrial}
             />
           </div>
         </div>
@@ -363,20 +550,39 @@ function CheckoutContent() {
 
       {currentStep === 'confirmation' && (
         <div className="max-w-lg mx-auto text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="h-10 w-10 text-green-600" />
+          <div className="w-20 h-20 bg-mint-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="h-10 w-10 text-mint-600" />
           </div>
 
-          <h2 className="text-2xl font-bold mb-4">Payment Successful!</h2>
-          <p className="text-muted-foreground mb-8">
-            Thank you for subscribing to {selectedPlan?.displayName}. Your
-            subscription is now active and you have full access to all features.
-          </p>
+          {selectedPlan?.trialDays && selectedPlan.trialDays > 0 ? (
+            <>
+              <h2 className="text-2xl font-bold mb-4">Trial Started!</h2>
+              <p className="text-muted-foreground mb-4">
+                Welcome to {selectedPlan.displayName}! Your {selectedPlan.trialDays}-day free trial has started.
+              </p>
+              <p className="text-sm text-muted-foreground mb-8">
+                Your payment method has been authorized. You will be automatically charged{' '}
+                {formatAmount(
+                  getPriceForCycle(selectedPlan.pricing, billingCycle) || 0
+                )}{' '}
+                when your trial ends. Enjoy full access to all features!
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold mb-4">Payment Successful!</h2>
+              <p className="text-muted-foreground mb-8">
+                Thank you for subscribing to {selectedPlan?.displayName}. Your
+                subscription is now active and you have full access to all features.
+              </p>
+            </>
+          )}
 
           <div className="space-y-4">
-            <Button asChild className="w-full">
-              <Link href="/dashboard">Go to Dashboard</Link>
-            </Button>
+            <Button className="w-full" onClick={() => {
+              const pending = localStorage.getItem('pendingInvitationUrl')
+              router.push(pending && /^\/ca-invitations\/[A-Za-z0-9_-]+$/.test(pending) ? pending : '/dashboard')
+            }}>Continue</Button>
             <Button variant="outline" asChild className="w-full">
               <Link href="/settings/billing">View Billing Details</Link>
             </Button>

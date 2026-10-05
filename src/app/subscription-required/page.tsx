@@ -1,0 +1,233 @@
+'use client'
+
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { AlertCircle, CreditCard, Clock, XCircle, Loader2, PauseCircle } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { useResumeSubscription } from '@/hooks/use-billing'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+
+function SubscriptionRequiredContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const resumeSubscription = useResumeSubscription()
+  const [isResuming, setIsResuming] = useState(false)
+
+  // Derived directly from the URL; no state needed
+  const errorDetails = {
+    error: searchParams.get('error'),
+    status: searchParams.get('status'),
+  }
+
+  const handleResume = async () => {
+    setIsResuming(true)
+    resumeSubscription.mutate(undefined, {
+      onSuccess: () => {
+        // Redirect to dashboard on successful resume
+        router.push('/dashboard')
+      },
+      onError: (error: Error & { response?: { status?: number; data?: { code?: string } } }) => {
+        // Check if payment is required (402 error)
+        const isPaymentRequired =
+          error.response?.status === 402 ||
+          error.response?.data?.code === 'PAYMENT_REQUIRED' ||
+          error.message?.includes('PAYMENT_REQUIRED')
+
+        if (isPaymentRequired) {
+          // Redirect to select-plan if payment is required
+          router.push('/select-plan')
+        }
+        setIsResuming(false)
+      },
+    })
+  }
+
+  const getErrorMessage = () => {
+    if (errorDetails.error === 'TRIAL_EXPIRED') {
+      return {
+        icon: Clock,
+        variant: 'default' as const,
+        title: 'Your free trial has expired',
+        description:
+          'Your trial period has ended. Upgrade to a paid plan to continue using EffortlessInsight and access all your data.',
+        showResume: false,
+      }
+    }
+
+    if (errorDetails.error === 'SUBSCRIPTION_REQUIRED' || errorDetails.status === 'none') {
+      return {
+        icon: CreditCard,
+        variant: 'default' as const,
+        title: 'Subscription required',
+        description:
+          'You need an active subscription to access this feature. Choose a plan that works for you and start your free trial today.',
+        showResume: false,
+      }
+    }
+
+    if (errorDetails.status === 'expired') {
+      return {
+        icon: XCircle,
+        variant: 'destructive' as const,
+        title: 'Subscription expired',
+        description:
+          'Your subscription has expired. Renew your subscription to regain access to all features.',
+        showResume: false,
+      }
+    }
+
+    if (errorDetails.status === 'cancelled') {
+      return {
+        icon: AlertCircle,
+        variant: 'default' as const,
+        title: 'Subscription cancelled',
+        description:
+          'Your subscription was cancelled. Reactivate or choose a new plan to continue using EffortlessInsight.',
+        showResume: false,
+      }
+    }
+
+    if (errorDetails.status === 'paused') {
+      return {
+        icon: PauseCircle,
+        variant: 'default' as const,
+        title: 'Subscription Paused',
+        description:
+          'Your subscription is currently paused. Resume it to continue using EffortlessInsight.',
+        showResume: true,
+      }
+    }
+
+    return {
+      icon: AlertCircle,
+      variant: 'default' as const,
+      title: 'Access restricted',
+      description:
+        'Your current subscription status does not allow access to this feature. Please upgrade your plan.',
+      showResume: false,
+    }
+  }
+
+  const errorInfo = getErrorMessage()
+  const Icon = errorInfo.icon
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-primary-50 to-white p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className={`h-16 w-16 rounded-full ${
+              errorInfo.variant === 'destructive' ? 'bg-destructive/10' : 'bg-primary/10'
+            } flex items-center justify-center`}>
+              <Icon className={`h-8 w-8 ${
+                errorInfo.variant === 'destructive' ? 'text-destructive' : 'text-primary'
+              }`} />
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold">{errorInfo.title}</CardTitle>
+          <CardDescription className="text-base">
+            {errorInfo.description}
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {errorDetails.status && (
+            <Alert variant={errorInfo.variant}>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Current Status</AlertTitle>
+              <AlertDescription>
+                Your subscription status is: <strong className="capitalize">{errorDetails.status}</strong>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="rounded-lg bg-muted p-4 space-y-2">
+            <h4 className="font-semibold text-sm">What you&apos;ll get with a subscription:</h4>
+            <ul className="space-y-1 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="text-primary">✓</span>
+                <span>Full access to all features</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">✓</span>
+                <span>Unlimited GST notice management</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">✓</span>
+                <span>AI-powered analysis and insights</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">✓</span>
+                <span>Priority support and updates</span>
+              </li>
+            </ul>
+          </div>
+        </CardContent>
+
+        <CardFooter className="flex flex-col gap-3">
+          {errorInfo.showResume ? (
+            <>
+              <Button
+                onClick={handleResume}
+                disabled={isResuming}
+                className="w-full"
+                size="lg"
+              >
+                {isResuming ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Resuming...
+                  </>
+                ) : (
+                  'Resume Subscription'
+                )}
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/select-plan">Choose a Different Plan</Link>
+              </Button>
+            </>
+          ) : (
+            <Button asChild className="w-full" size="lg">
+              <Link href="/select-plan">Choose a Plan</Link>
+            </Button>
+          )}
+
+          {errorDetails.status === 'expired' || errorDetails.status === 'cancelled' ? (
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/settings/billing">Manage Subscription</Link>
+            </Button>
+          ) : null}
+
+          <Button asChild variant="ghost" className="w-full">
+            <Link href="/pricing">View All Plans & Pricing</Link>
+          </Button>
+
+          <div className="text-center text-sm text-muted-foreground pt-2">
+            Need help?{' '}
+            <Link href="/contact" className="text-primary hover:underline">
+              Contact Support
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
+  )
+}
+
+export default function SubscriptionRequiredPage() {
+  return (
+    <Suspense fallback={null}>
+      <SubscriptionRequiredContent />
+    </Suspense>
+  )
+}

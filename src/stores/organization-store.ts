@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Organization, OrganizationListItem } from '@/types'
 import { organizationsApi, authApi } from '@/lib/api'
+import { useAuthStore } from './auth-store'
+import { useSubscriptionStore } from './subscription-store'
 
 interface OrganizationState {
   currentOrganization: OrganizationListItem | null
@@ -34,32 +36,81 @@ export const useOrganizationStore = create<OrganizationState>()(
           const current = get().currentOrganization
           let targetOrg = current
 
+          // A CA who owns their own firm org and also has role="ca" memberships
+          // in client orgs should land on their own firm by default, not a
+          // random client - the BO/Client selector is what picks a client.
+          const defaultOrg = () =>
+            organizations.find((o) => o.role !== 'ca') ?? organizations[0]
+
           // If current org is set, verify it still exists in the list
           if (current) {
             const stillExists = organizations.find(o => o.id === current.id)
-            if (!stillExists && organizations.length > 0) {
-              targetOrg = organizations[0]
+            if (stillExists) {
+              // Use the FULL org from API, not the potentially partial persisted version.
+              // This ensures we have all fields (noticeCount, memberCount, etc.) even if
+              // the persisted org was set with minimal data (e.g., after invitation accept).
+              targetOrg = stillExists
+            } else if (organizations.length > 0) {
+              targetOrg = defaultOrg()
             }
           } else if (organizations.length > 0) {
-            targetOrg = organizations[0]
+            targetOrg = defaultOrg()
           }
 
-          // Always call switchOrganization to ensure JWT has org_id claim
+          // Try to call switchOrganization to ensure JWT has org_id claim
           if (targetOrg) {
-            await authApi.switchOrganization({ organizationId: targetOrg.id })
+            try {
+              await authApi.switchOrganization({ organizationId: targetOrg.id })
+            } catch (switchError: unknown) {
+              // If switchOrganization fails with 402 (subscription required),
+              // just continue - we'll handle subscription separately
+              const isPaymentRequired =
+                (switchError && typeof switchError === 'object' && 'status' in switchError &&
+                 (switchError as { status: number }).status === 402) ||
+                (switchError && typeof switchError === 'object' && 'response' in switchError &&
+                 (switchError as { response: { status: number } }).response?.status === 402)
+
+              if (!isPaymentRequired) {
+                throw switchError
+              }
+              // For 402 errors, continue without re-throwing - organization is still valid
+            }
             set({ currentOrganization: targetOrg, isLoading: false })
           } else {
             set({ isLoading: false })
           }
-        } catch (error) {
-          set({ isLoading: false })
+        } catch (error: unknown) {
+          // Check for NOT_A_MEMBER or similar errors - clear stale data
+          const errorCode = (error && typeof error === 'object' && 'code' in error)
+            ? String((error as { code: unknown }).code)
+            : ''
+
+          if (errorCode === 'NOT_A_MEMBER' || errorCode === 'NOT_FOUND' || errorCode === 'FORBIDDEN') {
+            // Clear stale organization data
+            set({
+              currentOrganization: null,
+              organizations: [],
+              isLoading: false,
+            })
+          } else {
+            set({ isLoading: false })
+          }
           throw error
         }
       },
 
       switchOrganization: async (orgId: string) => {
+        if (get().isLoading || get().currentOrganization?.id === orgId) return
         const { organizations } = get()
-        const org = organizations.find((o) => o.id === orgId)
+        let org = organizations.find((o) => o.id === orgId)
+
+        // A BO may have accepted a distributor invitation in another session.
+        // Refresh memberships before rejecting a newly available client organization.
+        if (!org) {
+          const response = await organizationsApi.list()
+          set({ organizations: response.organizations })
+          org = response.organizations.find((o) => o.id === orgId)
+        }
 
         if (!org) {
           throw new Error('Organization not found')
@@ -68,7 +119,10 @@ export const useOrganizationStore = create<OrganizationState>()(
         set({ isLoading: true })
         try {
           // Call API to switch organization (updates JWT)
-          await authApi.switchOrganization({ organizationId: orgId })
+          const result = await authApi.switchOrganization({ organizationId: orgId })
+          useSubscriptionStore.getState().clearSubscription()
+          const user = useAuthStore.getState().user
+          if (user) useAuthStore.getState().setUser({ ...user, organization: result.organization })
           set({
             currentOrganization: org,
             isLoading: false,

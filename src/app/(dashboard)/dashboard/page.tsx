@@ -10,6 +10,7 @@ import {
   Upload,
   ArrowRight,
   Calendar,
+  UserPlus,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,8 @@ import {
   ActivityFeed,
   NoticesByStatusChart,
   NoticesByPriorityChart,
+  ClientAttentionCard,
+  PendingCaInvitationsCard,
 } from '@/components/features/dashboard'
 import { useDashboard } from '@/hooks/use-dashboard'
 import { useAuthStore } from '@/stores/auth-store'
@@ -90,10 +93,12 @@ export default function DashboardPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
+          <p className="eyebrow mb-2 text-azure-700">Your workspace</p>
           <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, {firstName}!
+            Welcome back,{' '}
+            <span className="text-gradient">{firstName}</span>
           </h1>
-          <p className="text-muted-foreground">
+          <p className="mt-1 text-muted-foreground">
             Here&apos;s an overview of your GST notices and tasks.
           </p>
         </div>
@@ -111,6 +116,14 @@ export default function DashboardPage() {
               <SelectItem value="all">All time</SelectItem>
             </SelectContent>
           </Select>
+          {user?.isCA && (
+            <Button asChild variant="outline">
+              <Link href="/clients/invite">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Invite Client
+              </Link>
+            </Button>
+          )}
           <Button asChild>
             <Link href="/notices/upload">
               <Upload className="mr-2 h-4 w-4" />
@@ -160,24 +173,33 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* CA-as-distributor: pending invitations (CA accounts only) */}
+      {/* {user?.isCA && <PendingCaInvitationsCard />} */}
+
+      {/* Clients needing attention (hidden when nothing is overdue) */}
+      <ClientAttentionCard />
+
       {/* Additional Stats Row */}
       {data?.notices && (
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="flex items-center justify-between pt-6">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-coral-50 text-coral-600">
+                  <Clock className="h-5 w-5" />
+                </span>
                 <div>
                   <p className="text-sm text-muted-foreground">Overdue Notices</p>
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className="text-2xl font-bold text-coral-600 nums">
                     {data.notices.overdue}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Demand Amount</p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(data.notices.totalDemandAmount)}
-                  </p>
-                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Total Demand Amount</p>
+                <p className="text-2xl font-bold nums">
+                  {formatCurrency(data.notices.totalDemandAmount)}
+                </p>
               </div>
             </CardContent>
           </Card>

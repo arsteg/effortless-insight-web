@@ -9,8 +9,11 @@ import type {
   NoticeFilters,
   NoticeListResponse,
   NoticeStatistics,
+  GstinNoticeSummary,
+  NoticeStatus,
   UpdateNoticeRequest,
   AssignNoticeRequest,
+  SimilarNotice,
 } from '@/types'
 
 // Query keys
@@ -21,6 +24,7 @@ export const noticeKeys = {
   details: () => [...noticeKeys.all, 'detail'] as const,
   detail: (id: string) => [...noticeKeys.details(), id] as const,
   statistics: () => [...noticeKeys.all, 'statistics'] as const,
+  similarNotices: (id: string) => [...noticeKeys.details(), id, 'similar'] as const,
 }
 
 // Get notices list with filters
@@ -29,6 +33,8 @@ export function useNotices(filters: NoticeFilters = {}) {
     queryKey: noticeKeys.list(filters),
     queryFn: () => noticesApi.list(filters),
     staleTime: 30 * 1000,
+    // Recover missed hub events, including notices outside the current filter.
+    refetchInterval: 15000,
   })
 }
 
@@ -38,6 +44,11 @@ export function useNotice(id: string) {
     queryKey: noticeKeys.detail(id),
     queryFn: () => noticesApi.get(id),
     enabled: !!id,
+    refetchInterval: (query) => {
+      const notice = query.state.data
+      return notice && (notice.status === 'uploaded' || notice.status === 'processing' ||
+        notice.processingStatus === 'retrying') ? 5000 : false
+    },
   })
 }
 
@@ -46,6 +57,15 @@ export function useNoticeStatistics() {
   return useQuery<NoticeStatistics>({
     queryKey: noticeKeys.statistics(),
     queryFn: () => noticesApi.getStatistics(),
+    staleTime: 60 * 1000,
+  })
+}
+
+// Get per-GSTIN notice counts for the client summary strip
+export function useGstinSummaries() {
+  return useQuery<GstinNoticeSummary[]>({
+    queryKey: [...noticeKeys.all, 'gstin-summary'] as const,
+    queryFn: () => noticesApi.getGstinSummary(),
     staleTime: 60 * 1000,
   })
 }
@@ -124,6 +144,33 @@ export function useDeleteNotice() {
       toast({
         title: 'Delete failed',
         description: 'Failed to delete the notice. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+// Update notice status mutation
+export function useUpdateNoticeStatus() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: ({ id, status, reason }: { id: string; status: NoticeStatus; reason?: string }) =>
+      noticesApi.updateStatus(id, { status, reason }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: noticeKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: noticeKeys.detail(data.id) })
+      toast({
+        title: 'Status updated',
+        description: 'The notice status has been updated successfully.',
+        variant: 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Update failed',
+        description: 'Failed to update the notice status. Please try again.',
         variant: 'destructive',
       })
     },
@@ -220,6 +267,59 @@ export function useExportNotices() {
       toast({
         title: 'Export failed',
         description: 'Failed to export notices. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+// Get similar notices (AI-detected)
+export function useSimilarNotices(noticeId: string) {
+  return useQuery<SimilarNotice[]>({
+    queryKey: noticeKeys.similarNotices(noticeId),
+    queryFn: () => noticesApi.getSimilarNotices(noticeId),
+    enabled: !!noticeId,
+  })
+}
+
+// Export notice summary as PDF
+export function useExportNoticeSummary() {
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async ({
+      noticeId,
+      noticeNumber,
+    }: {
+      noticeId: string
+      noticeNumber?: string
+    }) => {
+      const blob = await noticesApi.exportSummary(noticeId)
+      return { blob, noticeNumber }
+    },
+    onSuccess: ({ blob, noticeNumber }) => {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const fileName = noticeNumber
+        ? `notice-${noticeNumber.replace(/[^a-zA-Z0-9-_]/g, '_')}-summary.pdf`
+        : `notice-summary-${new Date().toISOString().split('T')[0]}.pdf`
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast({
+        title: 'Export successful',
+        description: 'Notice summary has been exported to PDF.',
+        variant: 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Export failed',
+        description: 'Failed to export notice summary. Please try again.',
         variant: 'destructive',
       })
     },

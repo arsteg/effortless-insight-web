@@ -1,102 +1,55 @@
-'use client'
-
 import Link from 'next/link'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function CTASection() {
   return (
-    <section className="py-20 md:py-28 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary-500/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <svg width="100%" height="100%">
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-      </div>
-
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <Sparkles className="h-4 w-4" />
-            Start Your Free Trial Today
-          </div>
-
-          {/* Headline */}
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
-            Ready to Transform Your
-            <br />
-            GST Compliance?
-          </h2>
-
-          {/* Subheadline */}
-          <p className="text-lg md:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Auto-fetch notices from GST Portal. Get WhatsApp alerts for deadlines.
-            Join businesses across India who have eliminated the chaos of GST notices.
+    <section className="bg-white py-16 md:py-24">
+      <div className="container mx-auto px-4">
+        <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[2rem] bg-gray-950 px-8 py-16 text-center shadow-premium ring-1 ring-gray-900/10 md:px-16 md:py-20">
+          {/* Single restrained glow + hairline grid texture */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-28 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-primary-500/20 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,black,transparent)]"
+          />
+          <p className="eyebrow relative justify-center text-primary-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary-400" aria-hidden />
+            Get started
           </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+          <h2 className="relative mt-4 font-display text-3xl font-bold tracking-tightest text-white md:text-[2.75rem] md:leading-[1.1]">
+            The next notice doesn&apos;t have to be scary.
+          </h2>
+          <p className="relative mx-auto mt-4 max-w-xl text-lg leading-relaxed text-gray-400">
+            Connect a GSTIN in two minutes. If a notice is already waiting on
+            the portal, you&apos;ll understand it before your trial is an hour old.
+          </p>
+          <div className="relative mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
               size="lg"
-              variant="secondary"
               asChild
-              className="w-full sm:w-auto text-lg px-8 py-6 bg-white text-primary-600 hover:bg-primary-50 shadow-xl"
+              className="group h-12 bg-white px-8 text-base font-semibold text-gray-950 shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
             >
               <Link href="/register">
-                Start Free 14-Day Trial
-                <ArrowRight className="ml-2 h-5 w-5" />
+                Start free 14-day trial
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
             <Button
               size="lg"
-              variant="outline"
+              variant="ghost"
               asChild
-              className="w-full sm:w-auto text-lg px-8 py-6 border-white/30 text-white hover:bg-white/10"
+              className="h-12 px-6 text-base text-gray-300 hover:bg-white/10 hover:text-white"
             >
-              <Link href="/contact">Talk to Sales</Link>
+              <Link href="/contact">Talk to sales</Link>
             </Button>
           </div>
-
-          {/* Trust Points */}
-          <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm text-primary-200">
-            <div className="flex items-center gap-2">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>14-day free trial</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>No credit card</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>GST Portal sync</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>WhatsApp alerts</span>
-            </div>
-          </div>
+          <p className="relative mt-6 text-sm text-gray-500">
+            No credit card · OTP-verified access · No password storage · Data hosted in India
+          </p>
         </div>
       </div>
     </section>

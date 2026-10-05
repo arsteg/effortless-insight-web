@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast'
 import { notificationsApi } from '@/lib/api/notifications'
 import {
   isFirebaseConfigured,
+  isMessagingSupported,
   getFCMToken,
   onForegroundMessage,
   requestNotificationPermission,
@@ -173,7 +174,6 @@ export function usePushNotifications(
       // Check if this is the same token we already registered
       const existingToken = localStorage.getItem(PUSH_TOKEN_KEY)
       if (existingToken === token) {
-        console.log('Push token already registered')
         setStatus('registered')
         return true
       }
@@ -192,8 +192,6 @@ export function usePushNotifications(
       localStorage.setItem(PUSH_TOKEN_REGISTERED_KEY, 'true')
 
       setStatus('registered')
-      console.log('Push notification token registered successfully')
-
       return true
     } catch (err) {
       console.error('Error registering push token:', err)
@@ -250,12 +248,29 @@ export function usePushNotifications(
 
   // Initialize on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs status with browser permission/localStorage state on mount
     checkStatus()
   }, [checkStatus])
+
+  // Confirm actual FCM support asynchronously (covers iOS Safari outside an
+  // installed PWA, private-mode IndexedDB, etc.). If unsupported, force the
+  // 'unsupported' state so the opt-in prompt is never shown (audit WB-06).
+  useEffect(() => {
+    let cancelled = false
+    isMessagingSupported().then((supported) => {
+      if (!cancelled && !supported) {
+        setStatus('unsupported')
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Auto-register if enabled and permission is granted
   useEffect(() => {
     if (autoRegister && status === 'permission-granted') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional auto-registration side effect when permission becomes granted
       registerToken()
     }
   }, [autoRegister, status, registerToken])

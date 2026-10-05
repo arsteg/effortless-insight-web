@@ -4,28 +4,37 @@ export type MessageRole = 'user' | 'assistant' | 'system'
 
 export interface Citation {
   source: string
-  type: string
-  reference?: string
+  reference: string
+  quote?: string
+}
+
+export interface MessageFeedback {
+  rating: number
+  feedbackText?: string
 }
 
 export interface ConversationDto {
   id: string
   noticeId: string
   title?: string
+  status?: string
   messageCount: number
-  totalTokens: number
   lastMessageAt?: string
   createdAt: string
+  lastMessage?: MessageDto
 }
 
 export interface MessageDto {
   id: string
-  conversationId: string
+  conversationId?: string
   role: MessageRole
   content: string
+  contentHtml?: string
   citations?: Citation[]
-  tokenCount: number
-  feedbackRating?: number
+  tokenCount?: number
+  modelId?: string
+  isError?: boolean
+  feedback?: MessageFeedback
   createdAt: string
 }
 
@@ -33,11 +42,14 @@ export interface ConversationDetailDto {
   id: string
   noticeId: string
   title?: string
+  status?: string
   messageCount: number
   totalTokens: number
   messages: MessageDto[]
   lastMessageAt?: string
   createdAt: string
+  hasMore?: boolean
+  nextCursor?: string
 }
 
 export interface SendMessageRequest {
@@ -58,13 +70,13 @@ export interface RegenerateMessageRequest {
   messageId: string
 }
 
-// Streaming event types
+// Streaming event types (must match ChatEventType constants in the .NET API)
 export type ChatEventType =
-  | 'UserMessageSaved'
-  | 'StreamStarted'
-  | 'ContentChunk'
-  | 'StreamCompleted'
-  | 'Error'
+  | 'user_message_saved'
+  | 'stream_started'
+  | 'content_chunk'
+  | 'stream_completed'
+  | 'error'
 
 export interface ChatStreamEvent {
   type: ChatEventType

@@ -1,3 +1,4 @@
+import { getRealtimeAccessToken } from '@/lib/api/client'
 import * as signalR from '@microsoft/signalr'
 import type { Notification, NotificationEvent } from '@/types/notification'
 
@@ -8,27 +9,45 @@ class NotificationService {
   private callbacks: Set<NotificationCallback> = new Set()
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
-  private isConnecting = false
+  private startPromise: Promise<void> | null = null
+  private refCount = 0
+  private disconnectTimer: ReturnType<typeof setTimeout> | null = null
 
   /**
-   * Initialize and connect to the notification hub
+   * Initialize and connect to the notification hub.
+   * Ref-counted: each connect() should be paired with a disconnect().
+   * Concurrent calls share a single in-flight start.
    */
   async connect(): Promise<void> {
+    this.refCount++
+
+    // A consumer came back before a deferred teardown ran — keep the connection
+    if (this.disconnectTimer) {
+      clearTimeout(this.disconnectTimer)
+      this.disconnectTimer = null
+    }
+
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
       return
     }
 
-    if (this.isConnecting) {
-      return
+    if (this.startPromise) {
+      return this.startPromise
     }
 
-    this.isConnecting = true
+    this.startPromise = this.startConnection()
+    try {
+      await this.startPromise
+    } finally {
+      this.startPromise = null
+    }
+  }
 
+  private async startConnection(): Promise<void> {
     try {
       const token = localStorage.getItem('access_token')
       if (!token) {
         console.warn('No access token available for SignalR connection')
-        this.isConnecting = false
         return
       }
 
@@ -36,7 +55,7 @@ class NotificationService {
 
       this.connection = new signalR.HubConnectionBuilder()
         .withUrl(`${baseUrl}/hubs/notifications`, {
-          accessTokenFactory: () => token,
+          accessTokenFactory: getRealtimeAccessToken,
           transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
         })
         .withAutomaticReconnect({
@@ -85,45 +104,84 @@ class NotificationService {
         })
       })
 
+      // The API's InAppNotificationService actually sends "notification" with an
+      // envelope ({ type, payload }) and "badgeUpdate" ({ unreadCount }) — the
+      // handlers above cover an older contract and never fire for new
+      // notifications. Handle the real protocol here.
+      this.connection.on('notification', (message: { type?: string; payload?: Record<string, unknown> }) => {
+        const p = (message?.payload ?? message) as Record<string, unknown> | undefined
+        if (!p?.id) return
+        const notification = {
+          ...(p as unknown as Notification),
+          isRead: Boolean(p.isRead ?? p.read ?? false),
+        }
+        this.notifySubscribers({
+          type: 'new',
+          notification,
+          unreadCount: -1, // Will be updated by the component
+        })
+      })
+
+      this.connection.on('badgeUpdate', (data: { unreadCount: number }) => {
+        this.notifySubscribers({
+          type: 'new',
+          unreadCount: data.unreadCount,
+        })
+      })
+
       // Connection state change handlers
-      this.connection.onreconnecting((error) => {
-        console.log('SignalR reconnecting...', error?.message)
+      this.connection.onreconnecting(() => {
         this.reconnectAttempts++
       })
 
-      this.connection.onreconnected((connectionId) => {
-        console.log('SignalR reconnected:', connectionId)
+      this.connection.onreconnected(() => {
         this.reconnectAttempts = 0
       })
 
-      this.connection.onclose((error) => {
-        console.log('SignalR connection closed', error?.message)
-        this.isConnecting = false
-      })
-
       await this.connection.start()
-      console.log('SignalR connected')
       this.reconnectAttempts = 0
-      this.isConnecting = false
     } catch (error) {
       console.error('Failed to connect to SignalR:', error)
-      this.isConnecting = false
       throw error
     }
   }
 
   /**
-   * Disconnect from the notification hub
+   * Release one consumer of the connection. The actual teardown is deferred
+   * briefly and skipped if a consumer reconnects (e.g. React StrictMode's
+   * mount → cleanup → mount cycle in development), so the connection is never
+   * stopped mid-negotiation.
    */
   async disconnect(): Promise<void> {
-    if (this.connection) {
-      try {
-        await this.connection.stop()
-        console.log('SignalR disconnected')
-      } catch (error) {
-        console.error('Error disconnecting from SignalR:', error)
-      }
-      this.connection = null
+    this.refCount = Math.max(0, this.refCount - 1)
+    if (this.refCount > 0) return
+
+    if (this.disconnectTimer) {
+      clearTimeout(this.disconnectTimer)
+    }
+    this.disconnectTimer = setTimeout(() => {
+      this.disconnectTimer = null
+      void this.teardown()
+    }, 1000)
+  }
+
+  private async teardown(): Promise<void> {
+    if (this.refCount > 0) return
+
+    const connection = this.connection
+    this.connection = null
+
+    // Never stop while a start is negotiating — wait for it to settle first
+    try {
+      await this.startPromise
+    } catch {
+      // start failed; there is nothing healthy to stop
+    }
+
+    try {
+      await connection?.stop()
+    } catch (error) {
+      console.error('Error disconnecting from SignalR:', error)
     }
   }
 

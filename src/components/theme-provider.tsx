@@ -15,16 +15,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 const STORAGE_KEY = 'theme'
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('system')
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
-
-  useEffect(() => {
-    // Load saved theme from localStorage
+  // Lazy init from localStorage (falls back to 'system' during SSR)
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'system'
     const saved = localStorage.getItem(STORAGE_KEY) as Theme | null
-    if (saved && ['light', 'dark', 'system'].includes(saved)) {
-      setThemeState(saved)
-    }
-  }, [])
+    return saved && ['light', 'dark', 'system'].includes(saved) ? saved : 'system'
+  })
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
     // Apply theme

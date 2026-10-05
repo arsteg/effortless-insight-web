@@ -2,6 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   taskApi,
   taskTemplateApi,
+  taskDependencyApi,
+  taskReminderApi,
+  teamsApi,
+  taskAttachmentApi,
   commentApi,
   documentRequestApi,
   documentRequestTemplateApi,
@@ -9,10 +13,15 @@ import {
   fileApi,
   timeTrackingApi,
 } from '@/services/collaboration'
+import { useToast } from '@/hooks/use-toast'
 import type {
   CreateTaskRequest,
   UpdateTaskRequest,
   CreateTaskTemplateRequest,
+  CreateTaskDependencyRequest,
+  CreateTaskReminderRequest,
+  CreateTeamRequest,
+  UpdateTeamRequest,
   CreateCommentRequest,
   UpdateCommentRequest,
   CreateDocumentRequestRequest,
@@ -69,6 +78,7 @@ export function useMyTasks(params?: {
 
 export function useCreateTask(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: (data: CreateTaskRequest) => taskApi.createTask(noticeId, data),
@@ -76,6 +86,17 @@ export function useCreateTask(noticeId: string) {
       queryClient.invalidateQueries({ queryKey: ['tasks', noticeId] })
       queryClient.invalidateQueries({ queryKey: ['myTasks'] })
       queryClient.invalidateQueries({ queryKey: ['activity', noticeId] })
+    },
+    onError: (error: unknown) => {
+      const apiError = error as { message?: string; errors?: Record<string, string[]> }
+      const message = apiError.errors?.DueDate?.[0]
+        || apiError.message
+        || 'Failed to create task'
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
@@ -160,6 +181,165 @@ export function useDeleteTaskTemplate() {
 }
 
 // =============================================================================
+// TEAM HOOKS
+// =============================================================================
+
+export function useTeams() {
+  return useQuery({
+    queryKey: ['teams'],
+    queryFn: () => teamsApi.getTeams(),
+  })
+}
+
+export function useCreateTeam() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: CreateTeamRequest) => teamsApi.createTeam(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] })
+    },
+  })
+}
+
+export function useUpdateTeam() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ teamId, data }: { teamId: string; data: UpdateTeamRequest }) =>
+      teamsApi.updateTeam(teamId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] })
+    },
+  })
+}
+
+export function useDeleteTeam() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (teamId: string) => teamsApi.deleteTeam(teamId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] })
+    },
+  })
+}
+
+// =============================================================================
+// TASK ATTACHMENT HOOKS
+// =============================================================================
+
+export function useTaskAttachments(taskId: string) {
+  return useQuery({
+    queryKey: ['taskAttachments', taskId],
+    queryFn: () => taskAttachmentApi.getAttachments(taskId),
+    enabled: !!taskId,
+  })
+}
+
+export function useUploadTaskAttachment(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (file: File) => taskAttachmentApi.uploadAttachment(taskId, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskAttachments', taskId] })
+    },
+  })
+}
+
+export function useDownloadTaskAttachment(taskId: string) {
+  return useMutation({
+    mutationFn: (attachmentId: string) =>
+      taskAttachmentApi.getDownloadUrl(taskId, attachmentId),
+  })
+}
+
+export function useDeleteTaskAttachment(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (attachmentId: string) =>
+      taskAttachmentApi.deleteAttachment(taskId, attachmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskAttachments', taskId] })
+    },
+  })
+}
+
+// =============================================================================
+// TASK DEPENDENCY HOOKS
+// =============================================================================
+
+export function useTaskDependencies(taskId: string) {
+  return useQuery({
+    queryKey: ['taskDependencies', taskId],
+    queryFn: () => taskDependencyApi.getDependencies(taskId),
+    enabled: !!taskId,
+  })
+}
+
+export function useAddTaskDependency(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: CreateTaskDependencyRequest) =>
+      taskDependencyApi.addDependency(taskId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskDependencies', taskId] })
+    },
+  })
+}
+
+export function useRemoveTaskDependency(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (dependsOnId: string) =>
+      taskDependencyApi.removeDependency(taskId, dependsOnId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskDependencies', taskId] })
+    },
+  })
+}
+
+// =============================================================================
+// TASK REMINDER HOOKS
+// =============================================================================
+
+export function useTaskReminders(taskId: string) {
+  return useQuery({
+    queryKey: ['taskReminders', taskId],
+    queryFn: () => taskReminderApi.getReminders(taskId),
+    enabled: !!taskId,
+  })
+}
+
+export function useCreateTaskReminder(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: CreateTaskReminderRequest) =>
+      taskReminderApi.createReminder(taskId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskReminders', taskId] })
+    },
+  })
+}
+
+export function useDeleteTaskReminder(taskId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (reminderId: string) =>
+      taskReminderApi.deleteReminder(taskId, reminderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['taskReminders', taskId] })
+    },
+  })
+}
+
+// =============================================================================
 // COMMENT HOOKS
 // =============================================================================
 
@@ -182,18 +362,33 @@ export function useComments(
 
 export function useCreateComment(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: (data: CreateCommentRequest) => commentApi.createComment(noticeId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
       queryClient.invalidateQueries({ queryKey: ['activity', noticeId] })
+      toast({
+        title: 'Comment added',
+        description: 'Your comment has been posted successfully.',
+        variant: 'success',
+      })
+    },
+    onError: (error: unknown) => {
+      const message = (error as { message?: string })?.message || 'Please try again.'
+      toast({
+        title: 'Failed to post comment',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
 
 export function useReplyToComment(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: ({ commentId, data }: { commentId: string; data: CreateCommentRequest }) =>
@@ -201,35 +396,77 @@ export function useReplyToComment(noticeId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
       queryClient.invalidateQueries({ queryKey: ['activity', noticeId] })
+      toast({
+        title: 'Reply added',
+        description: 'Your reply has been posted successfully.',
+        variant: 'success',
+      })
+    },
+    onError: (error: unknown) => {
+      const message = (error as { message?: string })?.message || 'Please try again.'
+      toast({
+        title: 'Failed to post reply',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
 
 export function useUpdateComment(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: ({ commentId, data }: { commentId: string; data: UpdateCommentRequest }) =>
       commentApi.updateComment(commentId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
+      toast({
+        title: 'Comment updated',
+        description: 'Your comment has been updated successfully.',
+        variant: 'success',
+      })
+    },
+    onError: (error: unknown) => {
+      const message = (error as { message?: string })?.message || 'Please try again.'
+      toast({
+        title: 'Failed to update comment',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
 
 export function useDeleteComment(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: (commentId: string) => commentApi.deleteComment(commentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
+      toast({
+        title: 'Comment deleted',
+        description: 'Your comment has been deleted.',
+        variant: 'success',
+      })
+    },
+    onError: (error: unknown) => {
+      const message = (error as { message?: string })?.message || 'Please try again.'
+      toast({
+        title: 'Failed to delete comment',
+        description: message,
+        variant: 'destructive',
+      })
     },
   })
 }
 
 export function useAddReaction(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: ({ commentId, emoji }: { commentId: string; emoji: string }) =>
@@ -237,17 +474,32 @@ export function useAddReaction(noticeId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
     },
+    onError: () => {
+      toast({
+        title: 'Failed to add reaction',
+        description: 'Please try again.',
+        variant: 'destructive',
+      })
+    },
   })
 }
 
 export function useRemoveReaction(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: ({ commentId, emoji }: { commentId: string; emoji: string }) =>
       commentApi.removeReaction(commentId, emoji),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', noticeId] })
+    },
+    onError: () => {
+      toast({
+        title: 'Failed to remove reaction',
+        description: 'Please try again.',
+        variant: 'destructive',
+      })
     },
   })
 }

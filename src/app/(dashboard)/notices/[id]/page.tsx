@@ -22,13 +22,19 @@ import {
   AIAnalysisView,
   DocumentsManager,
   ActivityTimeline,
-  CollaborationPanel,
   ResponseEditor,
+  EditNoticeDialog,
+  SimilarNotices,
 } from '@/components/features/notices'
+import { TaskList } from '@/components/features/tasks'
+import { ActivityFeed } from '@/components/features/activity/activity-feed'
 import { AIChatPanel } from '@/components/features/ai-chat'
+import { FeatureGate } from '@/components/features/subscription/feature-gate'
+import { CommentList } from '@/components/features/comments'
 import { DocumentRequestPanel } from '@/components/features/document-requests/document-request-panel'
 import { WorkflowPanel } from '@/components/features/workflow'
-import { useNotice, useDeleteNotice } from '@/hooks/use-notices'
+import { useNotice, useDeleteNotice, useExportNoticeSummary } from '@/hooks/use-notices'
+import { useNoticeUpdates } from '@/hooks/use-notice-updates'
 import {
   useAttachments,
   useDeleteAttachment,
@@ -36,6 +42,8 @@ import {
 } from '@/hooks/use-attachments'
 import { useWorkflowPanel } from '@/hooks/use-workflow'
 import { useMembers } from '@/hooks/use-team'
+import { usePermissions } from '@/hooks/use-permissions'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import { noticesApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import type { NoticeActivity } from '@/components/features/notices/activity-timeline'
@@ -45,18 +53,23 @@ interface NoticeDetailPageProps {
 }
 
 export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
+  // Enable real-time notice status updates
+  useNoticeUpdates()
   const router = useRouter()
   const { toast } = useToast()
   const { id: noticeId } = use(params)
+  const { canEditNotices, canDeleteNotices } = usePermissions()
 
   // State
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showEditDialog, setShowEditDialog] = useState(false)
   const [isRetrying, setIsRetrying] = useState(false)
 
   // Data fetching
   const { data: notice, isLoading: isLoadingNotice, error } = useNotice(noticeId)
   const { data: attachments = [], isLoading: isLoadingAttachments } = useAttachments(noticeId)
   const deleteMutation = useDeleteNotice()
+  const exportSummaryMutation = useExportNoticeSummary()
   const deleteAttachmentMutation = useDeleteAttachment(noticeId)
   const downloadAttachmentMutation = useDownloadAttachment(noticeId)
 
@@ -101,6 +114,13 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         variant: 'destructive',
       })
     }
+  }
+
+  const handleExportSummary = () => {
+    exportSummaryMutation.mutate({
+      noticeId,
+      noticeNumber: notice?.noticeNumber ?? undefined,
+    })
   }
 
   const handleRetryAnalysis = async () => {
@@ -148,8 +168,11 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
       <NoticeHeader
         notice={notice}
         isLoading={isLoadingNotice}
+        onEdit={notice && canEditNotices ? () => setShowEditDialog(true) : undefined}
         onDownload={notice?.fileUrl ? handleDownloadNotice : undefined}
-        onDelete={() => setShowDeleteDialog(true)}
+        onExportSummary={notice ? handleExportSummary : undefined}
+        isExportingSummary={exportSummaryMutation.isPending}
+        onDelete={canDeleteNotices ? () => setShowDeleteDialog(true) : undefined}
       />
 
       {/* Main Content with Workflow Panel */}
@@ -171,15 +194,20 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           {/* Tab Navigation */}
           <Tabs defaultValue="overview">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-8">
-            <TabsTrigger value="overview" className="flex-1 md:flex-none">Overview</TabsTrigger>
-            <TabsTrigger value="analysis" className="flex-1 md:flex-none whitespace-nowrap">AI Analysis</TabsTrigger>
-            <TabsTrigger value="chat" className="flex-1 md:flex-none whitespace-nowrap">AI Chat</TabsTrigger>
-            <TabsTrigger value="collaboration" className="flex-1 md:flex-none">Tasks</TabsTrigger>
-            <TabsTrigger value="response" className="flex-1 md:flex-none">Response</TabsTrigger>
-            <TabsTrigger value="documents" className="flex-1 md:flex-none">Documents</TabsTrigger>
-            <TabsTrigger value="requests" className="flex-1 md:flex-none">Requests</TabsTrigger>
-            <TabsTrigger value="activity" className="flex-1 md:flex-none">Activity</TabsTrigger>
+          {/* flex-auto sizes each tab to its label and shares the spare width equally, so the gaps between labels match.
+              px-1.5 is only the minimum padding: it lets all tabs fit a full-size laptop window without scrolling,
+              and the bar only scrolls when the window is genuinely too narrow */}
+          <TabsList className="flex w-max min-w-full">
+            <TabsTrigger value="overview" className="flex-auto px-1.5">Overview</TabsTrigger>
+            <TabsTrigger value="analysis" className="flex-auto px-1.5">AI Analysis</TabsTrigger>
+            <TabsTrigger value="similar" className="flex-auto px-1.5">Similar</TabsTrigger>
+            <TabsTrigger value="chat" className="flex-auto px-1.5">AI Chat</TabsTrigger>
+            <TabsTrigger value="collaboration" className="flex-auto px-1.5">Tasks</TabsTrigger>
+            <TabsTrigger value="comments" className="flex-auto px-1.5">Comments</TabsTrigger>
+            <TabsTrigger value="response" className="flex-auto px-1.5">Response</TabsTrigger>
+            <TabsTrigger value="documents" className="flex-auto px-1.5">Documents</TabsTrigger>
+            <TabsTrigger value="requests" className="flex-auto px-1.5">Requests</TabsTrigger>
+            <TabsTrigger value="activity" className="flex-auto px-1.5">Activity</TabsTrigger>
           </TabsList>
         </div>
 
@@ -188,13 +216,19 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="analysis" className="mt-6">
-          <AIAnalysisView
-            report={notice?.aiReport}
-            processingStatus={notice?.processingStatus}
-            isLoading={isLoadingNotice}
-            onRetry={handleRetryAnalysis}
-            isRetrying={isRetrying}
-          />
+          <FeatureGate feature={FeatureCodes.AiExplanation}>
+            <AIAnalysisView
+              report={notice?.aiReport}
+              processingStatus={notice?.processingStatus}
+              isLoading={isLoadingNotice}
+              onRetry={handleRetryAnalysis}
+              isRetrying={isRetrying}
+            />
+          </FeatureGate>
+        </TabsContent>
+
+        <TabsContent value="similar" className="mt-6">
+          <SimilarNotices noticeId={noticeId} />
         </TabsContent>
 
         <TabsContent value="chat" className="mt-6">
@@ -204,7 +238,22 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="collaboration" className="mt-6">
-          <CollaborationPanel noticeId={noticeId} />
+          <TaskList
+            noticeId={noticeId}
+            noticeType={notice?.noticeType}
+            availableMembers={teamMembers}
+          />
+        </TabsContent>
+
+        <TabsContent value="comments" className="mt-6">
+          <CommentList
+            noticeId={noticeId}
+            availableUsers={teamMembers.map(m => ({
+              id: m.id,
+              name: m.name,
+              email: m.email,
+            }))}
+          />
         </TabsContent>
 
         <TabsContent value="response" className="mt-6">
@@ -233,11 +282,16 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="activity" className="mt-6">
-          <ActivityTimeline
-            activities={workflowActivities}
-            isLoading={isLoadingNotice || workflow.isLoading}
-            emptyMessage="No activity recorded for this notice yet."
-          />
+          <div className="space-y-6">
+            {/* Collaboration events: tasks, comments, document requests */}
+            <ActivityFeed noticeId={noticeId} />
+            {/* Workflow stage history */}
+            <ActivityTimeline
+              activities={workflowActivities}
+              isLoading={isLoadingNotice || workflow.isLoading}
+              emptyMessage="No workflow activity recorded for this notice yet."
+            />
+          </div>
         </TabsContent>
       </Tabs>
         </div>
@@ -266,7 +320,17 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Edit Notice Dialog - only render if user has edit permissions */}
+      {notice && canEditNotices && (
+        <EditNoticeDialog
+          notice={notice}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog - only render if user has delete permissions */}
+      {canDeleteNotices && (
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
@@ -301,6 +365,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      )}
     </div>
   )
 }

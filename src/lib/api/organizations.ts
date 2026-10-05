@@ -16,6 +16,7 @@ import type {
   Invitation,
   InvitationListResponse,
   OrganizationSettings,
+  AcceptInvitationResponse,
 } from '@/types'
 
 export const organizationsApi = {
@@ -154,5 +155,17 @@ export const organizationsApi = {
       data
     )
     return response.data.data
+  },
+
+  // Accept/Decline Invitations (standalone endpoint)
+  async acceptInvitation(token: string): Promise<AcceptInvitationResponse> {
+    const response = await apiClient.post<ApiResponse<AcceptInvitationResponse>>(
+      `/invitations/${token}/accept`
+    )
+    return response.data.data
+  },
+
+  async declineInvitation(token: string): Promise<void> {
+    await apiClient.post(`/invitations/${token}/decline`)
   },
 }

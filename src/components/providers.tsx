@@ -1,46 +1,30 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState, useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import { useOrganizationStore } from '@/stores/organization-store'
+import { useAuthStore } from '@/stores/auth-store'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
-import { PushNotificationPrompt } from '@/components/push-notification-prompt'
-import { registerServiceWorker, isFirebaseConfigured } from '@/lib/firebase'
 
-/**
- * Push notification initializer component
- * Handles service worker registration and shows the notification prompt
- */
-function PushNotificationInitializer() {
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-
-    // Register service worker on mount
-    if (typeof window !== 'undefined' && isFirebaseConfigured()) {
-      registerServiceWorker().catch((err) => {
-        console.warn('Failed to register service worker:', err)
-      })
-    }
-  }, [])
-
-  // Only render on client side after auth check
-  if (!isClient) {
-    return null
-  }
-
-  return <PushNotificationPrompt delay={10000} variant="banner" />
-}
+// Push notification bootstrap now lives in AuthenticatedNotifications, mounted
+// inside the dashboard layout, so it never runs for anonymous visitors on
+// public pages (audit WB-05).
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const organizationId = useOrganizationStore((state) => state.currentOrganization?.id)
+  const userId = useAuthStore((state) => state.user?.id)
+
+  // Single QueryClient instance for the entire session - no key-based remounting
+  // to prevent memory leaks from orphaned refetchInterval timers
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
             staleTime: 30 * 1000, // 30 seconds
+            gcTime: 5 * 60 * 1000, // 5 minutes - explicit garbage collection time
             refetchOnWindowFocus: false,
             retry: (failureCount, error: unknown) => {
               // Don't retry on 4xx errors
@@ -62,13 +46,27 @@ export function Providers({ children }: { children: React.ReactNode }) {
       })
   )
 
+  // Track if this is the initial mount to skip clearing cache on first render
+  const isInitialMount = useRef(true)
+
+  // Clear cache on org/user change instead of remounting QueryClientProvider
+  // This properly cancels all refetchInterval timers on the active QueryClient
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    // Cancel all queries (stops refetch intervals) and clear the cache
+    queryClient.cancelQueries()
+    queryClient.clear()
+  }, [organizationId, userId, queryClient])
+
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider delayDuration={0}>
           {children}
           <Toaster />
-          <PushNotificationInitializer />
         </TooltipProvider>
       </QueryClientProvider>
     </ThemeProvider>

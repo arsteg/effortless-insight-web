@@ -14,6 +14,7 @@ interface OrderSummaryProps {
   coupon?: CouponValidation | null
   companyState?: string
   companyGstin?: string
+  isUpgradingFromTrial?: boolean
 }
 
 const GST_RATE = 18
@@ -26,6 +27,7 @@ export function OrderSummary({
   seatPrice = 0,
   coupon,
   companyState,
+  isUpgradingFromTrial = false,
 }: OrderSummaryProps) {
   const basePrice = billingCycle === 'annually' ? plan.pricing.annually : plan.pricing.monthly
   const seatsTotal = additionalSeats * seatPrice
@@ -92,7 +94,7 @@ export function OrderSummary({
 
         {/* Coupon Discount */}
         {coupon?.valid && discount > 0 && (
-          <div className="flex justify-between text-sm text-green-600">
+          <div className="flex justify-between text-sm text-mint-600">
             <span className="flex items-center gap-2">
               Discount
               <Badge variant="secondary" className="text-xs">
@@ -145,13 +147,26 @@ export function OrderSummary({
         </p>
 
         {/* Trial Info */}
-        {plan.trialDays > 0 && (
-          <div className="p-3 bg-primary/5 rounded-lg">
+        {plan.trialDays > 0 && !isUpgradingFromTrial && (
+          <div className="p-3 bg-primary/5 rounded-lg space-y-1">
             <p className="text-sm font-medium text-primary">
               {plan.trialDays}-day free trial included
             </p>
             <p className="text-xs text-muted-foreground">
-              You won&apos;t be charged until your trial ends
+              Payment method authorization required. You won&apos;t be charged until your trial ends.
+              Auto-billing starts after trial.
+            </p>
+          </div>
+        )}
+
+        {/* Upgrading from trial */}
+        {isUpgradingFromTrial && (
+          <div className="p-3 bg-mint-50 dark:bg-mint-900/20 rounded-lg border border-mint-200 dark:border-mint-800">
+            <p className="text-sm font-medium text-mint-700 dark:text-mint-400">
+              Upgrade to paid plan
+            </p>
+            <p className="text-xs text-mint-600 dark:text-mint-500">
+              Your paid subscription will start immediately after payment
             </p>
           </div>
         )}

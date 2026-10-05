@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { InfoIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -21,22 +23,25 @@ import {
   useCurrentSubscription,
   useUsage,
   useInvoices,
-  usePlans,
+  usePlansWithSettings,
   useChangePlan,
   useCancelSubscription,
   usePauseSubscription,
   useResumeSubscription,
-  useReactivateSubscription,
   useAddSeats,
+  useVerifySeatsPayment,
+  useRazorpayCheckout,
   useDownloadInvoice,
   usePaymentMethods,
   useSetDefaultPaymentMethod,
   useDeletePaymentMethod,
 } from '@/hooks/use-billing'
+import { usePermissions } from '@/hooks/use-permissions'
 import type { BillingCycle } from '@/types/billing'
 
 export default function BillingSettingsPage() {
   const router = useRouter()
+  const { isOwner } = usePermissions()
   const [showChangePlanModal, setShowChangePlanModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showPauseModal, setShowPauseModal] = useState(false)
@@ -47,16 +52,25 @@ export default function BillingSettingsPage() {
   const { data: subscription, isLoading: isLoadingSubscription } = useCurrentSubscription()
   const { data: usage, isLoading: isLoadingUsage } = useUsage()
   const { data: invoicesData, isLoading: isLoadingInvoices } = useInvoices(invoicePage, 10)
-  const { data: plans, isLoading: isLoadingPlans } = usePlans()
+  const { data: plansData, isLoading: isLoadingPlans } = usePlansWithSettings()
   const { data: paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods()
+
+  // Extract plans and global settings
+  const plans = plansData?.plans
+  const globalSettings = plansData?.globalSettings
+
+  // Non-owners have read-only access to billing
+  // Admin-granted subscriptions (CA free access) cannot be modified by the user
+  const canEdit = isOwner && !subscription?.isAdminGranted
 
   // Mutations
   const changePlan = useChangePlan()
   const cancelSubscription = useCancelSubscription()
   const pauseSubscription = usePauseSubscription()
   const resumeSubscription = useResumeSubscription()
-  const reactivateSubscription = useReactivateSubscription()
   const addSeats = useAddSeats()
+  const verifySeatsPayment = useVerifySeatsPayment()
+  const { openCheckout } = useRazorpayCheckout()
   const downloadInvoice = useDownloadInvoice()
   const setDefaultPaymentMethod = useSetDefaultPaymentMethod()
   const deletePaymentMethod = useDeletePaymentMethod()
@@ -64,6 +78,11 @@ export default function BillingSettingsPage() {
   const isLoading = isLoadingSubscription || isLoadingPlans
 
   const handleUpgrade = () => {
+    // During trial, no action allowed - informational only
+    if (subscription?.isTrialing) {
+      return
+    }
+
     if (subscription) {
       setShowChangePlanModal(true)
     } else {
@@ -71,9 +90,20 @@ export default function BillingSettingsPage() {
     }
   }
 
-  const handleManageBilling = () => {
+  const handleAddSeats = () => {
     setShowAddSeatsModal(true)
   }
+
+  // Check if user can add seats:
+  // - Not on trial
+  // - Not on free plan
+  // - Plan allows additional users
+  const currentPlan = plans?.find(p => p.code === subscription?.planCode)
+  const isFreePlan = currentPlan ? (currentPlan.pricing.monthly === 0 && currentPlan.pricing.annually === 0) : false
+  const canAddSeats = subscription
+    && subscription.status === 'active'
+    && !isFreePlan
+    && currentPlan?.limits.additionalUsersAllowed === true
 
   const handleCancel = () => {
     setShowCancelModal(true)
@@ -87,24 +117,31 @@ export default function BillingSettingsPage() {
     resumeSubscription.mutate()
   }
 
-  const handleReactivate = () => {
-    reactivateSubscription.mutate()
-  }
-
   const handleChangePlanConfirm = (
     planCode: string,
-    billingCycle: BillingCycle,
-    immediate: boolean
+    billingCycle: BillingCycle
   ) => {
     changePlan.mutate(
       {
         newPlanCode: planCode,
         billingCycle,
-        effectiveDate: immediate ? 'immediate' : 'period_end',
       },
       {
         onSuccess: () => {
           setShowChangePlanModal(false)
+        },
+        onError: (error: Error) => {
+          // Check if this is a PAYMENT_REQUIRED error (free to paid transition)
+          // The error code is in the Axios response data
+          const axiosError = error as { response?: { data?: { code?: string } } }
+          const errorCode = axiosError.response?.data?.code
+          if (errorCode === 'PAYMENT_REQUIRED' || error.message?.includes('PAYMENT_REQUIRED')) {
+            setShowChangePlanModal(false)
+            // Redirect to checkout with the selected plan and billing cycle
+            router.push(`/checkout?plan=${planCode}&billing=${billingCycle}`)
+            return
+          }
+          // Other errors are handled by the hook's default onError
         },
       }
     )
@@ -140,8 +177,36 @@ export default function BillingSettingsPage() {
     addSeats.mutate(
       { additionalSeats: quantity },
       {
-        onSuccess: () => {
-          setShowAddSeatsModal(false)
+        onSuccess: (data) => {
+          if (data.razorpayOrder) {
+            // Payment required - open Razorpay checkout
+            openCheckout(
+              {
+                key: data.razorpayOrder.key,
+                amount: data.razorpayOrder.amount,
+                currency: data.razorpayOrder.currency,
+                name: 'EffortlessInsight',
+                description: `Add ${quantity} seat(s)`,
+                orderId: data.razorpayOrder.id,
+              },
+              (response) => {
+                // Payment successful - verify and apply seats
+                verifySeatsPayment.mutate({
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                  additionalSeats: quantity,
+                })
+                setShowAddSeatsModal(false)
+              },
+              () => {
+                // Payment dismissed - do nothing, modal stays open
+              }
+            )
+          } else {
+            // No payment required - seats already applied
+            setShowAddSeatsModal(false)
+          }
         },
       }
     )
@@ -181,16 +246,38 @@ export default function BillingSettingsPage() {
         </div>
       </div>
 
-      {/* Current Plan */}
+      {/* Read-only banner for non-owners */}
+      {!isOwner && (
+        <Alert>
+          <EyeOff className="h-4 w-4" />
+          <AlertDescription>
+            You have view-only access to billing settings. Only the organization owner can make changes.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Upgrade-only policy message */}
+      {subscription && globalSettings?.downgradesAllowed === false && (
+        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+          <InfoIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertTitle className="text-blue-800 dark:text-blue-200">Upgrade-Only Policy</AlertTitle>
+          <AlertDescription className="text-blue-700 dark:text-blue-300">
+            Once subscribed, you can only upgrade to a higher plan. Downgrades to lower plans are not available.
+            If you need to change your plan or have any questions, please contact our support team.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Current Plan - during trial, no action buttons are shown */}
       <CurrentPlanCard
         subscription={subscription}
         isLoading={isLoadingSubscription}
-        onUpgrade={handleUpgrade}
-        onManage={handleManageBilling}
-        onCancel={handleCancel}
-        onPause={handlePause}
-        onResume={handleResume}
-        onReactivate={handleReactivate}
+        onUpgrade={canEdit && !subscription?.isTrialing ? handleUpgrade : undefined}
+        onAddSeats={canEdit ? handleAddSeats : undefined}
+        canAddSeats={canEdit && canAddSeats}
+        onCancel={canEdit && !subscription?.isTrialing ? handleCancel : undefined}
+        onPause={canEdit && !subscription?.isTrialing ? handlePause : undefined}
+        onResume={canEdit ? handleResume : undefined}
       />
 
       {/* Usage */}
@@ -200,8 +287,8 @@ export default function BillingSettingsPage() {
       <PaymentMethods
         paymentMethods={paymentMethods}
         isLoading={isLoadingPaymentMethods}
-        onSetDefault={(id) => setDefaultPaymentMethod.mutate(id)}
-        onDelete={(id) => deletePaymentMethod.mutate(id)}
+        onSetDefault={canEdit ? (id) => setDefaultPaymentMethod.mutate(id) : undefined}
+        onDelete={canEdit ? (id) => deletePaymentMethod.mutate(id) : undefined}
         isSettingDefault={setDefaultPaymentMethod.isPending}
         isDeleting={deletePaymentMethod.isPending}
       />
@@ -217,8 +304,8 @@ export default function BillingSettingsPage() {
         isDownloading={downloadInvoice.isPending}
       />
 
-      {/* Change Plan Modal */}
-      {subscription && plans && (
+      {/* Change Plan Modal - only for active subscriptions, not during trial */}
+      {subscription && plans && !subscription.isTrialing && (
         <ChangePlanModal
           open={showChangePlanModal}
           onOpenChange={setShowChangePlanModal}
@@ -226,11 +313,12 @@ export default function BillingSettingsPage() {
           currentSubscription={subscription}
           onConfirm={handleChangePlanConfirm}
           isLoading={changePlan.isPending}
+          globalSettings={globalSettings}
         />
       )}
 
-      {/* Cancel Subscription Modal */}
-      {subscription && (
+      {/* Cancel Subscription Modal - not during trial */}
+      {subscription && !subscription.isTrialing && (
         <CancelSubscriptionModal
           open={showCancelModal}
           onOpenChange={setShowCancelModal}
@@ -240,8 +328,8 @@ export default function BillingSettingsPage() {
         />
       )}
 
-      {/* Pause Subscription Modal */}
-      {subscription && (
+      {/* Pause Subscription Modal - not during trial */}
+      {subscription && !subscription.isTrialing && (
         <PauseSubscriptionModal
           open={showPauseModal}
           onOpenChange={setShowPauseModal}
@@ -251,13 +339,17 @@ export default function BillingSettingsPage() {
         />
       )}
 
-      {/* Add Seats Modal */}
-      {subscription && (
+      {/* Add Seats Modal - not during trial */}
+      {subscription && currentPlan && canAddSeats && !subscription.isTrialing && (
         <AddSeatsModal
           open={showAddSeatsModal}
           onOpenChange={setShowAddSeatsModal}
           subscription={subscription}
-          pricePerSeat={1000}
+          pricePerSeat={
+            subscription.billingCycle === 'annually'
+              ? currentPlan.pricing.perSeat?.annually ?? 0
+              : currentPlan.pricing.perSeat?.monthly ?? 0
+          }
           onConfirm={handleAddSeatsConfirm}
           isLoading={addSeats.isPending}
         />

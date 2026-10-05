@@ -18,6 +18,7 @@ import {
   Loader2,
   Info,
   Check,
+  RefreshCw,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -55,6 +56,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import { FeatureGate, useCanAccessFeature } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import { useNotificationPreferences, useUpdatePreferences } from '@/hooks/use-notifications'
 import type {
   NotificationPreferences,
@@ -126,6 +129,21 @@ const NOTIFICATION_TYPES = {
     types: [
       { key: 'login_alert', label: 'Login from new device' },
       { key: 'subscription_expiring', label: 'Subscription expiring' },
+    ],
+  },
+  gstSync: {
+    label: 'GST Sync',
+    icon: RefreshCw,
+    description: 'Notifications from GST Notice Guard auto-capture',
+    types: [
+      { key: 'gst_sync.notices_synced', label: 'Notices synced' },
+      { key: 'gst_sync.sync_failed', label: 'Sync failed' },
+      { key: 'gst_sync.due_date_reminder', label: 'Due date reminder' },
+      { key: 'gst_sync.due_date_overdue', label: 'Notice overdue' },
+      { key: 'gst_sync.daily_digest', label: 'Daily digest' },
+      { key: 'gst_sync.extension_disconnected', label: 'Extension disconnected' },
+      { key: 'gst_sync.sync_paused', label: 'Sync paused' },
+      { key: 'gst_sync.import_completed', label: 'Import completed' },
     ],
   },
 }
@@ -214,7 +232,7 @@ function ChannelToggle({
           <div className="flex items-center gap-2">
             <Label className="font-medium">{label}</Label>
             {verified === true && (
-              <Badge variant="outline" className="text-xs text-green-600">
+              <Badge variant="outline" className="text-xs text-mint-600">
                 <Check className="mr-1 h-3 w-3" />
                 Verified
               </Badge>
@@ -237,12 +255,14 @@ function ChannelToggle({
 export default function NotificationsSettingsPage() {
   const { data: preferences, isLoading } = useNotificationPreferences()
   const updatePreferences = useUpdatePreferences()
+  const hasWhatsAppAccess = useCanAccessFeature(FeatureCodes.WhatsAppAssistant)
 
-  // Local state for optimistic updates
+  // Local state for optimistic updates, re-synced whenever the server copy refetches
   const [localPrefs, setLocalPrefs] = useState<NotificationPreferences | null>(null)
 
   useEffect(() => {
     if (preferences) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional re-sync of optimistic state with async-loaded server data
       setLocalPrefs(preferences)
     }
   }, [preferences])
@@ -408,16 +428,18 @@ export default function NotificationsSettingsPage() {
             disabled={updatePreferences.isPending}
           />
 
-          <ChannelToggle
-            icon={MessageCircle}
-            label="WhatsApp Notifications"
-            description="Receive notifications via WhatsApp"
-            detail={prefs?.channels.whatsApp.phoneNumber}
-            enabled={prefs?.channels.whatsApp.enabled ?? false}
-            verified={prefs?.channels.whatsApp.verified}
-            onChange={(enabled) => handleUpdateChannels('whatsApp', enabled)}
-            disabled={updatePreferences.isPending}
-          />
+          <FeatureGate feature={FeatureCodes.WhatsAppAssistant} hideWhenUnavailable>
+            <ChannelToggle
+              icon={MessageCircle}
+              label="WhatsApp Notifications"
+              description="Receive notifications via WhatsApp"
+              detail={prefs?.channels.whatsApp.phoneNumber}
+              enabled={prefs?.channels.whatsApp.enabled ?? false}
+              verified={prefs?.channels.whatsApp.verified}
+              onChange={(enabled) => handleUpdateChannels('whatsApp', enabled)}
+              disabled={updatePreferences.isPending}
+            />
+          </FeatureGate>
         </CardContent>
       </Card>
 
@@ -713,16 +735,18 @@ export default function NotificationsSettingsPage() {
                               </Tooltip>
                             </TooltipProvider>
                           </TableHead>
-                          <TableHead className="text-center">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <MessageCircle className="h-4 w-4 mx-auto" />
-                                </TooltipTrigger>
-                                <TooltipContent>WhatsApp</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableHead>
+                          {hasWhatsAppAccess && (
+                            <TableHead className="text-center">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <MessageCircle className="h-4 w-4 mx-auto" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>WhatsApp</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableHead>
+                          )}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -774,18 +798,20 @@ export default function NotificationsSettingsPage() {
                                   }
                                 />
                               </TableCell>
-                              <TableCell className="text-center">
-                                <Switch
-                                  checked={typePref.whatsApp}
-                                  onCheckedChange={(checked) =>
-                                    handleUpdateTypePreference(type.key, 'whatsApp', checked)
-                                  }
-                                  disabled={
-                                    updatePreferences.isPending ||
-                                    !prefs?.channels.whatsApp.enabled
-                                  }
-                                />
-                              </TableCell>
+                              {hasWhatsAppAccess && (
+                                <TableCell className="text-center">
+                                  <Switch
+                                    checked={typePref.whatsApp}
+                                    onCheckedChange={(checked) =>
+                                      handleUpdateTypePreference(type.key, 'whatsApp', checked)
+                                    }
+                                    disabled={
+                                      updatePreferences.isPending ||
+                                      !prefs?.channels.whatsApp.enabled
+                                    }
+                                  />
+                                </TableCell>
+                              )}
                             </TableRow>
                           )
                         })}

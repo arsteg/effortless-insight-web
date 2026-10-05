@@ -1,0 +1,133 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { ArrowRight, Mail, Building2, LifeBuoy, MessageSquareText } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { LandingHeader, LandingFooter } from '@/components/landing'
+import { COMPANY } from '@/lib/company'
+
+export const metadata: Metadata = {
+  title: 'Contact | EffortlessInsight',
+  description:
+    'Talk to the EffortlessInsight team about GST notice management — sales questions, enterprise plans, support or security.',
+}
+
+// Channel policy: sales@ for pre-sales, info@ for everything else. Customer
+// support is deliberately NOT an email channel — it lives inside the app
+// (dashboard support), so no support@ mailbox exists.
+const CONTACT_EMAIL = COMPANY.email
+
+const topics = [
+  {
+    icon: Building2,
+    title: 'Sales & enterprise',
+    body: 'Custom plans, many GSTINs, procurement questions, or a walkthrough for your team or practice.',
+    channelLabel: COMPANY.salesEmail,
+    channelHref: `mailto:${COMPANY.salesEmail}`,
+  },
+  {
+    icon: LifeBuoy,
+    title: 'Support',
+    body: 'Already using EffortlessInsight? Support is built into the app — sign in and raise a request from your dashboard. We read every message.',
+    channelLabel: 'Sign in to the app',
+    channelHref: '/login',
+  },
+  {
+    icon: MessageSquareText,
+    title: 'Everything else',
+    body: 'Security questions, partnerships, press, or feedback on the product.',
+    channelLabel: COMPANY.email,
+    channelHref: `mailto:${COMPANY.email}`,
+  },
+]
+
+export default function ContactPage() {
+  return (
+    <main className="min-h-screen bg-white">
+      <LandingHeader />
+
+      <section className="relative overflow-hidden pt-28 pb-14 md:pt-36 md:pb-20">
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-[420px] bg-gradient-to-b from-primary-50/70 to-transparent"
+        />
+        <div className="container relative mx-auto px-4">
+          <div className="mx-auto max-w-2xl text-center">
+            <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-gray-950 md:text-5xl">
+              Talk to a human.
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-gray-600">
+              No call-booking maze. Every message below reaches the team, and a
+              real person replies — usually within one business day.
+            </p>
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="mt-7 inline-flex items-center gap-2.5 rounded-2xl border border-primary-200 bg-white px-6 py-4 text-lg font-semibold text-primary-700 shadow-lg shadow-primary-100/60 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+            >
+              <Mail className="h-5 w-5" aria-hidden />
+              {CONTACT_EMAIL}
+            </a>
+          </div>
+
+          <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-3">
+            {topics.map((topic) => (
+              <div
+                key={topic.title}
+                className="rounded-2xl border border-gray-200 bg-white p-7"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-md shadow-primary-200/60">
+                  <topic.icon className="h-5 w-5" aria-hidden />
+                </div>
+                <h2 className="mt-4 font-semibold text-gray-950">{topic.title}</h2>
+                <p className="mt-1.5 text-sm leading-relaxed text-gray-600">{topic.body}</p>
+                <a
+                  href={topic.channelHref}
+                  className="mt-3 inline-block text-sm font-medium text-primary-700 hover:underline"
+                >
+                  {topic.channelLabel}
+                </a>
+              </div>
+            ))}
+          </div>
+
+          <div className="mx-auto mt-14 max-w-2xl rounded-2xl border border-gray-200 bg-gray-50 p-8 text-center">
+            <h2 className="text-lg font-semibold text-gray-950">
+              Just want to see the product?
+            </h2>
+            <p className="mt-2 text-gray-600">
+              You don&apos;t need to talk to us first. The trial is free, needs
+              no card, and connecting a GSTIN takes about two minutes.
+            </p>
+            <Button size="lg" asChild className="mt-5 px-8 py-6 text-base">
+              <Link href="/register">
+                Start free 14-day trial
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="mx-auto mt-10 max-w-2xl border-t border-gray-100 pt-8 text-center text-sm text-gray-500">
+            <p className="font-medium text-gray-700">{COMPANY.legalName}</p>
+            <p className="mt-1">Registered office: {COMPANY.addressInline}</p>
+            <p className="mt-1">
+              CIN {COMPANY.cin} · GSTIN {COMPANY.gstin}
+            </p>
+            <p className="mt-1">
+              <a href={`tel:${COMPANY.phoneHref}`} className="hover:text-gray-700">
+                {COMPANY.phone}
+              </a>
+              {' · '}
+              <a
+                href={`mailto:${COMPANY.email}`}
+                className="hover:text-gray-700"
+              >
+                {COMPANY.email}
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <LandingFooter />
+    </main>
+  )
+}

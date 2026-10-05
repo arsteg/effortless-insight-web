@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { User, Building2, Users, CreditCard, Bell, Shield, Link2 } from 'lucide-react'
+import { User, Building2, Users, CreditCard, Bell, Shield, Link2, MessageCircle, ClipboardList } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -27,6 +27,24 @@ const settingsLinks = [
     description: 'Connect to GST Portal for automatic notice fetching',
     href: '/settings/integrations',
     icon: Link2,
+  },
+  {
+    title: 'WhatsApp',
+    description: 'Connect WhatsApp for notifications and bot commands',
+    href: '/settings/whatsapp',
+    icon: MessageCircle,
+  },
+  {
+    title: 'Task Templates',
+    description: 'Reusable task defaults for common notice work',
+    href: '/settings/task-templates',
+    icon: ClipboardList,
+  },
+  {
+    title: 'Teams',
+    description: 'Group members into teams for task assignment',
+    href: '/settings/teams',
+    icon: Users,
   },
   {
     title: 'Billing',

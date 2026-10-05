@@ -27,9 +27,9 @@ export function DuplicateWarning({
   const similarityPercent = Math.round(warning.similarityScore * 100)
 
   return (
-    <Card className="border-yellow-500 dark:border-yellow-600">
+    <Card className="border-amber-500 dark:border-amber-600">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-yellow-600 dark:text-yellow-500">
+        <CardTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
           <AlertTriangle className="h-5 w-5" />
           Potential Duplicate Detected
         </CardTitle>

@@ -113,21 +113,21 @@ function ActivityItem({ activity, isLast }: ActivityItemProps) {
       case 'uploaded':
         return <Upload className="h-4 w-4 text-blue-500" />
       case 'assigned':
-        return <UserPlus className="h-4 w-4 text-purple-500" />
+        return <UserPlus className="h-4 w-4 text-lavender-500" />
       case 'status_changed':
-        return <RefreshCw className="h-4 w-4 text-orange-500" />
+        return <RefreshCw className="h-4 w-4 text-amber-500" />
       case 'task_completed':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />
+        return <CheckCircle2 className="h-4 w-4 text-mint-500" />
       case 'task_created':
         return <CheckCircle2 className="h-4 w-4 text-blue-500" />
       case 'comment_added':
         return <MessageSquare className="h-4 w-4 text-cyan-500" />
       case 'response_drafted':
-        return <Edit className="h-4 w-4 text-yellow-500" />
+        return <Edit className="h-4 w-4 text-amber-500" />
       case 'response_submitted':
-        return <Send className="h-4 w-4 text-indigo-500" />
+        return <Send className="h-4 w-4 text-lavender-500" />
       case 'document_uploaded':
-        return <FileText className="h-4 w-4 text-teal-500" />
+        return <FileText className="h-4 w-4 text-mint-500" />
       case 'reminder_set':
         return <Bell className="h-4 w-4 text-pink-500" />
       case 'edited':

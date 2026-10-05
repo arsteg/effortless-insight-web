@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Building2, CheckCircle2, AlertCircle } from 'lucide-react'
 
 import {
-  onboardingSchema,
+  getOnboardingSchema,
   type OnboardingFormData,
   industryOptions,
   stateOptions,
@@ -16,6 +16,8 @@ import {
 import { organizationsApi } from '@/lib/api'
 import { useAuthStore } from '@/stores'
 import { useToast } from '@/hooks/use-toast'
+import { useStartTrial } from '@/hooks/use-billing'
+import type { BillingCycle } from '@/types/billing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -43,10 +45,11 @@ import {
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-export default function OnboardingPage() {
+function OnboardingForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
-  const { user, refreshUser } = useAuthStore()
+  const { user, refreshUser, isInitialized, initialize } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [isValidatingGstin, setIsValidatingGstin] = useState(false)
   const [gstinValidation, setGstinValidation] = useState<{
@@ -55,8 +58,66 @@ export default function OnboardingPage() {
     errorMessage?: string
   } | null>(null)
 
+  // Get plan selection from query params or localStorage
+  const selectedPlan = useMemo<{
+    planCode: string
+    billingCycle: BillingCycle
+  } | null>(() => {
+    // Try query params first
+    const planFromUrl = searchParams.get('plan')
+    const billingFromUrl = searchParams.get('billing') as BillingCycle | null
+
+    if (planFromUrl) {
+      return {
+        planCode: planFromUrl,
+        billingCycle: billingFromUrl || 'monthly',
+      }
+    }
+
+    // Fallback to localStorage
+    if (typeof window === 'undefined') return null
+    try {
+      const stored = localStorage.getItem('selected_plan')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        // Only use if less than 24 hours old
+        // eslint-disable-next-line react-hooks/purity -- one-time freshness check of the stored plan selection
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+          return {
+            planCode: parsed.planCode,
+            billingCycle: parsed.billingCycle,
+          }
+        }
+        localStorage.removeItem('selected_plan')
+      }
+    } catch {
+      // Ignore parsing errors
+    }
+    return null
+  }, [searchParams])
+
+  const startTrialMutation = useStartTrial()
+  const isCA = !!user?.isCA
+  console.log('user:', user)
+  console.log('isCA:', isCA)
+
+  // `user` (and therefore isCA) may not be hydrated from the auth store yet on
+  // first render, so the resolver is wrapped to always read the latest value
+  // via a ref rather than capturing `isCA` once at useForm's initial mount.
+  const isCARef = useRef(isCA)
+  useEffect(() => {
+    isCARef.current = isCA
+  }, [isCA])
+
+  useEffect(() => {
+    if (!isInitialized) {
+      initialize()
+    }
+  }, [isInitialized, initialize])
+
   const form = useForm<OnboardingFormData>({
-    resolver: zodResolver(onboardingSchema),
+    resolver: (values, context, options) =>
+      zodResolver(getOnboardingSchema(isCARef.current))(values, context, options),
     defaultValues: {
       name: '',
       legalName: '',
@@ -117,7 +178,7 @@ export default function OnboardingPage() {
       await organizationsApi.create({
         name: data.name,
         legalName: data.legalName || undefined,
-        gstin: data.gstin,
+        gstin: data.gstin || undefined,
         industry: data.industry || undefined,
         state: data.state,
         city: data.city || undefined,
@@ -127,11 +188,42 @@ export default function OnboardingPage() {
       // Refresh user to get updated organization info
       await refreshUser()
 
-      toast({
-        title: 'Organization created!',
-        description: 'Welcome to EffortlessInsight. Let\'s get started.',
-        variant: 'success',
-      })
+      // If plan was selected, start trial
+      if (selectedPlan) {
+        // Clear the localStorage immediately to prevent re-use
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('selected_plan')
+        }
+
+        try {
+          await startTrialMutation.mutateAsync({
+            planCode: selectedPlan.planCode,
+            billingCycle: selectedPlan.billingCycle,
+          })
+
+          toast({
+            title: 'Organization created!',
+            description: `Your free trial has started. Welcome to EffortlessInsight!`,
+            variant: 'success',
+          })
+        } catch (trialError: unknown) {
+          // Log trial error but don't block - user can select plan later
+          console.error('Failed to start trial:', trialError)
+          toast({
+            title: 'Organization created!',
+            description: 'Welcome to EffortlessInsight. Please select a plan to continue.',
+            variant: 'default',
+          })
+          // Redirect to dashboard - subscription guard will show "Subscription Required"
+        }
+      } else {
+        toast({
+          title: 'Organization created!',
+          description: 'Welcome to EffortlessInsight. Please select a plan to continue.',
+          variant: 'default',
+        })
+        // Redirect to dashboard - subscription guard will show "Subscription Required"
+      }
 
       router.push('/dashboard')
     } catch (error: unknown) {
@@ -148,6 +240,10 @@ export default function OnboardingPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (!isInitialized) {
+    return <OnboardingLoading />
   }
 
   return (
@@ -171,7 +267,18 @@ export default function OnboardingPage() {
               name="gstin"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>GSTIN *</FormLabel>
+                  <FormLabel>
+                    {isCA ? (
+                      <>
+                        GSTIN{' '}
+                        <span className="text-muted-foreground font-normal">
+                          (optional for CA accounts)
+                        </span>
+                      </>
+                    ) : (
+                      'GSTIN *'
+                    )}
+                  </FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -187,8 +294,8 @@ export default function OnboardingPage() {
                         className={
                           gstinValidation
                             ? gstinValidation.isValid
-                              ? 'border-green-500 focus-visible:ring-green-500'
-                              : 'border-red-500 focus-visible:ring-red-500'
+                              ? 'border-mint-500 focus-visible:ring-mint-500'
+                              : 'border-coral-500 focus-visible:ring-coral-500'
                             : ''
                         }
                       />
@@ -197,20 +304,26 @@ export default function OnboardingPage() {
                       )}
                       {gstinValidation && !isValidatingGstin && (
                         gstinValidation.isValid ? (
-                          <CheckCircle2 className="absolute right-3 top-2.5 h-4 w-4 text-green-500" />
+                          <CheckCircle2 className="absolute right-3 top-2.5 h-4 w-4 text-mint-500" />
                         ) : (
-                          <AlertCircle className="absolute right-3 top-2.5 h-4 w-4 text-red-500" />
+                          <AlertCircle className="absolute right-3 top-2.5 h-4 w-4 text-coral-500" />
                         )
                       )}
                     </div>
                   </FormControl>
+                  {isCA && !gstinValidation && (
+                    <FormDescription>
+                      Leave this blank if your firm doesn&apos;t have its own GSTIN — you&apos;ll
+                      invite each client&apos;s GSTIN separately from your dashboard.
+                    </FormDescription>
+                  )}
                   {gstinValidation?.isValid && gstinValidation.stateName && (
-                    <FormDescription className="text-green-600">
+                    <FormDescription className="text-mint-600">
                       State: {gstinValidation.stateName}
                     </FormDescription>
                   )}
                   {gstinValidation && !gstinValidation.isValid && gstinValidation.errorMessage && (
-                    <FormDescription className="text-red-500">
+                    <FormDescription className="text-coral-500">
                       {gstinValidation.errorMessage}
                     </FormDescription>
                   )}
@@ -400,5 +513,31 @@ export default function OnboardingPage() {
         </Form>
       </CardContent>
     </Card>
+  )
+}
+
+function OnboardingLoading() {
+  return (
+    <Card className="w-full max-w-lg">
+      <CardHeader className="space-y-1 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Building2 className="h-8 w-8 text-primary" />
+          </div>
+        </div>
+        <CardTitle className="text-2xl font-bold">Set up your organization</CardTitle>
+      </CardHeader>
+      <CardContent className="flex justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<OnboardingLoading />}>
+      <OnboardingForm />
+    </Suspense>
   )
 }

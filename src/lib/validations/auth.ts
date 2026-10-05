@@ -32,18 +32,27 @@ export const registerSchema = z
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
         'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      )
+      .regex(
+        /[^a-zA-Z0-9]/,
+        'Password must contain at least one special character'
+      )
+      .refine(
+        (val) => new Set(val).size >= 4,
+        'Password must contain at least 4 different characters'
       ),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
     mobile: z
       .string()
-      .optional()
-      .refine(
-        (val) => !val || /^[6-9]\d{9}$/.test(val),
+      .min(1, 'Mobile number is required')
+      .regex(
+        /^[6-9]\d{9}$/,
         'Please enter a valid 10-digit Indian mobile number'
       ),
     acceptTerms: z.boolean().refine((val) => val === true, {
       message: 'You must accept the terms and conditions',
     }),
+    isCA: z.boolean().default(false),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -70,6 +79,14 @@ export const resetPasswordSchema = z
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
         'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      )
+      .regex(
+        /[^a-zA-Z0-9]/,
+        'Password must contain at least one special character'
+      )
+      .refine(
+        (val) => new Set(val).size >= 4,
+        'Password must contain at least 4 different characters'
       ),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })

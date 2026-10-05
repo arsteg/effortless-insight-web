@@ -46,14 +46,14 @@ export function useNotifications(filters?: NotificationFilters) {
   useEffect(() => {
     const handleEvent = (event: NotificationEvent) => {
       if (event.type === 'new' && event.notification) {
-        // Add new notification to the list
+        // Add new notification to the list (cap at 100 to prevent unbounded growth)
         queryClient.setQueryData(
           notificationKeys.list(filters),
           (old: any) => {
             if (!old) return old
             return {
               ...old,
-              notifications: [event.notification, ...old.notifications],
+              notifications: [event.notification, ...old.notifications].slice(0, 100),
               totalCount: old.totalCount + 1,
               unreadCount: old.unreadCount + 1,
             }
@@ -180,6 +180,28 @@ export function useMarkAllAsRead() {
 }
 
 /**
+ * Hook for deleting a notification (soft delete). Optimistically removes it from
+ * the cached list and refreshes counts.
+ */
+export function useDeleteNotification() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: (notificationId: string) => notificationsApi.delete(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all })
+    },
+    onError: () => {
+      toast({
+        title: 'Failed to delete notification',
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+/**
  * Hook for notification preferences
  */
 export function useNotificationPreferences() {
@@ -240,6 +262,7 @@ export function useNotificationConnection() {
 
   // Auto-connect on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- connect() syncs connection state with the external SignalR client
     connect()
     return () => {
       disconnect()

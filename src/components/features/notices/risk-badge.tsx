@@ -17,11 +17,12 @@ function getRiskLevel(score: number): RiskLevel {
   return 'low'
 }
 
-const RISK_CONFIG: Record<RiskLevel, { label: string; bgColor: string; textColor: string }> = {
-  low: { label: 'Low Risk', bgColor: 'bg-green-100 dark:bg-green-900/30', textColor: 'text-green-700 dark:text-green-400' },
-  medium: { label: 'Medium Risk', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30', textColor: 'text-yellow-700 dark:text-yellow-400' },
-  high: { label: 'High Risk', bgColor: 'bg-orange-100 dark:bg-orange-900/30', textColor: 'text-orange-700 dark:text-orange-400' },
-  critical: { label: 'Critical Risk', bgColor: 'bg-red-100 dark:bg-red-900/30', textColor: 'text-red-700 dark:text-red-400' },
+// Domain risk color language (see DESIGN_SYSTEM.md): mint / amber / coral.
+const RISK_CONFIG: Record<RiskLevel, { label: string; dot: string; bgColor: string; textColor: string }> = {
+  low: { label: 'Low Risk', dot: 'bg-mint-500', bgColor: 'bg-mint-50 dark:bg-mint-500/15', textColor: 'text-mint-700 dark:text-mint-300' },
+  medium: { label: 'Medium Risk', dot: 'bg-amber-500', bgColor: 'bg-amber-50 dark:bg-amber-500/15', textColor: 'text-amber-700 dark:text-amber-300' },
+  high: { label: 'High Risk', dot: 'bg-coral-500', bgColor: 'bg-coral-50 dark:bg-coral-500/15', textColor: 'text-coral-700 dark:text-coral-300' },
+  critical: { label: 'Critical Risk', dot: 'bg-coral-600', bgColor: 'bg-coral-100 ring-1 ring-coral-500/25 dark:bg-coral-500/20', textColor: 'text-coral-800 dark:text-coral-200' },
 }
 
 export function RiskBadge({ score, level, showScore = true, className }: RiskBadgeProps) {
@@ -31,14 +32,15 @@ export function RiskBadge({ score, level, showScore = true, className }: RiskBad
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold',
         config.bgColor,
         config.textColor,
         className
       )}
     >
+      <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', config.dot)} aria-hidden />
       {showScore && score !== undefined && (
-        <span className="font-bold">{score}</span>
+        <span className="font-bold nums">{score}</span>
       )}
       <span>{config.label}</span>
     </span>

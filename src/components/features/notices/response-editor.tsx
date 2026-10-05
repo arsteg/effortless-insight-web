@@ -1,13 +1,39 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Loader2, Save, Send, CheckCircle, FileText, Wand2, Sparkles } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import {
+  Loader2,
+  Save,
+  Send,
+  CheckCircle,
+  FileText,
+  Wand2,
+  Sparkles,
+  Upload,
+  Paperclip,
+  Download,
+  Trash2,
+  File,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  X,
+} from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AIDisclaimer } from './ai-disclaimer'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,15 +45,33 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useToast } from '@/hooks/use-toast'
+import { usePermissions } from '@/hooks/use-permissions'
+import { FeatureCodes } from '@/hooks/use-feature-access'
+import { FeatureGate } from '@/components/features/subscription/feature-gate'
 import { noticesApi } from '@/lib/api'
+import {
+  useAttachments,
+  useUploadAttachment,
+  useDeleteAttachment,
+  useDownloadAttachment,
+} from '@/hooks/use-attachments'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { NoticeResponse } from '@/types'
+import { formatFileSize } from '@/lib/utils'
+import type { NoticeResponse, Attachment } from '@/types'
 
 interface ResponseEditorProps {
   noticeId: string
@@ -46,9 +90,30 @@ const statusConfig: Record<
 export function ResponseEditor({ noticeId }: ResponseEditorProps) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const { canApproveResponse } = usePermissions()
   const [content, setContent] = useState('')
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
   const [showAutoDraftDialog, setShowAutoDraftDialog] = useState(false)
+  const [showUploadDialog, setShowUploadDialog] = useState(false)
+  const [showApproveDialog, setShowApproveDialog] = useState(false)
+  const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+  const [isDocumentsOpen, setIsDocumentsOpen] = useState(true)
+  const [uploadDescription, setUploadDescription] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [deleteAttachmentId, setDeleteAttachmentId] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Fetch attachments (response documents)
+  const { data: attachments = [], isLoading: isLoadingAttachments } = useAttachments(noticeId)
+  const uploadMutation = useUploadAttachment(noticeId)
+  const deleteMutation = useDeleteAttachment(noticeId)
+  const downloadMutation = useDownloadAttachment(noticeId)
+
+  // Filter to show only response documents (documentType = 'response')
+  const responseDocuments = attachments.filter(
+    (a: Attachment) => a.documentType === 'response'
+  )
 
   // Fetch latest response
   const { data: response, isLoading } = useQuery({
@@ -59,6 +124,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
   // Initialize content from response
   useEffect(() => {
     if (response) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync of editor content with the async-loaded draft
       setContent(response.draftContent || response.finalContent || '')
     }
   }, [response])
@@ -102,8 +168,10 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
       let errorTitle = 'Auto-draft failed'
       let errorDescription = 'Failed to generate draft. Please try again.'
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const apiError = error as any
+      const apiError = error as {
+        response?: { data?: { error?: string; code?: string; message?: string } }
+        message?: string
+      }
       const errorCode = apiError?.response?.data?.error || apiError?.response?.data?.code
       const errorMessage = apiError?.response?.data?.message || apiError?.message
 
@@ -166,6 +234,55 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
     },
   })
 
+  // Approve response mutation
+  const approveResponseMutation = useMutation({
+    mutationFn: () => {
+      if (!response) throw new Error('No response to approve')
+      return noticesApi.approveResponse(noticeId, response.id)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notices', noticeId, 'response'] })
+      setShowApproveDialog(false)
+      toast({
+        title: 'Response approved',
+        description: 'The response has been approved and is ready for submission.',
+        variant: 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Approval failed',
+        description: 'Failed to approve response. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+
+  // Reject response mutation
+  const rejectResponseMutation = useMutation({
+    mutationFn: (reason?: string) => {
+      if (!response) throw new Error('No response to reject')
+      return noticesApi.rejectResponse(noticeId, response.id, reason)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notices', noticeId, 'response'] })
+      setShowRejectDialog(false)
+      setRejectReason('')
+      toast({
+        title: 'Response returned for revision',
+        description: 'The response has been sent back to the author for revision.',
+        variant: 'success',
+      })
+    },
+    onError: () => {
+      toast({
+        title: 'Rejection failed',
+        description: 'Failed to reject response. Please try again.',
+        variant: 'destructive',
+      })
+    },
+  })
+
   const handleSaveDraft = () => {
     saveDraftMutation.mutate(content)
   }
@@ -187,8 +304,91 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
     submitForReviewMutation.mutate()
   }
 
+  const handleApproveResponse = () => {
+    approveResponseMutation.mutate()
+  }
+
+  const handleRejectResponse = () => {
+    rejectResponseMutation.mutate(rejectReason.trim() || undefined)
+  }
+
   const canEdit = !response || response.status === 'draft'
+  const canReview = response?.status === 'review' && canApproveResponse
   const canSubmit = response?.status === 'draft' && content.trim().length > 0
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload a PDF or image file (JPG, PNG).',
+          variant: 'destructive',
+        })
+        return
+      }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: 'File too large',
+          description: 'Maximum file size is 10MB.',
+          variant: 'destructive',
+        })
+        return
+      }
+      setSelectedFile(file)
+      setShowUploadDialog(true)
+    }
+  }
+
+  // Handle upload
+  const handleUpload = () => {
+    if (!selectedFile) return
+
+    const formData = new FormData()
+    formData.append('file', selectedFile)
+    formData.append('documentType', 'response')
+    if (uploadDescription.trim()) {
+      formData.append('description', uploadDescription.trim())
+    }
+
+    uploadMutation.mutate(formData, {
+      onSuccess: () => {
+        setShowUploadDialog(false)
+        setSelectedFile(null)
+        setUploadDescription('')
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      },
+    })
+  }
+
+  // Handle download
+  const handleDownload = (attachmentId: string) => {
+    downloadMutation.mutate(attachmentId)
+  }
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = () => {
+    if (deleteAttachmentId) {
+      deleteMutation.mutate(deleteAttachmentId, {
+        onSuccess: () => {
+          setDeleteAttachmentId(null)
+        },
+      })
+    }
+  }
+
+  // Get file icon based on type
+  const getFileIcon = (fileType?: string) => {
+    if (fileType?.includes('pdf')) return <FileText className="h-4 w-4 text-coral-500" />
+    if (fileType?.includes('image')) return <File className="h-4 w-4 text-blue-500" />
+    return <File className="h-4 w-4 text-gray-500" />
+  }
 
   if (isLoading) {
     return (
@@ -226,7 +426,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {response?.status === 'submitted' && (
-          <div className="flex items-center gap-2 p-4 rounded-lg bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300">
+          <div className="flex items-center gap-2 p-4 rounded-lg bg-mint-50 dark:bg-mint-900 text-mint-700 dark:text-mint-300">
             <CheckCircle className="h-5 w-5" />
             <div>
               <p className="font-medium">Response Submitted</p>
@@ -238,6 +438,8 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
           </div>
         )}
 
+        <AIDisclaimer />
+
         <Textarea
           placeholder="Draft your response here, or click 'Auto-Draft' to generate an AI-powered response..."
           value={content}
@@ -247,35 +449,146 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
           className="font-mono text-sm"
         />
 
+        {/* Response Documents Section */}
+        <Collapsible open={isDocumentsOpen} onOpenChange={setIsDocumentsOpen}>
+          <div className="border rounded-lg">
+            <CollapsibleTrigger asChild>
+              <button className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Paperclip className="h-4 w-4" />
+                  <span className="font-medium">Response Documents</span>
+                  {responseDocuments.length > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {responseDocuments.length}
+                    </Badge>
+                  )}
+                </div>
+                {isDocumentsOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <Separator />
+              <div className="p-4 space-y-4">
+                {/* Upload Button */}
+                {canEdit && (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadMutation.isPending}
+                      className="w-full border-dashed"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload Response Document
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      Supported formats: PDF, JPG, PNG (max 10MB)
+                    </p>
+                  </div>
+                )}
+
+                {/* Documents List */}
+                {isLoadingAttachments ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ) : responseDocuments.length > 0 ? (
+                  <div className="space-y-2">
+                    {responseDocuments.map((doc: Attachment) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          {getFileIcon(doc.fileType)}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{doc.fileName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {doc.fileSize ? formatFileSize(doc.fileSize) : 'Unknown size'}
+                              {doc.description && ` • ${doc.description}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleDownload(doc.id)}
+                            disabled={downloadMutation.isPending}
+                            title="Download"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          {canEdit && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => setDeleteAttachmentId(doc.id)}
+                              disabled={deleteMutation.isPending}
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No response documents uploaded yet.
+                  </p>
+                )}
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+
         {canEdit && (
           <div className="flex gap-2 justify-between">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={handleAutoDraft}
-                    disabled={autoDraftMutation.isPending || saveDraftMutation.isPending}
-                    className="bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 dark:from-purple-950 dark:to-blue-950 dark:hover:from-purple-900 dark:hover:to-blue-900 border-purple-200 dark:border-purple-800"
-                  >
-                    {autoDraftMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
-                        Auto-Draft
-                      </>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Generate an AI-powered draft response based on the notice content</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <FeatureGate feature={FeatureCodes.DraftReply} hideWhenUnavailable>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={handleAutoDraft}
+                      disabled={autoDraftMutation.isPending || saveDraftMutation.isPending}
+                      className="bg-gradient-to-r from-lavender-50 to-blue-50 hover:from-lavender-100 hover:to-blue-100 dark:from-lavender-900 dark:to-blue-950 dark:hover:from-lavender-900 dark:hover:to-blue-900 border-lavender-200 dark:border-lavender-800"
+                    >
+                      {autoDraftMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4 text-lavender-500" />
+                          Auto-Draft
+                        </>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Generate an AI-powered draft response based on the notice content</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </FeatureGate>
 
             <div className="flex gap-2">
               <Button
@@ -302,7 +615,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
         )}
 
         {autoDraftMutation.isPending && (
-          <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+          <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-lavender-50 dark:bg-lavender-900 text-lavender-700 dark:text-lavender-300">
             <Wand2 className="h-5 w-5 animate-pulse" />
             <p className="text-sm">
               AI is analyzing the notice and generating a professional response...
@@ -311,9 +624,41 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
         )}
 
         {response?.status === 'review' && (
-          <p className="text-sm text-muted-foreground text-center">
-            This response is awaiting approval. You cannot edit it until it&apos;s returned for revision.
-          </p>
+          <div className="space-y-4">
+            {canReview ? (
+              <div className="flex items-center justify-between p-4 rounded-lg bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-800">
+                <div>
+                  <p className="font-medium text-amber-800 dark:text-amber-200">
+                    Review Required
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    This response is awaiting your approval.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowRejectDialog(true)}
+                    className="border-coral-300 text-coral-700 hover:bg-coral-50 dark:border-coral-700 dark:text-coral-400 dark:hover:bg-coral-900"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Reject
+                  </Button>
+                  <Button
+                    onClick={() => setShowApproveDialog(true)}
+                    className="bg-mint-600 hover:bg-mint-700 text-white"
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center">
+                This response is awaiting approval. You cannot edit it until it&apos;s returned for revision.
+              </p>
+            )}
+          </div>
         )}
 
         {response?.status === 'approved' && (
@@ -359,7 +704,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-500" />
+              <Sparkles className="h-5 w-5 text-lavender-500" />
               Replace existing draft?
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -374,7 +719,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
             <AlertDialogAction
               onClick={handleConfirmAutoDraft}
               disabled={autoDraftMutation.isPending}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-lavender-600 hover:bg-lavender-700"
             >
               {autoDraftMutation.isPending ? (
                 <>
@@ -391,6 +736,193 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Upload Document Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Response Document</DialogTitle>
+            <DialogDescription>
+              Add a supporting document for your response.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedFile && (
+              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                {getFileIcon(selectedFile.type)}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatFileSize(selectedFile.size)}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (optional)</Label>
+              <Input
+                id="description"
+                placeholder="e.g., Bank statement, Payment proof, Supporting evidence..."
+                value={uploadDescription}
+                onChange={(e) => setUploadDescription(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowUploadDialog(false)
+                setSelectedFile(null)
+                setUploadDescription('')
+              }}
+              disabled={uploadMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleUpload} disabled={uploadMutation.isPending}>
+              {uploadMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteAttachmentId} onOpenChange={() => setDeleteAttachmentId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this document? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Approve Response Dialog */}
+      <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Check className="h-5 w-5 text-mint-600" />
+              Approve Response?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will approve the response and mark it ready for submission to the GST portal.
+              The content will be finalized and the author will be notified.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={approveResponseMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleApproveResponse}
+              disabled={approveResponseMutation.isPending}
+              className="bg-mint-600 hover:bg-mint-700"
+            >
+              {approveResponseMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Approve
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reject Response Dialog */}
+      <Dialog open={showRejectDialog} onOpenChange={(open) => {
+        setShowRejectDialog(open)
+        if (!open) setRejectReason('')
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <X className="h-5 w-5 text-coral-600" />
+              Reject Response
+            </DialogTitle>
+            <DialogDescription>
+              This will return the response to the author for revision.
+              They will be able to edit and resubmit it.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejectReason">Reason for rejection (optional)</Label>
+              <Textarea
+                id="rejectReason"
+                placeholder="Provide feedback on what needs to be changed..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRejectDialog(false)
+                setRejectReason('')
+              }}
+              disabled={rejectResponseMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRejectResponse}
+              disabled={rejectResponseMutation.isPending}
+              variant="destructive"
+            >
+              {rejectResponseMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                <>
+                  <X className="mr-2 h-4 w-4" />
+                  Reject
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

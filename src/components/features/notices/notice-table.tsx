@@ -36,6 +36,7 @@ import { StatusBadge } from './status-badge'
 import { PriorityBadge } from './priority-badge'
 import { RiskBadge } from './risk-badge'
 import { SourceBadge } from './source-badge'
+import { ProcessingIndicator } from './processing-indicator'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import type { Notice, NoticeFilters } from '@/types'
 
@@ -52,7 +53,7 @@ interface NoticeTableProps {
   onDelete?: (notice: Notice) => void
 }
 
-type SortableColumn = 'noticeNumber' | 'noticeType' | 'responseDeadline' | 'taxAmount' | 'status' | 'priority' | 'createdAt'
+type SortableColumn = 'noticeNumber' | 'noticeType' | 'responseDeadline' | 'extendedDeadline' | 'taxAmount' | 'status' | 'priority' | 'createdAt'
 
 export function NoticeTable({
   notices,
@@ -114,10 +115,10 @@ export function NoticeTable({
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-muted/50 hover:bg-muted/50">
             {onSelectionChange && (
               <TableHead className="w-12">
                 <Checkbox
@@ -157,8 +158,19 @@ export function NoticeTable({
                 className="-ml-3 h-8"
                 onClick={() => handleSort('responseDeadline')}
               >
-                Deadline
+                Response Deadline
                 {getSortIcon('responseDeadline')}
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="-ml-3 h-8"
+                onClick={() => handleSort('extendedDeadline')}
+              >
+                Extended Deadline
+                {getSortIcon('extendedDeadline')}
               </Button>
             </TableHead>
             <TableHead>
@@ -203,7 +215,7 @@ export function NoticeTable({
             <TableRow
               key={notice.id}
               className={cn(
-                selectedIds.includes(notice.id) && 'bg-muted/50'
+                selectedIds.includes(notice.id) && 'bg-azure-50/60'
               )}
             >
               {onSelectionChange && (
@@ -244,13 +256,20 @@ export function NoticeTable({
                 )}
               </TableCell>
               <TableCell>
+                {/* daysRemaining counts down to the extended deadline when one is set */}
                 <DeadlineCell
                   deadline={notice.responseDeadline}
+                  daysRemaining={notice.extendedDeadline ? undefined : notice.daysRemaining}
+                />
+              </TableCell>
+              <TableCell>
+                <DeadlineCell
+                  deadline={notice.extendedDeadline}
                   daysRemaining={notice.daysRemaining}
                 />
               </TableCell>
               <TableCell>
-                <div className="font-medium">
+                <div className="font-medium nums">
                   {formatCurrency(notice.taxAmount)}
                 </div>
                 {notice.penaltyAmount !== undefined && notice.penaltyAmount > 0 && (
@@ -260,7 +279,14 @@ export function NoticeTable({
                 )}
               </TableCell>
               <TableCell>
-                <StatusBadge status={notice.status} />
+                <div className="flex flex-col gap-1">
+                  <StatusBadge status={notice.status} />
+                  {(notice.status === 'uploaded' || notice.status === 'processing') &&
+                    notice.processingStatus &&
+                    notice.processingStatus !== 'completed' && (
+                      <ProcessingIndicator status={notice.processingStatus} />
+                    )}
+                </div>
               </TableCell>
               <TableCell>
                 <PriorityBadge priority={notice.priority} />
@@ -332,9 +358,9 @@ function DeadlineCell({ deadline, daysRemaining }: DeadlineCellProps) {
 
   const getDeadlineColor = () => {
     if (daysRemaining === undefined) return ''
-    if (daysRemaining < 0) return 'text-red-600 dark:text-red-400'
-    if (daysRemaining <= 3) return 'text-red-600 dark:text-red-400'
-    if (daysRemaining <= 7) return 'text-yellow-600 dark:text-yellow-400'
+    if (daysRemaining < 0) return 'text-coral-600 dark:text-coral-400'
+    if (daysRemaining <= 3) return 'text-coral-600 dark:text-coral-400'
+    if (daysRemaining <= 7) return 'text-amber-600 dark:text-amber-400'
     return ''
   }
 
@@ -362,7 +388,7 @@ function DeadlineCell({ deadline, daysRemaining }: DeadlineCellProps) {
 
 function NoticeTableSkeleton() {
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
       <Table>
         <TableHeader>
           <TableRow>
@@ -371,7 +397,8 @@ function NoticeTableSkeleton() {
             </TableHead>
             <TableHead>Notice</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Deadline</TableHead>
+            <TableHead>Response Deadline</TableHead>
+            <TableHead>Extended Deadline</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Priority</TableHead>
@@ -395,6 +422,9 @@ function NoticeTableSkeleton() {
               <TableCell>
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="mt-1 h-3 w-16" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-24" />
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-20" />
@@ -421,9 +451,9 @@ function NoticeTableSkeleton() {
 
 function NoticeTableEmpty() {
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
       <div className="flex flex-col items-center justify-center py-12">
-        <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
+        <FileText className="h-12 w-12 text-azure-300 mb-4" />
         <h3 className="text-lg font-semibold mb-2">No notices found</h3>
         <p className="text-muted-foreground mb-4 text-center max-w-sm">
           Upload your first GST notice to get started with AI-powered analysis.

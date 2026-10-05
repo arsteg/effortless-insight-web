@@ -15,6 +15,7 @@ export const mockUser: User = {
   emailVerified: true,
   mobileVerified: false,
   is2faEnabled: false,
+  hasPassword: true,
   role: 'admin',
   organizations: [
     { id: 'org-1', name: 'Test Organization', role: 'admin' },

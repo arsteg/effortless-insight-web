@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowRight, UserPlus, Loader2 } from 'lucide-react';
@@ -335,7 +335,7 @@ function BulkAssignDialog({
     },
   });
 
-  const assignmentType = form.watch('assignmentType');
+  const assignmentType = useWatch({ control: form.control, name: 'assignmentType' });
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {

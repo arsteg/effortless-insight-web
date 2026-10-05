@@ -16,8 +16,9 @@ import {
   AlertCircle,
   PauseCircle,
   Archive,
-  UserPlus,
+  ListPlus,
   Tag,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,18 +47,20 @@ interface TaskItemProps {
   onStatusChange?: (status: TaskStatus) => void
   onEdit?: (task: Task) => void
   onDelete?: (task: Task) => void
+  onAddSubtask?: (task: Task) => void
   isUpdating?: boolean
   compact?: boolean
+  isSubtask?: boolean
 }
 
 const PRIORITY_CONFIG: Record<
   TaskPriority,
   { label: string; className: string }
 > = {
-  critical: { label: 'Critical', className: 'bg-red-100 text-red-800 border-red-200' },
-  high: { label: 'High', className: 'bg-orange-100 text-orange-800 border-orange-200' },
-  medium: { label: 'Medium', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  low: { label: 'Low', className: 'bg-green-100 text-green-800 border-green-200' },
+  critical: { label: 'Critical', className: 'bg-coral-100 text-coral-800 border-coral-200' },
+  high: { label: 'High', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  medium: { label: 'Medium', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  low: { label: 'Low', className: 'bg-mint-100 text-mint-800 border-mint-200' },
 }
 
 const STATUS_CONFIG: Record<
@@ -70,12 +73,12 @@ const STATUS_CONFIG: Record<
     icon: <ChevronRight className="h-4 w-4" />,
     color: 'text-blue-500',
   },
-  done: { label: 'Done', icon: <CheckCircle2 className="h-4 w-4" />, color: 'text-green-500' },
-  blocked: { label: 'Blocked', icon: <AlertCircle className="h-4 w-4" />, color: 'text-red-500' },
+  done: { label: 'Done', icon: <CheckCircle2 className="h-4 w-4" />, color: 'text-mint-500' },
+  blocked: { label: 'Blocked', icon: <AlertCircle className="h-4 w-4" />, color: 'text-coral-500' },
   on_hold: {
     label: 'On Hold',
     icon: <PauseCircle className="h-4 w-4" />,
-    color: 'text-yellow-500',
+    color: 'text-amber-500',
   },
   archived: {
     label: 'Archived',
@@ -124,8 +127,10 @@ export function TaskItem({
   onStatusChange,
   onEdit,
   onDelete,
+  onAddSubtask,
   isUpdating = false,
   compact = false,
+  isSubtask = false,
 }: TaskItemProps) {
   const [isHovered, setIsHovered] = useState(false)
   const isCompleted = task.status === 'done'
@@ -154,7 +159,8 @@ export function TaskItem({
         'group flex items-start gap-3 rounded-lg border p-3 transition-all',
         'hover:shadow-sm hover:border-primary/20',
         isCompleted && 'bg-muted/30 opacity-75',
-        task.isOverdue && !isCompleted && 'border-l-4 border-l-red-500 bg-red-50/50'
+        task.isOverdue && !isCompleted && 'border-l-4 border-l-coral-500 bg-coral-50/50',
+        isSubtask && 'ml-8 border-l-2 border-l-muted-foreground/20'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -203,7 +209,7 @@ export function TaskItem({
             <span
               className={cn(
                 'flex items-center gap-1',
-                dueDateInfo.isOverdue && 'text-red-600 font-medium',
+                dueDateInfo.isOverdue && 'text-coral-600 font-medium',
                 dueDateInfo.isToday && 'text-amber-600 font-medium'
               )}
             >
@@ -230,6 +236,17 @@ export function TaskItem({
             <span className="flex items-center gap-1">
               <Check className="h-3 w-3" />
               Completed {formatDistanceToNow(new Date(task.completedAt), { addSuffix: true })}
+            </span>
+          )}
+
+          {/* Assigned team */}
+          {task.assignedTeam && (
+            <span className="flex items-center gap-1">
+              <Users
+                className="h-3 w-3"
+                style={task.assignedTeam.color ? { color: task.assignedTeam.color } : undefined}
+              />
+              {task.assignedTeam.name}
             </span>
           )}
 
@@ -357,6 +374,13 @@ export function TaskItem({
             <DropdownMenuItem onClick={() => onEdit(task)}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
+            </DropdownMenuItem>
+          )}
+
+          {onAddSubtask && !task.parentTaskId && (
+            <DropdownMenuItem onClick={() => onAddSubtask(task)}>
+              <ListPlus className="mr-2 h-4 w-4" />
+              Add Subtask
             </DropdownMenuItem>
           )}
 

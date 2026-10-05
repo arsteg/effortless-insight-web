@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { AlertCircle, ArrowUp, ArrowDown, Calendar } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Info, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,17 +14,20 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { formatAmount } from '@/lib/api/billing'
+import { Badge } from '@/components/ui/badge'
+import { billingApi, formatAmount } from '@/lib/api/billing'
 import { BillingToggle } from './billing-toggle'
-import type { Plan, BillingCycle, Subscription } from '@/types/billing'
+import { PlanChangeValidationModal } from './plan-change-validation-modal'
+import type { Plan, BillingCycle, Subscription, PlanChangeValidationResult, GlobalBillingSettings } from '@/types/billing'
 
 interface ChangePlanModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   plans: Plan[]
   currentSubscription: Subscription
-  onConfirm: (planCode: string, billingCycle: BillingCycle, immediate: boolean) => void
+  onConfirm: (planCode: string, billingCycle: BillingCycle) => void
   isLoading?: boolean
+  globalSettings?: GlobalBillingSettings
 }
 
 export function ChangePlanModal({
@@ -34,33 +37,101 @@ export function ChangePlanModal({
   currentSubscription,
   onConfirm,
   isLoading,
+  globalSettings,
 }: ChangePlanModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<string>(currentSubscription.planCode)
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(currentSubscription.billingCycle)
-  const [immediate, setImmediate] = useState(true)
+  const [isValidating, setIsValidating] = useState(false)
+  const [validationResult, setValidationResult] = useState<PlanChangeValidationResult | null>(null)
+  const [showValidationModal, setShowValidationModal] = useState(false)
 
   const currentPlan = plans.find((p) => p.code === currentSubscription.planCode)
   const newPlan = plans.find((p) => p.code === selectedPlan)
 
-  const isUpgrade = newPlan && currentPlan ? getPlanTier(newPlan.code) > getPlanTier(currentPlan.code) : false
-  const isDowngrade = newPlan && currentPlan ? getPlanTier(newPlan.code) < getPlanTier(currentPlan.code) : false
   const isSamePlan = selectedPlan === currentSubscription.planCode
   const isBillingCycleChange = billingCycle !== currentSubscription.billingCycle
+  const hasChanges = !isSamePlan || isBillingCycleChange
 
+  // Exclude free plan (can't downgrade to free) and enterprise plans (contactSales)
   const availablePlans = plans.filter((p) => !p.contactSales && p.code !== 'free')
+
+  // Calculate available billing cycles from plans
+  const availableCycles: BillingCycle[] = Array.from(
+    new Set(availablePlans.flatMap(p => p.allowedBillingCycles || ['monthly', 'annually']))
+  )
+
+  // Sync billingCycle if current selection is not available
+  useEffect(() => {
+    if (availableCycles.length > 0 && !availableCycles.includes(billingCycle)) {
+      setBillingCycle(availableCycles[0])
+    }
+  }, [availableCycles, billingCycle])
+
+  // Helper to calculate daily rate for a plan
+  const getDailyRate = (plan: Plan, cycle: BillingCycle) => {
+    if (cycle === 'annually') {
+      return (plan.pricing.annually || 0) / 365
+    }
+    return (plan.pricing.monthly || 0) / 30
+  }
+
+  // Check if selecting a plan would be a downgrade
+  const isDowngrade = (plan: Plan) => {
+    if (!currentPlan) return false
+    const currentDailyRate = getDailyRate(currentPlan, currentSubscription.billingCycle)
+    const newDailyRate = getDailyRate(plan, billingCycle)
+    return newDailyRate < currentDailyRate
+  }
+
+  // Check if downgrades are allowed
+  const downgradesAllowed = globalSettings?.downgradesAllowed ?? true
 
   const getNewPrice = () => {
     if (!newPlan) return 0
     return billingCycle === 'annually' ? newPlan.pricing.annually : newPlan.pricing.monthly
   }
 
-  const handleConfirm = () => {
-    onConfirm(selectedPlan, billingCycle, immediate)
+  const handleValidateAndConfirm = async () => {
+    // If same plan and same billing cycle, nothing to do
+    if (isSamePlan && !isBillingCycleChange) {
+      return
+    }
+
+    // If only billing cycle change (same plan), proceed directly
+    if (isSamePlan && isBillingCycleChange) {
+      onConfirm(selectedPlan, billingCycle)
+      return
+    }
+
+    setIsValidating(true)
+    try {
+      const result = await billingApi.validatePlanChange({
+        newPlanCode: selectedPlan,
+        billingCycle: billingCycle,
+        additionalSeats: 0,
+      })
+      setValidationResult(result)
+
+      // Always show the validation modal when changing plans
+      // This ensures user sees what features they gain/lose before confirming
+      setShowValidationModal(true)
+    } catch (error) {
+      console.error('Validation failed:', error)
+      // On error, still allow the change (API will catch it)
+      onConfirm(selectedPlan, billingCycle)
+    } finally {
+      setIsValidating(false)
+    }
+  }
+
+  const handleConfirmFromValidation = () => {
+    setShowValidationModal(false)
+    onConfirm(selectedPlan, billingCycle)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Change Your Plan</DialogTitle>
           <DialogDescription>
@@ -68,12 +139,24 @@ export function ChangePlanModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 overflow-y-auto flex-1">
+          {/* Upgrade-Only Policy Notice */}
+          {!downgradesAllowed && (
+            <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+              <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <AlertTitle className="text-blue-800 dark:text-blue-200">Upgrade-Only Policy</AlertTitle>
+              <AlertDescription className="text-blue-700 dark:text-blue-300">
+                You can only upgrade to a higher plan. Downgrades to lower plans are not available.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Billing Cycle Toggle */}
           <div className="flex justify-center">
             <BillingToggle
               value={billingCycle}
               onChange={setBillingCycle}
+              allowedCycles={availableCycles}
               annualDiscount={20}
             />
           </div>
@@ -84,24 +167,33 @@ export function ChangePlanModal({
               {availablePlans.map((plan) => {
                 const price = billingCycle === 'annually' ? plan.pricing.annually : plan.pricing.monthly
                 const isCurrentPlan = plan.code === currentSubscription.planCode
+                const isPlanDowngrade = isDowngrade(plan)
+                const isDisabled = !isCurrentPlan && isPlanDowngrade && !downgradesAllowed
 
                 return (
                   <div
                     key={plan.code}
-                    className={`relative flex items-center space-x-4 rounded-lg border p-4 cursor-pointer hover:bg-accent ${
+                    className={`relative flex items-center space-x-4 rounded-lg border p-4 ${
+                      isDisabled
+                        ? 'cursor-not-allowed opacity-50'
+                        : 'cursor-pointer hover:bg-accent'
+                    } ${
                       selectedPlan === plan.code ? 'border-primary bg-accent' : ''
-                    }`}
-                    onClick={() => setSelectedPlan(plan.code)}
+                    } ${isCurrentPlan ? 'border-primary/50' : ''}`}
+                    onClick={() => !isDisabled && setSelectedPlan(plan.code)}
                   >
-                    <RadioGroupItem value={plan.code} id={plan.code} />
+                    <RadioGroupItem value={plan.code} id={plan.code} disabled={isDisabled} />
                     <div className="flex-1">
                       <Label
                         htmlFor={plan.code}
-                        className="flex items-center gap-2 cursor-pointer"
+                        className={`flex items-center gap-2 flex-wrap ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         {plan.displayName}
                         {isCurrentPlan && (
-                          <span className="text-xs text-muted-foreground">(Current)</span>
+                          <Badge variant="outline" className="text-xs">Current</Badge>
+                        )}
+                        {isDisabled && (
+                          <Badge variant="secondary" className="text-xs">Downgrade unavailable</Badge>
                         )}
                       </Label>
                       <p className="text-sm text-muted-foreground">
@@ -109,7 +201,9 @@ export function ChangePlanModal({
                       </p>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">{formatAmount(price || 0)}</div>
+                      <div className="font-semibold">
+                        {formatAmount(price || 0)}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         per {billingCycle === 'annually' ? 'year' : 'month'}
                       </div>
@@ -120,104 +214,68 @@ export function ChangePlanModal({
             </div>
           </RadioGroup>
 
-          {/* Change Type Info */}
-          {!isSamePlan && newPlan && (
-            <Alert variant={isUpgrade ? 'default' : 'destructive'}>
-              {isUpgrade ? (
-                <ArrowUp className="h-4 w-4" />
-              ) : (
-                <ArrowDown className="h-4 w-4" />
-              )}
-              <AlertTitle>
-                {isUpgrade ? 'Upgrade' : 'Downgrade'} to {newPlan.displayName}
-              </AlertTitle>
-              <AlertDescription>
-                {isUpgrade ? (
-                  <>
-                    Your new plan will be activated immediately. You will be charged a
-                    prorated amount for the remainder of your current billing period.
-                  </>
-                ) : (
-                  <>
-                    Your downgrade will take effect at the end of your current billing
-                    period on {formatDate(currentSubscription.currentPeriodEnd)}.
-                  </>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Billing Cycle Change Only */}
-          {isSamePlan && isBillingCycleChange && (
+          {/* Plan Change Info */}
+          {hasChanges && newPlan && !isSamePlan && (
             <Alert>
-              <Calendar className="h-4 w-4" />
-              <AlertTitle>Billing Cycle Change</AlertTitle>
+              <Info className="h-4 w-4" />
+              <AlertTitle>Plan Change</AlertTitle>
               <AlertDescription>
-                Your billing cycle will change to {billingCycle} at the end of your
-                current billing period.
+                You are switching to {newPlan.displayName}.
+                Click &quot;Review Changes&quot; to see what features will change.
               </AlertDescription>
             </Alert>
-          )}
-
-          {/* Downgrade Immediate Option */}
-          {isDowngrade && (
-            <div className="flex items-center space-x-2 p-4 bg-muted rounded-lg">
-              <input
-                type="checkbox"
-                id="immediate"
-                checked={immediate}
-                onChange={(e) => setImmediate(e.target.checked)}
-                className="h-4 w-4"
-              />
-              <Label htmlFor="immediate" className="text-sm">
-                Apply immediately (you will receive a prorated credit)
-              </Label>
-            </div>
           )}
 
           {/* Summary */}
           {!isSamePlan && newPlan && (
-            <div className="p-4 bg-muted rounded-lg">
+            <div className="p-4 bg-muted rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
-                <span>New plan price:</span>
+                <span>Current plan:</span>
                 <span className="font-medium">
-                  {formatAmount(getNewPrice() || 0)} / {billingCycle === 'annually' ? 'year' : 'month'}
+                  {currentPlan?.displayName} - {formatAmount(currentPlan?.pricing.monthly || 0)}/month
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>New plan:</span>
+                <span className="font-medium">
+                  {newPlan.displayName} - {formatAmount(getNewPrice() || 0)} / {billingCycle === 'annually' ? 'year' : 'month'}
                 </span>
               </div>
             </div>
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0 border-t pt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
-            onClick={handleConfirm}
-            disabled={isLoading || (isSamePlan && !isBillingCycleChange)}
+            onClick={handleValidateAndConfirm}
+            disabled={isLoading || isValidating || !hasChanges}
           >
-            {isLoading ? 'Processing...' : 'Confirm Change'}
+            {isLoading || isValidating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isValidating ? 'Checking changes...' : 'Processing...'}
+              </>
+            ) : isSamePlan && isBillingCycleChange ? (
+              'Change Billing Cycle'
+            ) : (
+              'Review Changes'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Validation Modal */}
+      <PlanChangeValidationModal
+        open={showValidationModal}
+        onOpenChange={setShowValidationModal}
+        validation={validationResult}
+        targetPlanName={newPlan?.displayName}
+        onConfirm={validationResult?.canChange ? handleConfirmFromValidation : undefined}
+        isLoading={isLoading}
+      />
     </Dialog>
   )
-}
-
-function getPlanTier(planCode: string): number {
-  const tiers: Record<string, number> = {
-    free: 0,
-    starter: 1,
-    professional: 2,
-    enterprise: 3,
-  }
-  return tiers[planCode] ?? 0
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
 }

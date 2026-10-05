@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { addDays, format } from 'date-fns'
@@ -80,10 +80,10 @@ interface DocumentRequestFormProps {
 }
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string }[] = [
-  { value: 'critical', label: 'Critical', color: 'bg-red-100 text-red-800' },
-  { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-800' },
-  { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'low', label: 'Low', color: 'bg-green-100 text-green-800' },
+  { value: 'critical', label: 'Critical', color: 'bg-coral-100 text-coral-800' },
+  { value: 'high', label: 'High', color: 'bg-amber-100 text-amber-800' },
+  { value: 'medium', label: 'Medium', color: 'bg-amber-100 text-amber-800' },
+  { value: 'low', label: 'Low', color: 'bg-mint-100 text-mint-800' },
 ]
 
 const COMMON_FORMATS = [
@@ -133,8 +133,8 @@ export function DocumentRequestForm({
     },
   })
 
-  const selectedMemberId = form.watch('requestedFrom')
-  const currentFormats = form.watch('acceptedFormats') || []
+  const selectedMemberId = useWatch({ control: form.control, name: 'requestedFrom' })
+  const currentFormats = useWatch({ control: form.control, name: 'acceptedFormats' }) || []
 
   const selectedMember = availableMembers.find((m) => m.id === selectedMemberId)
 

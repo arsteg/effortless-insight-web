@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { Check, X, Minus } from 'lucide-react'
 import {
   Table,
@@ -70,7 +71,7 @@ const FEATURE_ROWS: FeatureRow[] = [
   {
     name: 'Custom workflows',
     category: 'Core Features',
-    getValue: (plan) => plan.features.includes('custom_workflows'),
+    getValue: (plan) => plan.features.includes('workflows'),
   },
 
   // Collaboration
@@ -160,9 +161,9 @@ export function PlanComparison({ plans, highlightPlan }: PlanComparisonProps) {
         </TableHeader>
         <TableBody>
           {categories.map((category) => (
-            <>
+            <React.Fragment key={category}>
               {/* Category Header */}
-              <TableRow key={category} className="bg-muted/50">
+              <TableRow className="bg-muted/50">
                 <TableCell
                   colSpan={sortedPlans.length + 1}
                   className="font-semibold text-sm"
@@ -191,7 +192,7 @@ export function PlanComparison({ plans, highlightPlan }: PlanComparisonProps) {
                   })}
                 </TableRow>
               ))}
-            </>
+            </React.Fragment>
           ))}
         </TableBody>
       </Table>
@@ -202,7 +203,7 @@ export function PlanComparison({ plans, highlightPlan }: PlanComparisonProps) {
 function FeatureValue({ value }: { value: string | number | boolean }) {
   if (typeof value === 'boolean') {
     return value ? (
-      <Check className="h-5 w-5 text-green-600 mx-auto" />
+      <Check className="h-5 w-5 text-mint-600 mx-auto" />
     ) : (
       <X className="h-5 w-5 text-muted-foreground/50 mx-auto" />
     )

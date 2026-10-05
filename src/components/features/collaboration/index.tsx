@@ -1,7 +1,9 @@
 'use client'
 
 export { ActivityFeed } from '../activity/activity-feed'
-export { TaskPanel, TaskList, TaskForm, TaskItem } from '../tasks/task-panel'
+export { TaskList } from '../tasks/task-list'
+export { TaskForm } from '../tasks/task-form'
+export { TaskItem } from '../tasks/task-item'
 export {
   DocumentRequestPanel,
   DocumentRequestList,

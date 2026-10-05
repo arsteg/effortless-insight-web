@@ -68,14 +68,14 @@ const STATUS_CONFIG: Record<
   reviewing: {
     label: 'Reviewing',
     icon: <Eye className="h-4 w-4" />,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
+    color: 'text-lavender-600',
+    bgColor: 'bg-lavender-100',
   },
   fulfilled: {
     label: 'Fulfilled',
     icon: <CheckCircle className="h-4 w-4" />,
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
+    color: 'text-mint-600',
+    bgColor: 'bg-mint-100',
   },
   resubmit_needed: {
     label: 'Resubmit Needed',
@@ -86,16 +86,16 @@ const STATUS_CONFIG: Record<
   cancelled: {
     label: 'Cancelled',
     icon: <XCircle className="h-4 w-4" />,
-    color: 'text-red-600',
-    bgColor: 'bg-red-100',
+    color: 'text-coral-600',
+    bgColor: 'bg-coral-100',
   },
 }
 
 const PRIORITY_CONFIG: Record<TaskPriority, { label: string; className: string }> = {
-  critical: { label: 'Critical', className: 'bg-red-100 text-red-800 border-red-200' },
-  high: { label: 'High', className: 'bg-orange-100 text-orange-800 border-orange-200' },
-  medium: { label: 'Medium', className: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  low: { label: 'Low', className: 'bg-green-100 text-green-800 border-green-200' },
+  critical: { label: 'Critical', className: 'bg-coral-100 text-coral-800 border-coral-200' },
+  high: { label: 'High', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  medium: { label: 'Medium', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  low: { label: 'Low', className: 'bg-mint-100 text-mint-800 border-mint-200' },
 }
 
 function getInitials(name: string): string {
@@ -140,7 +140,7 @@ export function DocumentRequestCard({
       className={cn(
         'group relative rounded-lg border bg-card p-4 transition-all',
         'hover:shadow-md hover:border-primary/20',
-        isOverdue && request.status !== 'fulfilled' && 'border-red-200 bg-red-50/50',
+        isOverdue && request.status !== 'fulfilled' && 'border-coral-200 bg-coral-50/50',
         onClick && 'cursor-pointer'
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -263,7 +263,7 @@ export function DocumentRequestCard({
         <div
           className={cn(
             'flex items-center gap-1',
-            isOverdue && request.status !== 'fulfilled' && 'text-red-600 font-medium',
+            isOverdue && request.status !== 'fulfilled' && 'text-coral-600 font-medium',
             isDueToday && request.status !== 'fulfilled' && 'text-amber-600 font-medium'
           )}
         >

@@ -70,21 +70,21 @@ function SyncStatusBadge({ status }: { status: string }) {
   switch (status.toLowerCase()) {
     case 'completed':
       return (
-        <Badge className="bg-green-100 text-green-700 border-green-200">
+        <Badge className="bg-mint-100 text-mint-700 border-mint-200">
           <CheckCircle2 className="h-3 w-3 mr-1" />
           Completed
         </Badge>
       );
     case 'completed_with_warnings':
       return (
-        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">
+        <Badge className="bg-amber-100 text-amber-700 border-amber-200">
           <AlertCircle className="h-3 w-3 mr-1" />
           Warnings
         </Badge>
       );
     case 'failed':
       return (
-        <Badge className="bg-red-100 text-red-700 border-red-200">
+        <Badge className="bg-coral-100 text-coral-700 border-coral-200">
           <AlertCircle className="h-3 w-3 mr-1" />
           Failed
         </Badge>
@@ -133,7 +133,7 @@ function SyncLogEntry({ log }: { log: GstnSyncLogEntry }) {
           <p className="text-xs text-muted-foreground">Found</p>
         </div>
         <div className="text-center p-2 bg-muted rounded">
-          <p className="font-semibold text-green-600">{log.noticesImported ?? 0}</p>
+          <p className="font-semibold text-mint-600">{log.noticesImported ?? 0}</p>
           <p className="text-xs text-muted-foreground">Imported</p>
         </div>
         <div className="text-center p-2 bg-muted rounded">
@@ -141,7 +141,7 @@ function SyncLogEntry({ log }: { log: GstnSyncLogEntry }) {
           <p className="text-xs text-muted-foreground">Skipped</p>
         </div>
         <div className="text-center p-2 bg-muted rounded">
-          <p className="font-semibold text-red-600">{log.noticesFailed ?? 0}</p>
+          <p className="font-semibold text-coral-600">{log.noticesFailed ?? 0}</p>
           <p className="text-xs text-muted-foreground">Failed</p>
         </div>
       </div>

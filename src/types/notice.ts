@@ -19,6 +19,7 @@ export type ProcessingStatus =
   | 'analyzing'
   | 'completed'
   | 'failed'
+  | 'retrying'
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'
 
@@ -33,11 +34,13 @@ export interface Notice {
   gstin?: string
   issueDate?: string
   responseDeadline?: string
+  extendedDeadline?: string
   daysRemaining?: number
   taxAmount?: number
   penaltyAmount?: number
   status: NoticeStatus
   priority: NoticePriority
+  processingStatus?: ProcessingStatus
   riskScore?: number
   riskLevel?: RiskLevel
   summaryEn?: string
@@ -50,7 +53,6 @@ export interface Notice {
 
 // Notice detail
 export interface NoticeDetail extends Notice {
-  extendedDeadline?: string
   interestAmount?: number
   periodFrom?: string
   periodTo?: string
@@ -103,6 +105,12 @@ export interface NoticeFilters {
   priority?: NoticePriority
   noticeType?: string
   gstin?: string
+  /** All GSTINs of one client business (PAN = GSTIN chars 3-12) */
+  pan?: string
+  /** Deadline passed and still actionable */
+  overdue?: boolean
+  /** Actionable notices due within N days */
+  dueWithinDays?: number
   deadlineFrom?: string
   deadlineTo?: string
   search?: string
@@ -139,6 +147,13 @@ export interface NoticeStatistics {
   dueThisMonth: number
   totalDemandAmount: number
   totalCount: number
+}
+
+// Per-GSTIN notice counts for the client summary strip
+export interface GstinNoticeSummary {
+  gstin: string
+  totalCount: number
+  overdueCount: number
 }
 
 // Upload
@@ -178,6 +193,8 @@ export interface UpdateNoticeRequest {
   issuingAuthority?: string
   priority?: NoticePriority
   tags?: string[]
+  clearExtendedDeadline?: boolean
+  clearIssueDate?: boolean
 }
 
 export interface UpdateNoticeStatusRequest {
@@ -259,4 +276,15 @@ export interface CreateReminderRequest {
   reminderType: 'email' | 'sms' | 'push' | 'whatsapp'
   remindAt: string
   daysBefore?: number
+}
+
+// Similar notices (AI-detected)
+export interface SimilarNotice {
+  id: string
+  noticeNumber?: string
+  noticeType?: string
+  status: NoticeStatus
+  similarityScore: number
+  summary?: string
+  responseDeadline?: string
 }

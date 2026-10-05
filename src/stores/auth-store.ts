@@ -2,21 +2,61 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { User, LoginRequest, RegisterRequest } from '@/types'
 import { authApi } from '@/lib/api'
+import { useSubscriptionStore } from './subscription-store'
+import { useOrganizationStore } from './organization-store'
+import { notificationsApi } from '@/lib/api/notifications'
 import { clearTokens, getAccessToken } from '@/lib/api/client'
+
+const PUSH_TOKEN_KEY = 'ei_push_token'
+const PUSH_TOKEN_REGISTERED_KEY = 'ei_push_registered'
+
+/**
+ * Deactivate this browser's push token on logout, before auth tokens are
+ * cleared, so the previous user stops receiving pushes on a shared computer
+ * (audit WB-03 / CC-10). Best effort: never blocks logout.
+ */
+async function deactivatePushTokenOnLogout(): Promise<void> {
+  if (typeof window === 'undefined') return
+  const token = localStorage.getItem(PUSH_TOKEN_KEY)
+  if (!token) return
+  try {
+    await notificationsApi.deactivatePushToken(token)
+  } catch {
+    // Server call failed (offline / already gone) — clear locally regardless.
+  } finally {
+    localStorage.removeItem(PUSH_TOKEN_KEY)
+    localStorage.removeItem(PUSH_TOKEN_REGISTERED_KEY)
+  }
+}
+
+interface TwoFactorState {
+  required: boolean
+  partialToken: string | null
+  methods: string[]
+}
 
 interface AuthState {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
   isInitialized: boolean
+  twoFactor: TwoFactorState
 
   // Actions
   initialize: () => Promise<void>
   login: (credentials: LoginRequest) => Promise<void>
+  completeTwoFactorLogin: (code: string) => Promise<void>
+  clearTwoFactor: () => void
   register: (data: RegisterRequest) => Promise<void>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
   setUser: (user: User | null) => void
+}
+
+const initialTwoFactorState: TwoFactorState = {
+  required: false,
+  partialToken: null,
+  methods: [],
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       isInitialized: false,
+      twoFactor: initialTwoFactorState,
 
       initialize: async () => {
         const token = getAccessToken()
@@ -43,37 +84,86 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             isInitialized: true,
           })
-        } catch {
-          clearTokens()
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            isInitialized: true,
-          })
+        } catch (error) {
+          // Only clear tokens on actual auth errors (401/403), not network errors
+          const status = (error as { response?: { status?: number } })?.response?.status
+          if (status === 401 || status === 403) {
+            clearTokens()
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              isInitialized: true,
+            })
+          } else {
+            // Network error or server error - preserve session, mark as initialized but not loaded
+            // The user can retry when network is available
+            set({
+              isLoading: false,
+              isInitialized: true,
+            })
+          }
         }
       },
 
       login: async (credentials: LoginRequest) => {
-        set({ isLoading: true })
+        set({ isLoading: true, twoFactor: initialTwoFactorState })
         try {
           const result = await authApi.login(credentials)
 
           // Check if 2FA is required
           if ('requires2fa' in result) {
-            set({ isLoading: false })
-            throw new Error('2FA_REQUIRED')
+            set({
+              isLoading: false,
+              twoFactor: {
+                required: true,
+                partialToken: result.partialToken,
+                methods: result.methods,
+              },
+            })
+            return
           }
 
           set({
             user: result.user,
             isAuthenticated: true,
             isLoading: false,
+            isInitialized: true,
+            twoFactor: initialTwoFactorState,
+          })
+        } catch (error) {
+          set({ isLoading: false, twoFactor: initialTwoFactorState })
+          throw error
+        }
+      },
+
+      completeTwoFactorLogin: async (code: string) => {
+        const { twoFactor } = get()
+        if (!twoFactor.partialToken) {
+          throw new Error('No 2FA session found')
+        }
+
+        set({ isLoading: true })
+        try {
+          await authApi.login2fa(twoFactor.partialToken, code)
+          // Get user after successful 2FA login
+          const user = await authApi.getMe()
+
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+            isInitialized: true,
+            twoFactor: initialTwoFactorState,
           })
         } catch (error) {
           set({ isLoading: false })
           throw error
         }
+      },
+
+      clearTwoFactor: () => {
+        set({ twoFactor: initialTwoFactorState })
       },
 
       register: async (data: RegisterRequest) => {
@@ -90,15 +180,21 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         set({ isLoading: true })
         try {
+          // Deactivate the push token while the access token is still valid.
+          await deactivatePushTokenOnLogout()
           await authApi.logout()
         } catch {
           // Ignore logout errors, clear state anyway
         } finally {
           clearTokens()
+          // Clear subscription and organization stores on logout
+          useSubscriptionStore.getState().clearSubscription()
+          useOrganizationStore.getState().clearOrganizations()
           set({
             user: null,
             isAuthenticated: false,
             isLoading: false,
+            twoFactor: initialTwoFactorState,
           })
         }
       },
@@ -116,6 +212,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           user,
           isAuthenticated: !!user,
+          isInitialized: true,
         })
       },
     }),
@@ -130,6 +227,7 @@ export const useAuthStore = create<AuthState>()(
               email: state.user.email,
               name: state.user.name,
               role: state.user.role,
+              isCA: state.user.isCA,
             }
           : null,
         isAuthenticated: state.isAuthenticated,

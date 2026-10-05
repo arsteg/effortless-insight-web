@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, X, Plus, Clock, Users, Tag, FileText } from 'lucide-react'
+import { Loader2, X, Plus, Clock, Users, Tag, FileText, EyeOff } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,11 +41,13 @@ import {
 } from '@/components/ui/popover'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
-import { useTaskTemplates } from '@/hooks/use-collaboration'
+import { useTaskTemplates, useTeams } from '@/hooks/use-collaboration'
+import { usePermissions } from '@/hooks/use-permissions'
 import type {
   Task,
   TaskDetail,
   CreateTaskRequest,
+  UpdateTaskRequest,
   TaskPriority,
   TaskTemplate,
   TaskAssignee,
@@ -55,11 +57,15 @@ import { cn } from '@/lib/utils'
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or less'),
   description: z.string().max(2000, 'Description must be 2000 characters or less').optional(),
-  dueDate: z.string().optional(),
+  dueDate: z.string().optional().refine(
+    (d) => !d || new Date(d) >= new Date(new Date().toDateString()),
+    'Due date must be today or in the future'
+  ),
   priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
   estimatedHours: z.number().min(0).max(999).optional(),
   labels: z.array(z.string()).optional(),
   assignees: z.array(z.string()).max(5, 'Maximum 5 assignees allowed').optional(),
+  assignedTeamId: z.string().optional(),
   parentTaskId: z.string().optional(),
   templateId: z.string().optional(),
 })
@@ -84,10 +90,10 @@ interface TaskFormProps {
 }
 
 const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string }[] = [
-  { value: 'critical', label: 'Critical', color: 'bg-red-100 text-red-800' },
-  { value: 'high', label: 'High', color: 'bg-orange-100 text-orange-800' },
-  { value: 'medium', label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'low', label: 'Low', color: 'bg-green-100 text-green-800' },
+  { value: 'critical', label: 'Critical', color: 'bg-coral-100 text-coral-800' },
+  { value: 'high', label: 'High', color: 'bg-amber-100 text-amber-800' },
+  { value: 'medium', label: 'Medium', color: 'bg-amber-100 text-amber-800' },
+  { value: 'low', label: 'Low', color: 'bg-mint-100 text-mint-800' },
 ]
 
 const COMMON_LABELS = [
@@ -119,12 +125,38 @@ export function TaskForm({
   onCancel,
   isLoading = false,
 }: TaskFormProps) {
+  const { canCreateTasks, canEditTasks } = usePermissions()
   const isEditing = !!task
   const [labelInput, setLabelInput] = useState('')
   const [assigneePopoverOpen, setAssigneePopoverOpen] = useState(false)
   const [templatePopoverOpen, setTemplatePopoverOpen] = useState(false)
 
   const { data: templates } = useTaskTemplates(noticeType)
+  const { data: teams } = useTeams()
+
+  // Check permissions based on whether we're creating or editing
+  const hasPermission = isEditing ? canEditTasks : canCreateTasks
+
+  // Show read-only message for viewers
+  if (!hasPermission) {
+    return (
+      <div className="rounded-lg border bg-muted/50 px-4 py-6">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <EyeOff className="h-8 w-8 text-muted-foreground" />
+          <div>
+            <p className="font-medium">View-only Access</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              You don&apos;t have permission to {isEditing ? 'edit tasks' : 'create tasks'}.
+              Contact your administrator for access.
+            </p>
+          </div>
+          <Button variant="outline" onClick={onCancel}>
+            Close
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   const form = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
@@ -136,12 +168,13 @@ export function TaskForm({
       estimatedHours: task?.estimatedHours,
       labels: task?.labels || [],
       assignees: task?.assignees?.map((a) => a.id) || [],
+      assignedTeamId: task?.assignedTeam?.id || 'none',
       parentTaskId: parentTaskId || task?.parentTaskId,
     },
   })
 
-  const selectedAssignees = form.watch('assignees') || []
-  const currentLabels = form.watch('labels') || []
+  const selectedAssignees = useWatch({ control: form.control, name: 'assignees' }) || []
+  const currentLabels = useWatch({ control: form.control, name: 'labels' }) || []
 
   const handleTemplateSelect = (template: TaskTemplate) => {
     form.setValue('title', template.defaultTitle)
@@ -186,7 +219,11 @@ export function TaskForm({
   }
 
   const handleSubmit = (data: TaskFormData) => {
-    onSubmit({
+    const teamId = data.assignedTeamId && data.assignedTeamId !== 'none'
+      ? data.assignedTeamId
+      : undefined
+
+    const payload: CreateTaskRequest & Pick<UpdateTaskRequest, 'clearTeamAssignment'> = {
       title: data.title,
       description: data.description || undefined,
       dueDate: data.dueDate || undefined,
@@ -194,9 +231,18 @@ export function TaskForm({
       estimatedHours: data.estimatedHours,
       labels: data.labels && data.labels.length > 0 ? data.labels : undefined,
       assignees: data.assignees && data.assignees.length > 0 ? data.assignees : undefined,
+      assignedTeamId: teamId,
       parentTaskId: data.parentTaskId,
       templateId: data.templateId,
-    })
+    }
+
+    // When editing a task that had a team and the team was deselected,
+    // explicitly clear the assignment on the server
+    if (isEditing && task?.assignedTeam && !teamId) {
+      payload.clearTeamAssignment = true
+    }
+
+    onSubmit(payload)
   }
 
   const selectedMemberDetails = availableMembers.filter((m) =>
@@ -323,7 +369,12 @@ export function TaskForm({
                   Due Date <span className="text-muted-foreground font-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input type="date" disabled={isLoading} {...field} />
+                  <Input
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    disabled={isLoading}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -364,6 +415,52 @@ export function TaskForm({
             </FormItem>
           )}
         />
+
+        {/* Team assignment */}
+        {teams && teams.length > 0 && (
+          <FormField
+            control={form.control}
+            name="assignedTeamId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Assign to Team{' '}
+                  <span className="text-muted-foreground font-normal">(optional)</span>
+                </FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="No team" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">No team</SelectItem>
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        <div className="flex items-center gap-2">
+                          {team.color && (
+                            <span
+                              className="inline-block h-2 w-2 rounded-full"
+                              style={{ backgroundColor: team.color }}
+                            />
+                          )}
+                          {team.name}
+                          <span className="text-xs text-muted-foreground">
+                            ({team.memberCount} {team.memberCount === 1 ? 'member' : 'members'})
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  All team members become assignees of this task.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Assignees */}
         {availableMembers.length > 0 && (

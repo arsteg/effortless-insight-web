@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Upload, Trash2, Archive, UserPlus, Download, FileText, FileSpreadsheet, File } from 'lucide-react'
 
@@ -25,19 +26,40 @@ import {
   NoticeFilters,
   NoticeTable,
   AssignNoticeDialog,
+  ClientSummaryStrip,
 } from '@/components/features/notices'
 import { useNotices, useDeleteNotice, useBulkDeleteNotices, useArchiveNotice, useExportNotices } from '@/hooks/use-notices'
+import { useNoticeUpdates } from '@/hooks/use-notice-updates'
+import { useCanAccessFeature } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import type { NoticeFilters as NoticeFiltersType, Notice } from '@/types'
 
 const DEFAULT_PAGE_SIZE = 10
 
 export default function NoticesPage() {
+  return (
+    <Suspense>
+      <NoticesPageInner />
+    </Suspense>
+  )
+}
+
+function NoticesPageInner() {
+  // Enable real-time notice status updates
+  useNoticeUpdates()
+  // Deep-link support (e.g. dashboard widget links /notices?gstin=X&overdue=true)
+  const searchParams = useSearchParams()
   // Filters state
-  const [filters, setFilters] = useState<NoticeFiltersType>({
+  const [filters, setFilters] = useState<NoticeFiltersType>(() => ({
     page: 1,
     pageSize: DEFAULT_PAGE_SIZE,
     includeAggregations: true,
-  })
+    gstin: searchParams.get('gstin') || undefined,
+    overdue: searchParams.get('overdue') === 'true' ? true : undefined,
+    dueWithinDays: searchParams.get('dueWithinDays')
+      ? Number(searchParams.get('dueWithinDays'))
+      : undefined,
+  }))
 
   // Selection state for bulk actions
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -57,6 +79,10 @@ export default function NoticesPage() {
   const bulkDeleteMutation = useBulkDeleteNotices()
   const archiveMutation = useArchiveNotice()
   const exportMutation = useExportNotices()
+
+  // Feature access
+  const hasBulkOperations = useCanAccessFeature(FeatureCodes.BulkOperations)
+  const hasDataExport = useCanAccessFeature(FeatureCodes.DataExport)
 
   // Handlers
   const handleFiltersChange = useCallback((newFilters: NoticeFiltersType) => {
@@ -121,7 +147,7 @@ export default function NoticesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          {selectedIds.length > 0 && (
+          {hasBulkOperations && selectedIds.length > 0 && (
             <>
               <Button
                 variant="outline"
@@ -141,28 +167,30 @@ export default function NoticesPage() {
               </Button>
             </>
           )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={exportMutation.isPending}>
-                <Download className="mr-2 h-4 w-4" />
-                {exportMutation.isPending ? 'Exporting...' : 'Export'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleExport('csv')}>
-                <FileText className="mr-2 h-4 w-4" />
-                Export as CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('xlsx')}>
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Export as Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                <File className="mr-2 h-4 w-4" />
-                Export as PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {hasDataExport && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={exportMutation.isPending}>
+                  <Download className="mr-2 h-4 w-4" />
+                  {exportMutation.isPending ? 'Exporting...' : 'Export'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleExport('csv')}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('xlsx')}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Export as Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                  <File className="mr-2 h-4 w-4" />
+                  Export as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <Button asChild>
             <Link href="/notices/upload">
               <Upload className="mr-2 h-4 w-4" />
@@ -171,6 +199,9 @@ export default function NoticesPage() {
           </Button>
         </div>
       </div>
+
+      {/* Per-client summary — one card per GSTIN, click to filter */}
+      <ClientSummaryStrip filters={filters} onFiltersChange={handleFiltersChange} />
 
       {/* Filters */}
       <Card>
@@ -201,8 +232,8 @@ export default function NoticesPage() {
         sortBy={filters.sortBy}
         sortDesc={filters.sortDesc}
         onSortChange={handleSortChange}
-        selectedIds={selectedIds}
-        onSelectionChange={setSelectedIds}
+        selectedIds={hasBulkOperations ? selectedIds : undefined}
+        onSelectionChange={hasBulkOperations ? setSelectedIds : undefined}
         onAssign={handleAssign}
         onArchive={(notice) => archiveMutation.mutate({ id: notice.id })}
         onDelete={setDeleteNotice}
