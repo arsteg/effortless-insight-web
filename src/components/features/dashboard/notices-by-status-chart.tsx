@@ -99,11 +99,15 @@ export function NoticesByStatusChart({
                 cy="50%"
                 innerRadius={50}
                 outerRadius={80}
-                paddingAngle={2}
+                paddingAngle={chartData.length > 1 ? 2 : 0}
                 dataKey="value"
               >
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.color}
+                    stroke={chartData.length > 1 ? '#fff' : 'none'}
+                  />
                 ))}
               </Pie>
               <Tooltip

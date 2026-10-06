@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { noticesApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
+import { dashboardKeys } from '@/hooks/use-dashboard'
 import type {
   Notice,
   NoticeDetail,
@@ -81,6 +82,7 @@ export function useUpdateNotice() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: noticeKeys.lists() })
       queryClient.invalidateQueries({ queryKey: noticeKeys.detail(data.id) })
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
       toast({
         title: 'Notice updated',
         description: 'The notice has been updated successfully.',
@@ -161,6 +163,7 @@ export function useUpdateNoticeStatus() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: noticeKeys.lists() })
       queryClient.invalidateQueries({ queryKey: noticeKeys.detail(data.id) })
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
       toast({
         title: 'Status updated',
         description: 'The notice status has been updated successfully.',

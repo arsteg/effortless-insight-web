@@ -47,6 +47,7 @@ export interface DeadlineItem {
   priority: string
   noticeId?: string
   noticeNumber?: string
+  kind?: 'response' | 'extended' | 'task'
 }
 
 export interface UpcomingDeadlines {
