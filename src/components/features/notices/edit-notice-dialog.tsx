@@ -50,7 +50,37 @@ const editNoticeSchema = z.object({
   penaltyAmount: z.coerce.number().min(0).optional(),
   interestAmount: z.coerce.number().min(0).optional(),
   priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-});
+}).refine(
+  // Dates are yyyy-mm-dd strings, so string comparison orders them correctly
+  (data) =>
+    !data.extendedDeadline ||
+    !data.responseDeadline ||
+    data.extendedDeadline >= data.responseDeadline,
+  {
+    message: "Extended deadline cannot be before the response deadline",
+    path: ["extendedDeadline"],
+  }
+).refine(
+  (data) =>
+    !data.issueDate ||
+    !data.responseDeadline ||
+    data.issueDate <= data.responseDeadline,
+  {
+    message: "Issue date cannot be after the response deadline",
+    path: ["issueDate"],
+  }
+).refine(
+  // Only needed without a response deadline; otherwise the two rules above already cover it
+  (data) =>
+    !!data.responseDeadline ||
+    !data.issueDate ||
+    !data.extendedDeadline ||
+    data.extendedDeadline >= data.issueDate,
+  {
+    message: "Extended deadline cannot be before the issue date",
+    path: ["extendedDeadline"],
+  }
+);
 
 type EditNoticeFormData = z.infer<typeof editNoticeSchema>;
 
@@ -153,17 +183,24 @@ export function EditNoticeDialog({
     if (data.noticeCategory !== notice.noticeCategory)
       updateData.noticeCategory = data.noticeCategory;
     if (data.gstin !== notice.gstin) updateData.gstin = data.gstin;
-    if (data.issueDate && data.issueDate !== notice.issueDate?.split("T")[0])
-      updateData.issueDate = data.issueDate;
-    if (
-      data.responseDeadline &&
-      data.responseDeadline !== notice.responseDeadline?.split("T")[0]
-    )
-      updateData.responseDeadline = data.responseDeadline;
+    if (data.issueDate !== (notice.issueDate?.split("T")[0] || "")) {
+      if (data.issueDate) {
+        updateData.issueDate = data.issueDate;
+      } else {
+        // Field was cleared; the API needs an explicit flag to remove the date
+        updateData.clearIssueDate = true;
+      }
+    }
+    // Response deadline is read-only here; it is never sent in the update
     if (
       data.extendedDeadline !== (notice.extendedDeadline?.split("T")[0] || "")
     ) {
-      updateData.extendedDeadline = data.extendedDeadline || undefined;
+      if (data.extendedDeadline) {
+        updateData.extendedDeadline = data.extendedDeadline;
+      } else {
+        // Field was cleared; the API needs an explicit flag to remove the date
+        updateData.clearExtendedDeadline = true;
+      }
     }
     if (data.taxAmount !== notice.taxAmount)
       updateData.taxAmount = data.taxAmount;
@@ -328,7 +365,7 @@ export function EditNoticeDialog({
                   <FormItem>
                     <FormLabel>Response Deadline</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" {...field} disabled />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

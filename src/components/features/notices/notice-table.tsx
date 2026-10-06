@@ -53,7 +53,7 @@ interface NoticeTableProps {
   onDelete?: (notice: Notice) => void
 }
 
-type SortableColumn = 'noticeNumber' | 'noticeType' | 'responseDeadline' | 'taxAmount' | 'status' | 'priority' | 'createdAt'
+type SortableColumn = 'noticeNumber' | 'noticeType' | 'responseDeadline' | 'extendedDeadline' | 'taxAmount' | 'status' | 'priority' | 'createdAt'
 
 export function NoticeTable({
   notices,
@@ -158,8 +158,19 @@ export function NoticeTable({
                 className="-ml-3 h-8"
                 onClick={() => handleSort('responseDeadline')}
               >
-                Deadline
+                Response Deadline
                 {getSortIcon('responseDeadline')}
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="-ml-3 h-8"
+                onClick={() => handleSort('extendedDeadline')}
+              >
+                Extended Deadline
+                {getSortIcon('extendedDeadline')}
               </Button>
             </TableHead>
             <TableHead>
@@ -245,8 +256,15 @@ export function NoticeTable({
                 )}
               </TableCell>
               <TableCell>
+                {/* daysRemaining counts down to the extended deadline when one is set */}
                 <DeadlineCell
                   deadline={notice.responseDeadline}
+                  daysRemaining={notice.extendedDeadline ? undefined : notice.daysRemaining}
+                />
+              </TableCell>
+              <TableCell>
+                <DeadlineCell
+                  deadline={notice.extendedDeadline}
                   daysRemaining={notice.daysRemaining}
                 />
               </TableCell>
@@ -384,7 +402,8 @@ function NoticeTableSkeleton() {
             </TableHead>
             <TableHead>Notice</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Deadline</TableHead>
+            <TableHead>Response Deadline</TableHead>
+            <TableHead>Extended Deadline</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Priority</TableHead>
@@ -408,6 +427,9 @@ function NoticeTableSkeleton() {
               <TableCell>
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="mt-1 h-3 w-16" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-24" />
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-20" />

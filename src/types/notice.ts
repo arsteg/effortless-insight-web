@@ -34,6 +34,7 @@ export interface Notice {
   gstin?: string
   issueDate?: string
   responseDeadline?: string
+  extendedDeadline?: string
   daysRemaining?: number
   taxAmount?: number
   penaltyAmount?: number
@@ -53,7 +54,6 @@ export interface Notice {
 
 // Notice detail
 export interface NoticeDetail extends Notice {
-  extendedDeadline?: string
   interestAmount?: number
   periodFrom?: string
   periodTo?: string
@@ -194,6 +194,8 @@ export interface UpdateNoticeRequest {
   issuingAuthority?: string
   priority?: NoticePriority
   tags?: string[]
+  clearExtendedDeadline?: boolean
+  clearIssueDate?: boolean
 }
 
 export interface UpdateNoticeStatusRequest {

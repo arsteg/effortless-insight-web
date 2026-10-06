@@ -194,17 +194,20 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           {/* Tab Navigation */}
           <Tabs defaultValue="overview">
         <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-10">
-            <TabsTrigger value="overview" className="flex-1 md:flex-none">Overview</TabsTrigger>
-            <TabsTrigger value="analysis" className="flex-1 md:flex-none whitespace-nowrap">AI Analysis</TabsTrigger>
-            <TabsTrigger value="similar" className="flex-1 md:flex-none">Similar</TabsTrigger>
-            <TabsTrigger value="chat" className="flex-1 md:flex-none whitespace-nowrap">AI Chat</TabsTrigger>
-            <TabsTrigger value="collaboration" className="flex-1 md:flex-none">Tasks</TabsTrigger>
-            <TabsTrigger value="comments" className="flex-1 md:flex-none">Comments</TabsTrigger>
-            <TabsTrigger value="response" className="flex-1 md:flex-none">Response</TabsTrigger>
-            <TabsTrigger value="documents" className="flex-1 md:flex-none">Documents</TabsTrigger>
-            <TabsTrigger value="requests" className="flex-1 md:flex-none">Requests</TabsTrigger>
-            <TabsTrigger value="activity" className="flex-1 md:flex-none">Activity</TabsTrigger>
+          {/* flex-auto sizes each tab to its label and shares the spare width equally, so the gaps between labels match.
+              px-1.5 is only the minimum padding: it lets all tabs fit a full-size laptop window without scrolling,
+              and the bar only scrolls when the window is genuinely too narrow */}
+          <TabsList className="flex w-max min-w-full">
+            <TabsTrigger value="overview" className="flex-auto px-1.5">Overview</TabsTrigger>
+            <TabsTrigger value="analysis" className="flex-auto px-1.5">AI Analysis</TabsTrigger>
+            <TabsTrigger value="similar" className="flex-auto px-1.5">Similar</TabsTrigger>
+            <TabsTrigger value="chat" className="flex-auto px-1.5">AI Chat</TabsTrigger>
+            <TabsTrigger value="collaboration" className="flex-auto px-1.5">Tasks</TabsTrigger>
+            <TabsTrigger value="comments" className="flex-auto px-1.5">Comments</TabsTrigger>
+            <TabsTrigger value="response" className="flex-auto px-1.5">Response</TabsTrigger>
+            <TabsTrigger value="documents" className="flex-auto px-1.5">Documents</TabsTrigger>
+            <TabsTrigger value="requests" className="flex-auto px-1.5">Requests</TabsTrigger>
+            <TabsTrigger value="activity" className="flex-auto px-1.5">Activity</TabsTrigger>
           </TabsList>
         </div>
 
