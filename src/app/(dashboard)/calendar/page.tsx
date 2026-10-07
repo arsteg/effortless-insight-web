@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
+  CalendarClock,
   AlertCircle,
   Clock,
   FileText,
@@ -26,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { useDashboard } from '@/hooks/use-dashboard'
+import { useCalendarDeadlines } from '@/hooks/use-dashboard'
 import { cn } from '@/lib/utils'
 import {
   format,
@@ -50,6 +51,8 @@ interface Deadline {
   id: string
   noticeId: string
   noticeNumber: string
+  label: string
+  kind: 'response' | 'extended' | 'task'
   title: string
   dueDate: string
   priority: 'critical' | 'high' | 'medium' | 'low'
@@ -118,25 +121,38 @@ export default function CalendarPage() {
     localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(typeFilters))
   }, [typeFilters])
 
-  const { data, isLoading } = useDashboard()
+  // Fetch deadlines for the whole visible grid (month view includes leading/trailing days)
+  const rangeStart = format(
+    viewMode === 'month' ? startOfWeek(startOfMonth(currentDate)) : startOfWeek(currentDate),
+    'yyyy-MM-dd'
+  )
+  const rangeEnd = format(
+    viewMode === 'month' ? endOfWeek(endOfMonth(currentDate)) : endOfWeek(currentDate),
+    'yyyy-MM-dd'
+  )
+  const { data: calendarItems } = useCalendarDeadlines(rangeStart, rangeEnd)
 
-  // Transform dashboard deadlines into calendar events
-  const next7Days = data?.deadlines?.next7Days
   const allDeadlines: Deadline[] = useMemo(() => {
-    if (!next7Days) return []
+    if (!calendarItems) return []
 
-    return next7Days.map((d) => ({
-      id: d.id,
-      noticeId: d.noticeId || d.id,
-      noticeNumber: d.noticeNumber || `#${(d.noticeId || d.id)?.slice(0, 8)}`,
-      title: d.title || 'Deadline',
-      dueDate: d.dueDate,
-      priority: (d.priority as Deadline['priority']) || 'medium',
-      status: d.isOverdue ? 'overdue' : 'pending',
-      noticeType: d.type === 'task' ? 'Task' : 'GST Notice',
-      itemType: d.type === 'task' ? 'task' : 'notice',
-    }))
-  }, [next7Days])
+    return calendarItems.map((d) => {
+      const kind = d.kind ?? (d.type === 'task' ? 'task' : 'response')
+      const noticeNumber = d.noticeNumber || `#${(d.noticeId || d.id)?.slice(0, 8)}`
+      return {
+        id: `${kind}-${d.id}`, // a notice can appear twice (response + extended)
+        noticeId: d.noticeId || d.id,
+        noticeNumber,
+        label: noticeNumber,
+        kind,
+        title: d.title || 'Deadline',
+        dueDate: d.dueDate,
+        priority: (d.priority as Deadline['priority']) || 'medium',
+        status: d.isOverdue ? 'overdue' : 'pending',
+        noticeType: kind === 'task' ? 'Task' : 'GST Notice',
+        itemType: kind === 'task' ? 'task' : 'notice',
+      }
+    })
+  }, [calendarItems])
 
   // Apply type filters
   const deadlines = useMemo(() => {
@@ -340,17 +356,19 @@ export default function CalendarPage() {
                       </div>
                       <div className="space-y-1">
                         {dayDeadlines.slice(0, 3).map((deadline) => {
-                          const TypeIcon = typeIcons[deadline.itemType]
+                          const TypeIcon = deadline.kind === 'extended' ? CalendarClock : typeIcons[deadline.itemType]
                           return (
                             <div
                               key={deadline.id}
+                              title={deadline.label}
                               className={cn(
                                 'text-xs p-1 rounded truncate border-l-2 flex items-center gap-1',
-                                priorityBorderColors[deadline.priority]
+                                priorityBorderColors[deadline.priority],
+                                deadline.kind === 'extended' && 'bg-blue-50 dark:bg-blue-950/40'
                               )}
                             >
                               <TypeIcon className="h-3 w-3 shrink-0" />
-                              <span className="truncate">{deadline.noticeNumber}</span>
+                              <span className="truncate">{deadline.label}</span>
                             </div>
                           )
                         })}
@@ -390,19 +408,20 @@ export default function CalendarPage() {
                       </div>
                       <div className="space-y-2">
                         {dayDeadlines.map((deadline) => {
-                          const TypeIcon = typeIcons[deadline.itemType]
+                          const TypeIcon = deadline.kind === 'extended' ? CalendarClock : typeIcons[deadline.itemType]
                           return (
                             <Link
                               key={deadline.id}
                               href={`/notices/${deadline.noticeId}`}
                               className={cn(
                                 'block text-xs p-2 rounded border-l-2 hover:bg-muted/50',
-                                priorityBorderColors[deadline.priority]
+                                priorityBorderColors[deadline.priority],
+                                deadline.kind === 'extended' && 'bg-blue-50 dark:bg-blue-950/40'
                               )}
                             >
                               <div className="flex items-center gap-1 font-medium truncate">
                                 <TypeIcon className="h-3 w-3 shrink-0" />
-                                {deadline.noticeNumber}
+                                {deadline.label}
                               </div>
                               <div className="text-muted-foreground truncate">{deadline.title}</div>
                             </Link>
@@ -550,23 +569,30 @@ export default function CalendarPage() {
                 selectedDateDeadlines.length > 0 ? (
                   <div className="space-y-3">
                     {selectedDateDeadlines.map((deadline) => {
-                      const TypeIcon = typeIcons[deadline.itemType]
+                      const TypeIcon = deadline.kind === 'extended' ? CalendarClock : typeIcons[deadline.itemType]
                       return (
                         <Link
                           key={deadline.id}
                           href={`/notices/${deadline.noticeId}`}
                           className={cn(
                             'block p-3 rounded-lg border border-l-4 hover:bg-muted/50 transition-colors',
-                            priorityBorderColors[deadline.priority]
+                            priorityBorderColors[deadline.priority],
+                            deadline.kind === 'extended' && 'bg-blue-50 dark:bg-blue-950/40'
                           )}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="space-y-1">
                               <div className="flex items-center gap-1.5 font-medium text-sm">
                                 <TypeIcon className="h-3.5 w-3.5" />
-                                {deadline.noticeNumber}
+                                {deadline.label}
                               </div>
-                              <div className="text-xs text-muted-foreground">{deadline.title}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {deadline.kind === 'extended'
+                                  ? 'Extended deadline'
+                                  : deadline.kind === 'response'
+                                    ? 'Response deadline'
+                                    : deadline.title}
+                              </div>
                               <Badge variant="outline" className={cn('text-xs', typeColors[deadline.itemType])}>
                                 {deadline.noticeType}
                               </Badge>

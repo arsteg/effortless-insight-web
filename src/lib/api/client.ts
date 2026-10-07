@@ -115,6 +115,7 @@ apiClient.interceptors.response.use(
                            originalRequest.url?.includes('/auth/reset-password') ||
                            originalRequest.url?.includes('/auth/verify-email') ||
                            originalRequest.url?.includes('/auth/otp') ||
+                           originalRequest.url?.includes('/auth/signup/') ||
                            originalRequest.url?.includes('/auth/2fa/login') ||
                            originalRequest.url?.includes('/auth/oauth/')
 
