@@ -32,7 +32,9 @@ interface StatusDropdownProps {
   disabled?: boolean
 }
 
-// Status configuration with display info and allowed transitions
+// Status configuration with display info and allowed transitions.
+// Archiving and unarchiving are not offered here: they go through the Archive/Unarchive
+// actions, which confirm first and know which status a restore returns to.
 const STATUS_CONFIG: Record<NoticeStatus, {
   label: string
   description: string
@@ -41,7 +43,7 @@ const STATUS_CONFIG: Record<NoticeStatus, {
   uploaded: {
     label: 'Uploaded',
     description: 'Notice has been uploaded',
-    allowedTransitions: ['processing', 'archived'],
+    allowedTransitions: ['processing'],
   },
   processing: {
     label: 'Processing',
@@ -51,12 +53,12 @@ const STATUS_CONFIG: Record<NoticeStatus, {
   analyzed: {
     label: 'Analyzed',
     description: 'AI analysis complete',
-    allowedTransitions: ['in_progress', 'archived'],
+    allowedTransitions: ['in_progress'],
   },
   in_progress: {
     label: 'In Progress',
     description: 'Notice is being worked on',
-    allowedTransitions: ['responded', 'archived'],
+    allowedTransitions: ['responded'],
   },
   responded: {
     label: 'Responded',
@@ -66,22 +68,22 @@ const STATUS_CONFIG: Record<NoticeStatus, {
   closed: {
     label: 'Closed',
     description: 'Notice has been resolved',
-    allowedTransitions: ['archived'],
+    allowedTransitions: [],
   },
   archived: {
     label: 'Archived',
     description: 'Notice has been archived',
-    allowedTransitions: ['in_progress'],
+    allowedTransitions: [],
   },
   failed: {
     label: 'Failed',
     description: 'Processing failed',
-    allowedTransitions: ['processing', 'archived'],
+    allowedTransitions: ['processing'],
   },
 }
 
 // Statuses that require a reason
-const STATUSES_REQUIRING_REASON: NoticeStatus[] = ['archived', 'closed']
+const STATUSES_REQUIRING_REASON: NoticeStatus[] = ['closed']
 
 export function StatusDropdown({ noticeId, currentStatus, disabled = false }: StatusDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)

@@ -172,6 +172,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
               planCode: state.subscription.planCode,
               planName: state.subscription.planName,
               status: state.subscription.status,
+              hasAccess: state.subscription.hasAccess,
               isTrialing: state.subscription.isTrialing,
               trialEnd: state.subscription.trialEnd,
               trialDaysRemaining: state.subscription.trialDaysRemaining,

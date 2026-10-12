@@ -12,15 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { useGstClients } from '@/hooks/use-gst-sync'
 import type { NoticeFilters as NoticeFiltersType, NoticeStatus, NoticePriority } from '@/types'
 
@@ -54,7 +45,6 @@ export function NoticeFilters({
   isLoading = false,
 }: NoticeFiltersProps) {
   const [searchValue, setSearchValue] = useState(filters.search || '')
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   // Connected GSTINs power the client filter (a CA sees one entry per client).
   const { data: gstClientsData } = useGstClients({ pageSize: 100 })
@@ -247,7 +237,7 @@ export function NoticeFilters({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowClearConfirm(true)}
+            onClick={clearFilters}
             className="gap-1"
           >
             <X className="h-4 w-4" />
@@ -297,28 +287,6 @@ export function NoticeFilters({
           )}
         </div>
       )}
-
-      <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear all filters?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove {activeFilterCount} active filter{activeFilterCount > 1 ? 's' : ''} and show all notices.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button
-              onClick={() => {
-                clearFilters()
-                setShowClearConfirm(false)
-              }}
-            >
-              Clear filters
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

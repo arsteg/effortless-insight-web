@@ -7,6 +7,7 @@ import {
   Eye,
   UserPlus,
   Archive,
+  ArchiveRestore,
   Trash2,
   ArrowUpDown,
   ArrowUp,
@@ -37,6 +38,7 @@ import { PriorityBadge } from './priority-badge'
 import { RiskBadge } from './risk-badge'
 import { SourceBadge } from './source-badge'
 import { ProcessingIndicator } from './processing-indicator'
+import { canArchiveNotice } from './archive-notice-dialog'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import type { Notice, NoticeFilters } from '@/types'
 
@@ -50,7 +52,10 @@ interface NoticeTableProps {
   onSelectionChange?: (ids: string[]) => void
   onAssign?: (notice: Notice) => void
   onArchive?: (notice: Notice) => void
+  onUnarchive?: (notice: Notice) => void
   onDelete?: (notice: Notice) => void
+  // Active list filters, so the empty state can say why nothing matched
+  filters?: NoticeFilters
 }
 
 type SortableColumn = 'noticeNumber' | 'noticeType' | 'responseDeadline' | 'extendedDeadline' | 'taxAmount' | 'status' | 'priority' | 'createdAt'
@@ -65,7 +70,9 @@ export function NoticeTable({
   onSelectionChange,
   onAssign,
   onArchive,
+  onUnarchive,
   onDelete,
+  filters,
 }: NoticeTableProps) {
   const allSelected = notices.length > 0 && selectedIds.length === notices.length
   const someSelected = selectedIds.length > 0 && selectedIds.length < notices.length
@@ -111,7 +118,7 @@ export function NoticeTable({
   }
 
   if (notices.length === 0) {
-    return <NoticeTableEmpty />
+    return <NoticeTableEmpty filters={filters} />
   }
 
   return (
@@ -325,7 +332,14 @@ export function NoticeTable({
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    {onArchive && (
+                    {notice.status === 'archived' ? (
+                      onUnarchive && (
+                        <DropdownMenuItem onClick={() => onUnarchive(notice)}>
+                          <ArchiveRestore className="mr-2 h-4 w-4" />
+                          Unarchive
+                        </DropdownMenuItem>
+                      )
+                    ) : onArchive && canArchiveNotice(notice.status) && (
                       <DropdownMenuItem onClick={() => onArchive(notice)}>
                         <Archive className="mr-2 h-4 w-4" />
                         Archive
@@ -454,7 +468,21 @@ function NoticeTableSkeleton() {
   )
 }
 
-function NoticeTableEmpty() {
+function NoticeTableEmpty({ filters }: { filters?: NoticeFilters }) {
+  if (filters?.status === 'archived') {
+    return (
+      <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
+        <div className="flex flex-col items-center justify-center py-12">
+          <FileText className="h-12 w-12 text-azure-300 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No archived notices found</h3>
+          <p className="text-muted-foreground mb-4 text-center max-w-sm">
+            Notices you archive are hidden from the default list and appear here.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
       <div className="flex flex-col items-center justify-center py-12">

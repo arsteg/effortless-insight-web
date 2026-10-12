@@ -60,11 +60,14 @@ export function useUpdateProfile() {
 export function useUploadAvatar() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
+  const { user, setUser } = useAuthStore()
 
   return useMutation({
     mutationFn: (file: File) => usersApi.uploadAvatar(file),
-    onSuccess: () => {
+    onSuccess: ({ avatarUrl }) => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.profile() })
+      // The header reads the avatar from the auth store, not the profile query.
+      if (user) setUser({ ...user, avatarUrl })
       toast({
         title: 'Avatar updated',
         description: 'Your avatar has been updated successfully.',
@@ -84,11 +87,13 @@ export function useUploadAvatar() {
 export function useDeleteAvatar() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
+  const { user, setUser } = useAuthStore()
 
   return useMutation({
     mutationFn: () => usersApi.deleteAvatar(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: settingsKeys.profile() })
+      if (user) setUser({ ...user, avatarUrl: undefined })
       toast({
         title: 'Avatar removed',
         description: 'Your avatar has been removed.',

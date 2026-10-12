@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { noticesApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import { dashboardKeys } from '@/hooks/use-dashboard'
+import { getValidationErrorMessage } from '@/lib/api/error-utils'
 import type {
   Notice,
   NoticeDetail,
@@ -180,26 +181,98 @@ export function useUpdateNoticeStatus() {
   })
 }
 
-// Archive notice mutation
+// Refresh everything that shows a notice's status after archive/unarchive
+function invalidateNoticeStatus(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: noticeKeys.lists() })
+  queryClient.invalidateQueries({ queryKey: noticeKeys.details() })
+  queryClient.invalidateQueries({ queryKey: noticeKeys.statistics() })
+  queryClient.invalidateQueries({ queryKey: dashboardKeys.all })
+}
+
+// Archive one or more notices. Each goes through the status endpoint, so a partial
+// failure still archives the rest and reports how many could not be archived.
 export function useArchiveNotice() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
-      noticesApi.updateStatus(id, { status: 'archived', reason }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: noticeKeys.lists() })
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(
+        ids.map((id) => noticesApi.updateStatus(id, { status: 'archived' }))
+      )
+      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      // Nothing archived: let onError show the API's reason
+      if (failures.length === ids.length) throw failures[0].reason
+      return { archived: ids.length - failures.length, failed: failures.length, firstError: failures[0]?.reason }
+    },
+    onSuccess: ({ archived, failed, firstError }) => {
+      invalidateNoticeStatus(queryClient)
+      if (failed > 0) {
+        toast({
+          title: 'Some notices were not archived',
+          description: `${archived} of ${archived + failed} notices archived. ${getValidationErrorMessage(firstError, '')}`.trim(),
+          variant: 'destructive',
+        })
+        return
+      }
       toast({
-        title: 'Notice archived',
-        description: 'The notice has been archived successfully.',
+        title: archived === 1 ? 'Notice archived' : `${archived} notices archived`,
+        description:
+          archived === 1
+            ? 'The notice has been archived successfully.'
+            : 'The selected notices have been archived successfully.',
         variant: 'success',
       })
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: 'Archive failed',
-        description: 'Failed to archive the notice. Please try again.',
+        description: getValidationErrorMessage(error, 'Failed to archive the notice. Please try again.'),
+        variant: 'destructive',
+      })
+    },
+  })
+}
+
+// Unarchive one or more notices. The API only accepts the status each notice was archived
+// from (notice.restoreStatus). Like archive, a partial failure still restores the rest.
+export function useUnarchiveNotice() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async (targets: { id: string; status: NoticeStatus }[]) => {
+      const results = await Promise.allSettled(
+        targets.map(({ id, status }) => noticesApi.updateStatus(id, { status }))
+      )
+      const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      // Nothing unarchived: let onError show the API's reason
+      if (failures.length === targets.length) throw failures[0].reason
+      return { unarchived: targets.length - failures.length, failed: failures.length, firstError: failures[0]?.reason }
+    },
+    onSuccess: ({ unarchived, failed, firstError }) => {
+      invalidateNoticeStatus(queryClient)
+      if (failed > 0) {
+        toast({
+          title: 'Some notices were not unarchived',
+          description: `${unarchived} of ${unarchived + failed} notices unarchived. ${getValidationErrorMessage(firstError, '')}`.trim(),
+          variant: 'destructive',
+        })
+        return
+      }
+      toast({
+        title: unarchived === 1 ? 'Notice unarchived' : `${unarchived} notices unarchived`,
+        description:
+          unarchived === 1
+            ? 'The notice has been restored to the active list.'
+            : 'The selected notices have been restored to the active list.',
+        variant: 'success',
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Unarchive failed',
+        description: getValidationErrorMessage(error, 'Failed to unarchive the notice. Please try again.'),
         variant: 'destructive',
       })
     },

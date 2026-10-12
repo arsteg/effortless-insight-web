@@ -50,6 +50,8 @@ export interface Notice {
   source?: NoticeSource
   gstnNoticeId?: string
   createdAt: string
+  // Archived notices only: the status the API restores it to (the one it was archived from)
+  restoreStatus?: NoticeStatus
 }
 
 // Notice detail
