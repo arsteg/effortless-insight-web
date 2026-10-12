@@ -1,4 +1,4 @@
-import { CalendarClock, Layers, FolderOpen, History } from 'lucide-react'
+import { CalendarClock, Layers, FolderOpen, History, Mail } from 'lucide-react'
 
 /**
  * The supporting system, in one compact band. Deliberately only the four
@@ -8,6 +8,12 @@ import { CalendarClock, Layers, FolderOpen, History } from 'lucide-react'
  */
 
 const features = [
+  {
+    icon: Mail,
+    title: 'Email sync',
+    outcome:
+      'Connect Gmail or Outlook — notices from GST authorities auto-detected and imported, which can arrive before they appear on the portal.',
+  },
   {
     icon: CalendarClock,
     title: 'Deadline tracking',
@@ -52,7 +58,7 @@ export function FeatureGrid() {
           </p>
         </div>
 
-        <div className="mx-auto mt-10 grid max-w-6xl gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto mt-10 grid max-w-7xl gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {features.map((feature) => (
             <div
               key={feature.title}

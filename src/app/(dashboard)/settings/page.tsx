@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { User, Building2, Users, CreditCard, Bell, Shield, Link2, MessageCircle, ClipboardList } from 'lucide-react'
+import { User, Building2, Users, CreditCard, Bell, Shield, Link2, MessageCircle, ClipboardList, Mail } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -27,6 +27,12 @@ const settingsLinks = [
     description: 'Connect to GST Portal for automatic notice fetching',
     href: '/settings/integrations',
     icon: Link2,
+  },
+  {
+    title: 'Email Sync',
+    description: 'Automatically detect GST notices from your email',
+    href: '/settings/email-sync',
+    icon: Mail,
   },
   {
     title: 'WhatsApp',

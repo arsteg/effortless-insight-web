@@ -6,7 +6,7 @@ const steps = [
   {
     number: '01',
     title: 'Connect once',
-    body: 'Verify your GSTIN with an OTP — the same one the portal sends you. We never see or store your portal password.',
+    body: 'Verify your GSTIN with an OTP, or connect Gmail/Outlook for automatic email scanning. Either way, notices land in one place.',
     time: '2 minutes',
   },
   {

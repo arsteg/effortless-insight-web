@@ -9,6 +9,7 @@ import {
   MonitorSmartphone,
   Landmark,
   ArrowRight,
+  Mail,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -56,6 +57,11 @@ const facts = [
     icon: Fingerprint,
     title: 'You authorize with OTP',
     body: 'Access is granted by you, with the same OTP the portal sends you. Revoke it anytime — tokens are invalidated immediately.',
+  },
+  {
+    icon: Mail,
+    title: 'Email: read-only, GST only',
+    body: 'Email sync only reads emails from verified GST authority addresses. Your personal emails are never accessed or stored.',
   },
   {
     icon: KeyRound,
