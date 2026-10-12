@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useCallback, Suspense } from 'react'
+import { useState, useCallback, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Upload, Trash2, Archive, UserPlus, Download, FileText, FileSpreadsheet, File } from 'lucide-react'
+import { Upload, Trash2, Archive, ArchiveRestore, UserPlus, Download, FileText, FileSpreadsheet, File } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -26,9 +26,13 @@ import {
   NoticeFilters,
   NoticeTable,
   AssignNoticeDialog,
+  ArchiveNoticeDialog,
+  UnarchiveNoticeDialog,
   ClientSummaryStrip,
+  canArchiveNotice,
 } from '@/components/features/notices'
-import { useNotices, useDeleteNotice, useBulkDeleteNotices, useArchiveNotice, useExportNotices } from '@/hooks/use-notices'
+import { useNotices, useDeleteNotice, useBulkDeleteNotices, useExportNotices } from '@/hooks/use-notices'
+import { useToast } from '@/hooks/use-toast'
 import { useNoticeUpdates } from '@/hooks/use-notice-updates'
 import { useCanAccessFeature } from '@/components/features/subscription/feature-gate'
 import { FeatureCodes } from '@/hooks/use-feature-access'
@@ -70,6 +74,15 @@ function NoticesPageInner() {
   // Assign dialog
   const [assignNotice, setAssignNotice] = useState<Notice | null>(null)
 
+  // Archive confirmation (one row or the bulk selection). Targets are kept while the
+  // dialog closes so its text doesn't flash empty during the close animation.
+  const [archiveTargets, setArchiveTargets] = useState<Notice[]>([])
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false)
+
+  // Unarchive confirmation (one row or the bulk selection), kept like archiveTargets
+  const [unarchiveTargets, setUnarchiveTargets] = useState<Notice[]>([])
+  const [showUnarchiveDialog, setShowUnarchiveDialog] = useState(false)
+
   // Bulk action dialogs
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false)
 
@@ -77,8 +90,8 @@ function NoticesPageInner() {
   const { data, isLoading, error } = useNotices(filters)
   const deleteMutation = useDeleteNotice()
   const bulkDeleteMutation = useBulkDeleteNotices()
-  const archiveMutation = useArchiveNotice()
   const exportMutation = useExportNotices()
+  const { toast } = useToast()
 
   // Feature access
   const hasBulkOperations = useCanAccessFeature(FeatureCodes.BulkOperations)
@@ -112,13 +125,51 @@ function NoticesPageInner() {
     setShowBulkDeleteDialog(false)
   }, [selectedIds, bulkDeleteMutation])
 
-  const handleBulkArchive = useCallback(async () => {
-    // Archive each selected notice
-    await Promise.all(
-      selectedIds.map((id) => archiveMutation.mutateAsync({ id }))
-    )
+  const notices = useMemo(() => data?.notices ?? [], [data?.notices])
+  // Only notices the API allows archiving from (not already archived, not mid-workflow)
+  const archivableNotices = useMemo(
+    () => notices.filter((n) => selectedIds.includes(n.id) && canArchiveNotice(n.status)),
+    [notices, selectedIds]
+  )
+
+  // Selected archived notices. When the whole selection is archived, the bulk Archive
+  // button becomes Unarchive.
+  const unarchivableNotices = useMemo(
+    () => notices.filter((n) => selectedIds.includes(n.id) && n.status === 'archived'),
+    [notices, selectedIds]
+  )
+  const showBulkUnarchive = unarchivableNotices.length > 0 && unarchivableNotices.length === selectedIds.length
+
+  const openArchiveDialog = useCallback((targets: Notice[]) => {
+    setArchiveTargets(targets)
+    setShowArchiveDialog(true)
+  }, [])
+
+  const handleBulkArchive = useCallback(() => {
+    const skipped = selectedIds.length - archivableNotices.length
+    if (skipped > 0) {
+      toast({
+        title: 'Some notices skipped',
+        description: `${skipped} selected notice(s) are already archived or can't be archived in their current status.`,
+      })
+    }
+    openArchiveDialog(archivableNotices)
+  }, [selectedIds, archivableNotices, openArchiveDialog, toast])
+
+  // Archived notices leave the list, so start a fresh selection
+  const handleArchived = useCallback(() => {
     setSelectedIds([])
-  }, [selectedIds, archiveMutation])
+  }, [])
+
+  const openUnarchiveDialog = useCallback((targets: Notice[]) => {
+    setUnarchiveTargets(targets)
+    setShowUnarchiveDialog(true)
+  }, [])
+
+  // Unarchived notices leave the Archived list, so start a fresh selection
+  const handleUnarchived = useCallback(() => {
+    setSelectedIds([])
+  }, [])
 
   const handleAssign = useCallback((notice: Notice) => {
     setAssignNotice(notice)
@@ -131,7 +182,6 @@ function NoticesPageInner() {
     [filters, exportMutation]
   )
 
-  const notices = data?.notices ?? []
   const totalCount = data?.totalCount ?? 0
   const totalPages = data?.totalPages ?? 1
   const currentPage = data?.page ?? 1
@@ -149,14 +199,22 @@ function NoticesPageInner() {
         <div className="flex gap-2">
           {hasBulkOperations && selectedIds.length > 0 && (
             <>
-              <Button
-                variant="outline"
-                onClick={handleBulkArchive}
-                disabled={archiveMutation.isPending}
-              >
-                <Archive className="mr-2 h-4 w-4" />
-                Archive ({selectedIds.length})
-              </Button>
+              {showBulkUnarchive ? (
+                <Button variant="outline" onClick={() => openUnarchiveDialog(unarchivableNotices)}>
+                  <ArchiveRestore className="mr-2 h-4 w-4" />
+                  Unarchive ({unarchivableNotices.length})
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={handleBulkArchive}
+                  disabled={archivableNotices.length === 0}
+                  title={archivableNotices.length === 0 ? 'None of the selected notices can be archived' : undefined}
+                >
+                  <Archive className="mr-2 h-4 w-4" />
+                  Archive ({archivableNotices.length})
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={() => setShowBulkDeleteDialog(true)}
@@ -235,8 +293,10 @@ function NoticesPageInner() {
         selectedIds={hasBulkOperations ? selectedIds : undefined}
         onSelectionChange={hasBulkOperations ? setSelectedIds : undefined}
         onAssign={handleAssign}
-        onArchive={(notice) => archiveMutation.mutate({ id: notice.id })}
+        onArchive={(notice) => openArchiveDialog([notice])}
+        onUnarchive={(notice) => openUnarchiveDialog([notice])}
         onDelete={setDeleteNotice}
+        filters={filters}
       />
 
       {/* Pagination */}
@@ -315,6 +375,22 @@ function NoticesPageInner() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Archive Confirmation Dialog */}
+      <ArchiveNoticeDialog
+        notices={archiveTargets}
+        open={showArchiveDialog}
+        onOpenChange={setShowArchiveDialog}
+        onArchived={handleArchived}
+      />
+
+      {/* Unarchive Confirmation Dialog */}
+      <UnarchiveNoticeDialog
+        notices={unarchiveTargets}
+        open={showUnarchiveDialog}
+        onOpenChange={setShowUnarchiveDialog}
+        onUnarchived={handleUnarchived}
+      />
 
       {/* Assign Notice Dialog */}
       <AssignNoticeDialog

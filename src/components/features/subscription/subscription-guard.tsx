@@ -204,6 +204,12 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
     // - Active/PastDue subscriptions have access
     // - Trialing subscriptions only have access if plan has trial AND trial hasn't expired
     // - Cancelled/Expired/Paused subscriptions don't have access
+    // Only block on confirmed server data; the persisted cache is for optimistic rendering
+    if (!freshSubscription && isLoading) {
+      debugLog('[SubscriptionGuard] CACHED ONLY - waiting for fresh subscription before blocking')
+      return
+    }
+
     if (!subscription.hasAccess) {
       debugLog('[SubscriptionGuard] SUBSCRIPTION NO ACCESS - showing blocking UI', { status: subscription.status })
       setShowBlockingUI(true)

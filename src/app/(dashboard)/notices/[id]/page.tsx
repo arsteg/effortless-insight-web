@@ -24,6 +24,8 @@ import {
   ActivityTimeline,
   ResponseEditor,
   EditNoticeDialog,
+  ArchiveNoticeDialog,
+  UnarchiveNoticeDialog,
   SimilarNotices,
 } from '@/components/features/notices'
 import { TaskList } from '@/components/features/tasks'
@@ -63,6 +65,8 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   // State
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false)
+  const [showUnarchiveDialog, setShowUnarchiveDialog] = useState(false)
   const [isRetrying, setIsRetrying] = useState(false)
 
   // Data fetching
@@ -172,6 +176,8 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         onDownload={notice?.fileUrl ? handleDownloadNotice : undefined}
         onExportSummary={notice ? handleExportSummary : undefined}
         isExportingSummary={exportSummaryMutation.isPending}
+        onArchive={canEditNotices ? () => setShowArchiveDialog(true) : undefined}
+        onUnarchive={canEditNotices ? () => setShowUnarchiveDialog(true) : undefined}
         onDelete={canDeleteNotices ? () => setShowDeleteDialog(true) : undefined}
       />
 
@@ -327,6 +333,22 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
         />
+      )}
+
+      {/* Archive / Unarchive Dialogs - only render if user has edit permissions */}
+      {notice && canEditNotices && (
+        <>
+          <ArchiveNoticeDialog
+            notices={[notice]}
+            open={showArchiveDialog}
+            onOpenChange={setShowArchiveDialog}
+          />
+          <UnarchiveNoticeDialog
+            notices={[notice]}
+            open={showUnarchiveDialog}
+            onOpenChange={setShowUnarchiveDialog}
+          />
+        </>
       )}
 
       {/* Delete Confirmation Dialog - only render if user has delete permissions */}

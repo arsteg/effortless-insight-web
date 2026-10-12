@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   UserPlus,
   Archive,
+  ArchiveRestore,
   Trash2,
   Clock,
   Calendar,
@@ -29,6 +30,7 @@ import { StatusBadge } from './status-badge'
 import { StatusDropdown } from './status-dropdown'
 import { PriorityBadge } from './priority-badge'
 import { RiskBadge } from './risk-badge'
+import { canArchiveNotice } from './archive-notice-dialog'
 import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import { usePermissions } from '@/hooks/use-permissions'
 import { useCanAccessFeature } from '@/components/features/subscription/feature-gate'
@@ -45,6 +47,7 @@ interface NoticeHeaderProps {
   onEdit?: () => void
   onAssign?: () => void
   onArchive?: () => void
+  onUnarchive?: () => void
   onDelete?: () => void
 }
 
@@ -58,6 +61,7 @@ export function NoticeHeader({
   onEdit,
   onAssign,
   onArchive,
+  onUnarchive,
   onDelete,
 }: NoticeHeaderProps) {
   const { canEditNotices, canDeleteNotices, canAssignNotices } = usePermissions()
@@ -137,12 +141,19 @@ export function NoticeHeader({
                 {canAssignNotices && (canEditNotices || canDeleteNotices) && (
                   <DropdownMenuSeparator />
                 )}
-                {onArchive && canEditNotices && (
-                  <DropdownMenuItem onClick={onArchive}>
-                    <Archive className="mr-2 h-4 w-4" />
-                    Archive
-                  </DropdownMenuItem>
-                )}
+                {notice.status === 'archived'
+                  ? onUnarchive && canEditNotices && (
+                      <DropdownMenuItem onClick={onUnarchive}>
+                        <ArchiveRestore className="mr-2 h-4 w-4" />
+                        Unarchive
+                      </DropdownMenuItem>
+                    )
+                  : onArchive && canEditNotices && canArchiveNotice(notice.status) && (
+                      <DropdownMenuItem onClick={onArchive}>
+                        <Archive className="mr-2 h-4 w-4" />
+                        Archive
+                      </DropdownMenuItem>
+                    )}
                 {onDelete && canDeleteNotices && (
                   <DropdownMenuItem
                     onClick={onDelete}

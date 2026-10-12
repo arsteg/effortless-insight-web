@@ -13,7 +13,7 @@ export interface UpdateAvatarResponse {
 export const usersApi = {
   // Profile
   async updateProfile(data: UpdateProfileRequest): Promise<User> {
-    const response = await apiClient.put<ApiResponse<User>>('/users/profile', data)
+    const response = await apiClient.patch<ApiResponse<User>>('/auth/me', data)
     return response.data.data
   },
 
