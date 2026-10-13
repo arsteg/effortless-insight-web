@@ -42,6 +42,7 @@ export interface Notice {
   status: NoticeStatus
   priority: NoticePriority
   processingStatus?: ProcessingStatus
+  processingError?: string | null
   riskScore?: number
   riskLevel?: RiskLevel
   summaryEn?: string

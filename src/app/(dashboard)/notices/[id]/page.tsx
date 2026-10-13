@@ -2,9 +2,10 @@
 
 import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
@@ -47,6 +48,7 @@ import { useMembers } from '@/hooks/use-team'
 import { usePermissions } from '@/hooks/use-permissions'
 import { FeatureCodes } from '@/hooks/use-feature-access'
 import { noticesApi } from '@/lib/api'
+import { getValidationErrorMessage } from '@/lib/api/error-utils'
 import { useToast } from '@/hooks/use-toast'
 import type { NoticeActivity } from '@/components/features/notices/activity-timeline'
 
@@ -70,7 +72,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const [isRetrying, setIsRetrying] = useState(false)
 
   // Data fetching
-  const { data: notice, isLoading: isLoadingNotice, error } = useNotice(noticeId)
+  const { data: notice, isLoading: isLoadingNotice, error, refetch } = useNotice(noticeId)
   const { data: attachments = [], isLoading: isLoadingAttachments } = useAttachments(noticeId)
   const deleteMutation = useDeleteNotice()
   const exportSummaryMutation = useExportNoticeSummary()
@@ -131,15 +133,16 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
     setIsRetrying(true)
     try {
       await noticesApi.retryProcessing(noticeId)
+      await refetch()
       toast({
         title: 'Analysis restarted',
         description: 'The notice is being re-analyzed. This may take a few moments.',
         variant: 'success',
       })
-    } catch {
+    } catch (error) {
       toast({
         title: 'Retry failed',
-        description: 'Failed to restart analysis. Please try again.',
+        description: getValidationErrorMessage(error, 'Failed to restart analysis. Please try again.'),
         variant: 'destructive',
       })
     } finally {
@@ -153,10 +156,13 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
       <div className="flex flex-col items-center justify-center py-12">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <h2 className="text-lg font-semibold mb-2">Notice Not Found</h2>
-            <p className="text-muted-foreground mb-4">
-              The notice you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
+            <h2 className="text-lg font-semibold mb-2">Unable to load notice</h2>
+            <p role="alert" className="text-muted-foreground mb-4">
+              {getValidationErrorMessage(error, 'Could not connect to the API. Check that the API is running, then try again.')}
             </p>
+            <Button variant="outline" onClick={() => void refetch()} className="mr-2">
+              Try again
+            </Button>
             <Button onClick={() => router.push('/notices')}>
               Back to Notices
             </Button>
@@ -180,6 +186,16 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         onUnarchive={canEditNotices ? () => setShowUnarchiveDialog(true) : undefined}
         onDelete={canDeleteNotices ? () => setShowDeleteDialog(true) : undefined}
       />
+
+      {notice && (notice.processingStatus === 'failed' || notice.status === 'failed') && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Notice analysis failed</AlertTitle>
+          <AlertDescription className="whitespace-pre-wrap break-words">
+            {notice.processingError?.trim() || 'Analysis could not be completed. Open the AI Analysis tab to retry.'}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Main Content with Workflow Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -226,6 +242,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
             <AIAnalysisView
               report={notice?.aiReport}
               processingStatus={notice?.processingStatus}
+              processingError={notice?.processingError}
               isLoading={isLoadingNotice}
               onRetry={handleRetryAnalysis}
               isRetrying={isRetrying}

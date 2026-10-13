@@ -182,7 +182,7 @@ export function NoticeHeader({
                 currentStatus={notice.status}
               />
             ) : (
-              <StatusBadge status={notice.status} />
+              <StatusBadge status={notice.status} error={notice.processingError} />
             )}
             <PriorityBadge priority={notice.priority} />
           </div>

@@ -292,11 +292,11 @@ export function NoticeTable({
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-1">
-                  <StatusBadge status={notice.status} />
+                  <StatusBadge status={notice.status} error={notice.processingError} />
                   {(notice.status === 'uploaded' || notice.status === 'processing') &&
                     notice.processingStatus &&
                     notice.processingStatus !== 'completed' && (
-                      <ProcessingIndicator status={notice.processingStatus} />
+                      <ProcessingIndicator status={notice.processingStatus} error={notice.processingError} />
                     )}
                 </div>
               </TableCell>

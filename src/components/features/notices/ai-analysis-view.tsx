@@ -25,6 +25,7 @@ import type { NoticeAiReport, ProcessingStatus } from '@/types'
 interface AIAnalysisViewProps {
   report?: NoticeAiReport
   processingStatus?: ProcessingStatus
+  processingError?: string | null
   isLoading?: boolean
   onRetry?: () => void
   isRetrying?: boolean
@@ -33,6 +34,7 @@ interface AIAnalysisViewProps {
 export function AIAnalysisView({
   report,
   processingStatus,
+  processingError,
   isLoading = false,
   onRetry,
   isRetrying = false,
@@ -57,6 +59,11 @@ export function AIAnalysisView({
           <p className="text-muted-foreground text-center max-w-md">
             {getProcessingMessage(processingStatus)}
           </p>
+          {processingError && (
+            <p role="alert" className="mt-3 text-sm text-coral-600 text-center max-w-md">
+              {processingError}
+            </p>
+          )}
           <div className="w-full max-w-xs mt-6">
             <Progress value={getProcessingProgress(processingStatus)} className="h-2" />
           </div>
@@ -66,14 +73,14 @@ export function AIAnalysisView({
   }
 
   // Failed state
-  if (processingStatus === 'failed' && !report) {
+  if (processingStatus === 'failed') {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <AlertTriangle className="h-12 w-12 text-coral-500 mb-4" />
           <h3 className="text-lg font-semibold mb-2">Analysis Failed</h3>
-          <p className="text-muted-foreground text-center max-w-md mb-4">
-            We encountered an error while analyzing this notice. Please try again.
+          <p role="alert" className="text-muted-foreground text-center max-w-md mb-4">
+            {processingError || 'We encountered an error while analyzing this notice. Please try again.'}
           </p>
           {onRetry && (
             <Button onClick={onRetry} disabled={isRetrying}>

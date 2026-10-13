@@ -1,11 +1,13 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
+import { StatusBadge } from './status-badge'
 import { cn } from '@/lib/utils'
 import type { ProcessingStatus } from '@/types'
 
 interface ProcessingIndicatorProps {
   status: ProcessingStatus
+  error?: string | null
   className?: string
 }
 
@@ -22,11 +24,13 @@ const PROCESSING_STEPS: Record<ProcessingStatus, { label: string; step: number }
 
 const TOTAL_STEPS = 5
 
-export function ProcessingIndicator({ status, className }: ProcessingIndicatorProps) {
+export function ProcessingIndicator({ status, error, className }: ProcessingIndicatorProps) {
   const config = PROCESSING_STEPS[status] || { label: status, step: 0 }
   const isProcessing = config.step > 0 && config.step < TOTAL_STEPS
   const isFailed = config.step === -1
   const progress = config.step > 0 ? (config.step / TOTAL_STEPS) * 100 : 0
+
+  if (isFailed) return <StatusBadge status="failed" error={error} className={className} />
 
   if (status === 'completed') {
     return null // Don't show indicator for completed
@@ -45,6 +49,7 @@ export function ProcessingIndicator({ status, className }: ProcessingIndicatorPr
           {config.label}
         </span>
       </div>
+      {error && <span role="alert" className="text-xs text-destructive max-w-xs">{error}</span>}
       {isProcessing && (
         <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
           <div
