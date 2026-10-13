@@ -66,6 +66,7 @@ export interface PushChannelPreferences {
 
 export interface WhatsAppChannelPreferences {
   enabled: boolean
+  phone?: string
   phoneNumber?: string
   verified?: boolean
 }

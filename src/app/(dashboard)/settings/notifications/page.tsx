@@ -432,10 +432,9 @@ export default function NotificationsSettingsPage() {
             <ChannelToggle
               icon={MessageCircle}
               label="WhatsApp Notifications"
-              description="Receive notifications via WhatsApp"
-              detail={prefs?.channels.whatsApp.phoneNumber}
+              description="Receive notifications at your registered mobile number when your plan includes WhatsApp Assistant"
+              detail={prefs?.channels.whatsApp.phone ?? prefs?.channels.whatsApp.phoneNumber}
               enabled={prefs?.channels.whatsApp.enabled ?? false}
-              verified={prefs?.channels.whatsApp.verified}
               onChange={(enabled) => handleUpdateChannels('whatsApp', enabled)}
               disabled={updatePreferences.isPending}
             />
