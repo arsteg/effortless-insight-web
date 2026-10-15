@@ -12,10 +12,15 @@ interface OrganizationState {
 
   // Actions
   fetchOrganizations: () => Promise<void>
+  _fetchOrganizations: () => Promise<void>
   switchOrganization: (orgId: string) => Promise<void>
   setCurrentOrganization: (org: OrganizationListItem | null) => void
   clearOrganizations: () => void
 }
+
+// Shared by concurrent callers (e.g. React StrictMode running effects twice) so only
+// one switch-organization request is sent; parallel switches would each create a session.
+let fetchOrganizationsInFlight: Promise<void> | null = null
 
 export const useOrganizationStore = create<OrganizationState>()(
   persist(
@@ -24,7 +29,14 @@ export const useOrganizationStore = create<OrganizationState>()(
       organizations: [],
       isLoading: false,
 
-      fetchOrganizations: async () => {
+      fetchOrganizations: () => {
+        fetchOrganizationsInFlight ??= get()._fetchOrganizations().finally(() => {
+          fetchOrganizationsInFlight = null
+        })
+        return fetchOrganizationsInFlight
+      },
+
+      _fetchOrganizations: async () => {
         set({ isLoading: true })
         try {
           const response = await organizationsApi.list()
