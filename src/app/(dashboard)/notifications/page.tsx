@@ -382,7 +382,7 @@ export default function NotificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+          <h1 className="page-title">Notifications</h1>
           <p className="text-muted-foreground">
             Stay updated with all your alerts and notifications.
           </p>
@@ -408,7 +408,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="page-header">
         <div className="flex items-center gap-2">
           {/* Status tabs */}
           <Tabs

@@ -80,12 +80,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="product-ui flex h-dvh overflow-hidden bg-background">
+      <a href="#main-content" className="product-skip-link">Skip to content</a>
       <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto bg-gradient-to-b from-background to-secondary/40 p-4 md:p-6">
-          <SubscriptionGuard>{children}</SubscriptionGuard>
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="product-content mx-auto w-full max-w-[1440px] pb-20">
+            <SubscriptionGuard>{children}</SubscriptionGuard>
+          </div>
         </main>
       </div>
       <AssistantLauncher />

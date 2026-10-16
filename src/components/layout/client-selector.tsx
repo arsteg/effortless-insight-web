@@ -58,9 +58,9 @@ export function ClientSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="ml-2 gap-2">
+        <Button variant="outline" className="min-w-0 gap-2 px-3">
           <Users className="h-4 w-4" />
-          <span className="max-w-[150px] truncate">
+          <span className="max-w-[100px] truncate sm:max-w-[180px]">
             {currentClient?.displayName || 'Select Client'}
           </span>
           <ChevronDown className="h-4 w-4 opacity-50" />

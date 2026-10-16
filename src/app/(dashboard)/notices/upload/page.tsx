@@ -115,7 +115,7 @@ export default function UploadNoticePage() {
             <ArrowLeft className="mr-1 h-4 w-4" />
             Back to Notices
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Upload Notices</h1>
+          <h1 className="page-title">Upload Notices</h1>
         </div>
 
         <Card className="max-w-md">
@@ -152,7 +152,7 @@ export default function UploadNoticePage() {
             <ArrowLeft className="mr-1 h-4 w-4" />
             Back to Notices
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Upload Notices</h1>
+          <h1 className="page-title">Upload Notices</h1>
         </div>
 
         {/* Multi-file Upload Progress */}
@@ -274,7 +274,7 @@ export default function UploadNoticePage() {
             <ArrowLeft className="mr-1 h-4 w-4" />
             Back to Notices
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Upload Notice</h1>
+          <h1 className="page-title">Upload Notice</h1>
         </div>
 
         <div className="max-w-md mx-auto">
@@ -300,7 +300,7 @@ export default function UploadNoticePage() {
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back to Notices
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight">Upload Notices</h1>
+        <h1 className="page-title">Upload Notices</h1>
         <p className="text-muted-foreground">
           Upload one or more GST notice documents for AI-powered analysis.
         </p>

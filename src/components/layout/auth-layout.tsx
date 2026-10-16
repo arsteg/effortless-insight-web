@@ -93,9 +93,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="product-ui product-auth min-h-dvh flex flex-col bg-background">
       {/* Header */}
-      <header className="flex h-16 items-center px-4 md:px-6 border-b border-border/70 bg-card/60 backdrop-blur-xl">
+      <header className="flex h-16 shrink-0 items-center px-4 md:px-6 border-b bg-card">
         <Link href="/" className="flex items-center gap-3 font-semibold">
           <Image
             src="/logo.svg"
@@ -109,15 +109,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       </header>
 
       {/* Main content — calm, warm backdrop with soft pastel depth */}
-      <main className="relative flex-1 flex items-center justify-center overflow-hidden p-4 md:p-6 bg-gradient-to-b from-background to-secondary/50">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-32 -left-24 h-[420px] w-[420px] rounded-full bg-azure-200/30 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-32 -right-24 h-[420px] w-[420px] rounded-full bg-lavender-200/30 blur-3xl"
-        />
+      <main className="relative flex-1 flex items-center justify-center px-4 py-10 md:py-14">
         <div className="relative w-full max-w-md">
           {children}
         </div>

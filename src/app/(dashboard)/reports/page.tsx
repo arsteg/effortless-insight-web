@@ -76,7 +76,7 @@ export default function ReportsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+          <h1 className="page-title">Reports</h1>
           <p className="text-muted-foreground">
             View analytics and generate compliance reports.
           </p>

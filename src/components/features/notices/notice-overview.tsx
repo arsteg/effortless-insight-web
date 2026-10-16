@@ -124,7 +124,7 @@ function DetailRow({ label, value, highlight, large }: DetailRowProps) {
     <div className="flex justify-between items-start gap-4">
       <span className="text-sm text-muted-foreground shrink-0">{label}</span>
       <span
-        className={`text-sm text-right ${
+        className={`min-w-0 break-words text-sm text-right ${
           highlight ? 'font-semibold' : ''
         } ${large ? 'text-lg font-bold' : ''}`}
       >

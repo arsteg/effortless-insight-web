@@ -71,7 +71,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <h1 className="page-title">Settings</h1>
         <p className="text-muted-foreground">
           Manage your account and application settings.
         </p>
@@ -82,8 +82,8 @@ export default function SettingsPage() {
         {settingsLinks.map((item) => {
           const Icon = item.icon
           return (
-            <Link key={item.href} href={item.href}>
-              <Card className="h-full hover:bg-accent/50 transition-colors cursor-pointer">
+            <Link key={item.href} href={item.href} className="rounded-xl">
+              <Card className="h-full hover:border-primary/30 hover:bg-accent/30 transition-colors cursor-pointer">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">

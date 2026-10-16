@@ -1,53 +1,19 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
-export default function DashboardLoading() {
+export default function Loading() {
   return (
-    <div className="space-y-6">
-      {/* Header skeleton */}
-      <div className="space-y-2">
+    <div role="status" aria-label="Loading workspace" className="space-y-6">
+      <span className="sr-only">Loading your workspace…</span>
+      <div aria-hidden className="space-y-3">
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-64" />
+        <Skeleton className="h-4 w-64 max-w-full" />
       </div>
-
-      {/* Metrics row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-20 mb-1" />
-              <Skeleton className="h-3 w-32" />
-            </CardContent>
-          </Card>
+      <div aria-hidden className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton key={index} className="h-32 rounded-xl" />
         ))}
       </div>
-
-      {/* Content area */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-32" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-32" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-64 w-full" />
-          </CardContent>
-        </Card>
-      </div>
+      <Skeleton aria-hidden className="h-72 rounded-xl" />
     </div>
   )
 }

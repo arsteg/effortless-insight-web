@@ -174,7 +174,7 @@ export default function OrganizationSettingsPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Organization</h1>
+          <h1 className="page-title">Organization</h1>
           <p className="text-muted-foreground">
             Manage your organization details and GSTINs.
           </p>

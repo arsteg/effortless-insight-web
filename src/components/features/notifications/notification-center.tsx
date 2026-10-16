@@ -81,7 +81,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
       </PopoverTrigger>
 
       <PopoverContent
-        className="w-[400px] p-0"
+        className="w-[400px] max-w-[calc(100vw-2rem)] p-0"
         align="end"
         sideOffset={8}
       >

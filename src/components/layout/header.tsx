@@ -50,9 +50,10 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border/70 bg-card/70 px-4 backdrop-blur-xl md:px-6">
+    <header className="sticky top-0 z-40 flex min-h-16 shrink-0 flex-wrap items-center gap-2 border-b bg-card px-4 py-3 md:gap-3 md:px-6">
       {/* Mobile menu button */}
       <Button
+        id="mobile-menu-trigger"
         variant="ghost"
         size="icon"
         className="md:hidden"
@@ -63,7 +64,7 @@ export function Header() {
       </Button>
 
       {/* Logo */}
-      <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+      <Link href="/dashboard" className="flex shrink-0 items-center gap-2 font-semibold md:hidden">
         <Image
           src="/small-logo.svg"
           alt="EffortlessInsight - GST notice management"
@@ -83,12 +84,12 @@ export function Header() {
           ownOrganizations.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-4 gap-2">
+                <Button variant="outline" className="min-w-0 gap-2 px-3">
                   <Building2 className="h-4 w-4" />
                   {orgLoading ? (
                     <Skeleton className="h-4 w-24" />
                   ) : (
-                    <span className="max-w-[150px] truncate">
+                    <span className="max-w-[105px] truncate sm:max-w-[180px]">
                       {currentOrganization && currentOrganization.role !== 'ca'
                         ? currentOrganization.name
                         : 'Select Organization'}
@@ -135,7 +136,7 @@ export function Header() {
       {/* User Menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+          <Button variant="ghost" aria-label="Open account menu" className="relative h-10 w-10 shrink-0 rounded-full">
             {authLoading ? (
               <Skeleton className="h-10 w-10 rounded-full" />
             ) : (

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import './product.css'
 import { Providers } from '@/components/providers'
 import { RouteTracker } from '@/components/analytics/route-tracker'
 import { COMPANY } from '@/lib/company'

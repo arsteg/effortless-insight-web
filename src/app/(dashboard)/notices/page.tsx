@@ -37,12 +37,13 @@ import { useNoticeUpdates } from '@/hooks/use-notice-updates'
 import { useCanAccessFeature } from '@/components/features/subscription/feature-gate'
 import { FeatureCodes } from '@/hooks/use-feature-access'
 import type { NoticeFilters as NoticeFiltersType, Notice } from '@/types'
+import Loading from '../loading'
 
 const DEFAULT_PAGE_SIZE = 10
 
 export default function NoticesPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<Loading />}>
       <NoticesPageInner />
     </Suspense>
   )
@@ -87,7 +88,7 @@ function NoticesPageInner() {
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false)
 
   // Data fetching
-  const { data, isLoading, error } = useNotices(filters)
+  const { data, isLoading, error, refetch } = useNotices(filters)
   const deleteMutation = useDeleteNotice()
   const bulkDeleteMutation = useBulkDeleteNotices()
   const exportMutation = useExportNotices()
@@ -189,14 +190,14 @@ function NoticesPageInner() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Notices</h1>
+          <h1 className="page-title">Notices</h1>
           <p className="text-muted-foreground">
             Manage and track all your GST notices.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {hasBulkOperations && selectedIds.length > 0 && (
             <>
               {showBulkUnarchive ? (
@@ -276,15 +277,16 @@ function NoticesPageInner() {
       {error && (
         <Card className="border-destructive">
           <CardContent className="pt-6">
-            <p className="text-sm text-destructive">
-              Failed to load notices. Please try refreshing the page.
+            <p role="alert" className="text-sm text-destructive">
+              We couldn’t load your notices. Please try again.
             </p>
+            <Button variant="outline" className="mt-3" onClick={() => void refetch()}>Try again</Button>
           </CardContent>
         </Card>
       )}
 
       {/* Notice Table */}
-      <NoticeTable
+      {!error && <NoticeTable
         notices={notices}
         isLoading={isLoading}
         sortBy={filters.sortBy}
@@ -297,11 +299,11 @@ function NoticesPageInner() {
         onUnarchive={(notice) => openUnarchiveDialog([notice])}
         onDelete={setDeleteNotice}
         filters={filters}
-      />
+      />}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="page-header">
           <PaginationInfo
             currentPage={currentPage}
             pageSize={filters.pageSize || DEFAULT_PAGE_SIZE}

@@ -139,7 +139,7 @@ export default function InviteClientPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Invite Client</h1>
+          <h1 className="page-title">Invite Client</h1>
           <p className="text-muted-foreground">
             Invite Business Owners to connect their GSTIN with your CA practice.
           </p>

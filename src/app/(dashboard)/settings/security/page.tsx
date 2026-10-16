@@ -203,7 +203,7 @@ export default function SecuritySettingsPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Security</h1>
+          <h1 className="page-title">Security</h1>
           <p className="text-muted-foreground">
             Manage your password and security settings.
           </p>

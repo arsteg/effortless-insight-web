@@ -50,7 +50,7 @@ export function MetricCard({
   return (
     <Card
       className={cn(
-        'card-lift relative overflow-hidden',
+        'relative overflow-hidden',
         "before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:content-['']",
         accent.bar
       )}
@@ -73,7 +73,7 @@ export function MetricCard({
           </>
         ) : (
           <>
-            <div className="text-3xl font-bold tracking-tight nums">{value}</div>
+            <div className="text-3xl font-semibold tracking-tight nums">{value}</div>
             {(trend !== undefined || trendLabel) && (
               <div className="flex items-center gap-1 text-xs">
                 {/* eslint-disable-next-line react-hooks/static-components -- icon selected from static lucide components, not created during render */}

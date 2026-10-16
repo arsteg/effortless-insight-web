@@ -94,7 +94,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="eyebrow mb-2 text-azure-700">Your workspace</p>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="page-title">
             Welcome back,{' '}
             <span className="text-gradient">{firstName}</span>
           </h1>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <MetricCard
           title="Active Notices"
           value={data?.notices?.open ?? '—'}
@@ -183,7 +183,7 @@ export default function DashboardPage() {
       {data?.notices && (
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
-            <CardContent className="flex items-center justify-between pt-6">
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-coral-50 text-coral-600">
                   <Clock className="h-5 w-5" />

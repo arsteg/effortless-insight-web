@@ -247,7 +247,7 @@ export default function CalendarPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="page-title flex items-center gap-2">
             <CalendarIcon className="h-8 w-8" />
             Deadline Calendar
           </h1>

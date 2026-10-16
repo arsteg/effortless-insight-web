@@ -124,7 +124,7 @@ export default function TeamsSettingsPage() {
             <ArrowLeft className="h-4 w-4" />
             Settings
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Teams</h1>
+          <h1 className="page-title">Teams</h1>
           <p className="text-muted-foreground">
             Group members into teams so whole teams can be assigned to tasks at once.
           </p>

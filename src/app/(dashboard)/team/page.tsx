@@ -10,9 +10,9 @@ export default function TeamPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Team</h1>
+          <h1 className="page-title">Team</h1>
           <p className="text-muted-foreground">
             Manage team members and their access to your organization.
           </p>

@@ -71,16 +71,16 @@ function DeadlineItemRow({ deadline }: DeadlineItemRowProps) {
   const getDaysLabel = () => {
     if (deadline.isOverdue || deadline.daysRemaining < 0) {
       return (
-        <span className="text-coral-500 font-medium">
+        <span className="text-coral-700 dark:text-coral-300 font-medium">
           Overdue by {Math.abs(deadline.daysRemaining)} day{Math.abs(deadline.daysRemaining) !== 1 ? 's' : ''}
         </span>
       )
     }
     if (deadline.daysRemaining === 0) {
-      return <span className="text-coral-500 font-medium">Due today</span>
+      return <span className="text-coral-700 dark:text-coral-300 font-medium">Due today</span>
     }
     if (deadline.daysRemaining === 1) {
-      return <span className="text-amber-600 font-medium">Due tomorrow</span>
+      return <span className="text-amber-700 dark:text-amber-300 font-medium">Due tomorrow</span>
     }
     return (
       <span className="text-muted-foreground">
@@ -135,10 +135,10 @@ function DeadlineItemRow({ deadline }: DeadlineItemRowProps) {
               Notice: {deadline.noticeNumber}
             </div>
           )}
-          <div className="mt-2 flex items-center gap-4 text-sm">
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <div className="flex items-center gap-1">
               {deadline.isOverdue || deadline.daysRemaining < 0 ? (
-                <AlertTriangle className="h-3.5 w-3.5 text-coral-500" />
+                <AlertTriangle className="h-3.5 w-3.5 text-coral-700 dark:text-coral-300" />
               ) : (
                 <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               )}

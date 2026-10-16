@@ -69,7 +69,7 @@ export default function IntegrationsPage() {
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold tracking-tight">Integrations</h1>
+          <h1 className="page-title">Integrations</h1>
           <p className="text-muted-foreground">
             Connect your GSTINs to the GST Portal for automatic notice fetching
           </p>

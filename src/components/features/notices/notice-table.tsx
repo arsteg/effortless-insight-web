@@ -14,6 +14,8 @@ import {
   ArrowDown,
   FileText,
   Upload,
+  Clock,
+  AlertTriangle,
 } from 'lucide-react'
 import {
   Table,
@@ -123,20 +125,20 @@ export function NoticeTable({
 
   return (
     <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
-      <Table>
+      <Table aria-label="GST notices">
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
             {onSelectionChange && (
               <TableHead className="w-12">
                 <Checkbox
-                  checked={allSelected}
+                  checked={someSelected ? 'indeterminate' : allSelected}
                   onCheckedChange={handleSelectAll}
                   aria-label="Select all"
-                  className={someSelected ? 'opacity-50' : ''}
+
                 />
               </TableHead>
             )}
-            <TableHead>
+            <TableHead aria-sort={sortBy === 'noticeNumber' ? (sortDesc ? 'descending' : 'ascending') : 'none'}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -147,7 +149,7 @@ export function NoticeTable({
                 {getSortIcon('noticeNumber')}
               </Button>
             </TableHead>
-            <TableHead>
+            <TableHead aria-sort={sortBy === 'noticeType' ? (sortDesc ? 'descending' : 'ascending') : 'none'}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -158,7 +160,7 @@ export function NoticeTable({
                 {getSortIcon('noticeType')}
               </Button>
             </TableHead>
-            <TableHead>
+            <TableHead aria-sort={sortBy === 'responseDeadline' ? (sortDesc ? 'descending' : 'ascending') : 'none'}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -169,7 +171,7 @@ export function NoticeTable({
                 {getSortIcon('responseDeadline')}
               </Button>
             </TableHead>
-            <TableHead>
+            <TableHead aria-sort={sortBy === 'extendedDeadline' ? (sortDesc ? 'descending' : 'ascending') : 'none'}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -180,7 +182,7 @@ export function NoticeTable({
                 {getSortIcon('extendedDeadline')}
               </Button>
             </TableHead>
-            <TableHead>
+            <TableHead aria-sort={sortBy === 'taxAmount' ? (sortDesc ? 'descending' : 'ascending') : 'none'}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -191,7 +193,7 @@ export function NoticeTable({
                 {getSortIcon('taxAmount')}
               </Button>
             </TableHead>
-            <TableHead>
+            <TableHead aria-sort={sortBy === 'status' ? (sortDesc ? 'descending' : 'ascending') : 'none'}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -202,7 +204,7 @@ export function NoticeTable({
                 {getSortIcon('status')}
               </Button>
             </TableHead>
-            <TableHead>
+            <TableHead aria-sort={sortBy === 'priority' ? (sortDesc ? 'descending' : 'ascending') : 'none'}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -240,7 +242,7 @@ export function NoticeTable({
                 <div className="flex items-center gap-2">
                   <Link
                     href={`/notices/${notice.id}`}
-                    className="font-medium hover:underline"
+                    className="font-semibold text-primary underline-offset-4 hover:underline"
                   >
                     {notice.noticeNumber || `#${notice.id.slice(0, 8)}`}
                   </Link>
@@ -253,7 +255,7 @@ export function NoticeTable({
                 )}
               </TableCell>
               <TableCell>
-                <div className="max-w-[150px] truncate">
+                <div className="min-w-[100px] max-w-[180px] break-words">
                   {notice.noticeType || '—'}
                 </div>
                 {notice.noticeCategory && (
@@ -377,9 +379,9 @@ function DeadlineCell({ deadline, daysRemaining }: DeadlineCellProps) {
 
   const getDeadlineColor = () => {
     if (daysRemaining === undefined) return ''
-    if (daysRemaining < 0) return 'text-coral-600 dark:text-coral-400'
+    if (daysRemaining < 0) return 'text-coral-700 dark:text-coral-300'
     if (daysRemaining <= 3) return 'text-coral-600 dark:text-coral-400'
-    if (daysRemaining <= 7) return 'text-amber-600 dark:text-amber-400'
+    if (daysRemaining <= 7) return 'text-amber-700 dark:text-amber-300'
     return ''
   }
 
@@ -393,11 +395,12 @@ function DeadlineCell({ deadline, daysRemaining }: DeadlineCellProps) {
 
   return (
     <div>
-      <div className={cn('font-medium', getDeadlineColor())}>
+      <div className={cn('whitespace-nowrap font-medium nums', getDeadlineColor())}>
         {formatDate(deadline)}
       </div>
       {daysRemaining !== undefined && (
-        <div className={cn('text-xs', getDeadlineColor())}>
+        <div className={cn('mt-1 flex items-center gap-1 whitespace-nowrap text-xs font-medium', getDeadlineColor())}>
+          {daysRemaining < 0 ? <AlertTriangle aria-hidden className="h-3 w-3" /> : <Clock aria-hidden className="h-3 w-3" />}
           {getDaysLabel()}
         </div>
       )}
@@ -469,10 +472,11 @@ function NoticeTableSkeleton() {
 }
 
 function NoticeTableEmpty({ filters }: { filters?: NoticeFilters }) {
+  const hasFilters = !!(filters?.search || filters?.status || filters?.priority || filters?.gstin || filters?.pan || filters?.noticeType || filters?.overdue || filters?.dueWithinDays)
   if (filters?.status === 'archived') {
     return (
       <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
-        <div className="flex flex-col items-center justify-center py-12">
+        <div className="flex flex-col items-center justify-center px-5 py-12">
           <FileText className="h-12 w-12 text-azure-300 mb-4" />
           <h3 className="text-lg font-semibold mb-2">No archived notices found</h3>
           <p className="text-muted-foreground mb-4 text-center max-w-sm">
@@ -485,11 +489,11 @@ function NoticeTableEmpty({ filters }: { filters?: NoticeFilters }) {
 
   return (
     <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
-      <div className="flex flex-col items-center justify-center py-12">
+      <div className="flex flex-col items-center justify-center px-5 py-12">
         <FileText className="h-12 w-12 text-azure-300 mb-4" />
         <h3 className="text-lg font-semibold mb-2">No notices found</h3>
         <p className="text-muted-foreground mb-4 text-center max-w-sm">
-          Upload your first GST notice to get started with AI-powered analysis.
+          {hasFilters ? 'Try changing your search or clearing filters to see more notices.' : 'Upload your first GST notice to get started with AI-powered analysis.'}
         </p>
         <Button asChild>
           <Link href="/notices/upload">

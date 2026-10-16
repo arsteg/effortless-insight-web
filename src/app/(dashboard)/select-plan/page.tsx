@@ -143,15 +143,15 @@ function SelectPlanContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
-      <div className="container max-w-6xl mx-auto py-12 px-4">
+    <div className="mx-auto max-w-6xl">
+      <div className="py-4">
         {/* Header */}
         <div className="text-center mb-12">
           <Badge className="mb-4" variant="secondary">
             <Rocket className="mr-1 h-3 w-3" />
             {isExpiredTrial ? 'Trial Expired' : 'Welcome to EffortlessInsight'}
           </Badge>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">
+          <h1 className="page-title mb-4">
             {isExpiredTrial ? (
               <>
                 Continue with your{' '}
@@ -261,68 +261,66 @@ function CaAccessRequestContent({ userEmail }: { userEmail?: string }) {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
-      <div className="container max-w-2xl mx-auto py-16 px-4">
-        <Card className="text-center">
-          <CardHeader>
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <BadgeCheck className="h-8 w-8 text-primary" />
-            </div>
-            <Badge className="mx-auto mb-2" variant="secondary">
-              Chartered Accountant Account
-            </Badge>
-            <CardTitle className="text-2xl font-bold">
-              Free CA Access is approved by our team
-            </CardTitle>
-            <CardDescription className="text-base">
-              CA accounts don&apos;t go through self-service billing. Reach out and we&apos;ll
-              review and enable free access for your own organization, so you can start
-              inviting and managing client GSTINs right away.
-            </CardDescription>
-          </CardHeader>
+    <div className="mx-auto max-w-2xl py-4">
+      <Card className="text-center">
+        <CardHeader>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <BadgeCheck className="h-8 w-8 text-primary" />
+          </div>
+          <Badge className="mx-auto mb-2" variant="secondary">
+            Chartered Accountant Account
+          </Badge>
+          <CardTitle className="text-2xl font-bold">
+            Free CA Access is approved by our team
+          </CardTitle>
+          <CardDescription className="text-base">
+            CA accounts don&apos;t go through self-service billing. Reach out and we&apos;ll
+            review and enable free access for your own organization, so you can start
+            inviting and managing client GSTINs right away.
+          </CardDescription>
+        </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="rounded-lg bg-muted p-4 text-left space-y-2">
-              <h4 className="font-semibold text-sm">What happens next</h4>
-              <ul className="space-y-1 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">✓</span>
-                  <span>Send us a quick note (button below pre-fills one for you)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">✓</span>
-                  <span>Our team verifies your CA account and enables Free CA Access</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary">✓</span>
-                  <span>You&apos;re notified and can immediately invite clients by GSTIN</span>
-                </li>
-              </ul>
-            </div>
-          </CardContent>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg bg-muted p-4 text-left space-y-2">
+            <h4 className="font-semibold text-sm">What happens next</h4>
+            <ul className="space-y-1 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <Check className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                <span>Send us a quick note (button below pre-fills one for you)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                <span>Our team verifies your CA account and enables Free CA Access</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                <span>You&apos;re notified and can immediately invite clients by GSTIN</span>
+              </li>
+            </ul>
+          </div>
+        </CardContent>
 
-          <CardFooter className="flex flex-col gap-3">
-            <Button asChild className="w-full" size="lg">
-              <a href={`mailto:${COMPANY.salesEmail}?subject=${mailSubject}&body=${mailBody}`}>
-                <Mail className="mr-2 h-4 w-4" />
-                Request Free CA Access
-              </a>
-            </Button>
-            <Button asChild variant="outline" className="w-full">
-              <a href={`tel:${COMPANY.phoneHref}`}>
-                <Phone className="mr-2 h-4 w-4" />
-                {COMPANY.phone}
-              </a>
-            </Button>
-            <div className="text-center text-sm text-muted-foreground pt-2">
-              Prefer to browse first?{' '}
-              <Link href="/contact" className="text-primary hover:underline">
-                See all contact options
-              </Link>
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
+        <CardFooter className="flex flex-col gap-3">
+          <Button asChild className="w-full" size="lg">
+            <a href={`mailto:${COMPANY.salesEmail}?subject=${mailSubject}&body=${mailBody}`}>
+              <Mail className="mr-2 h-4 w-4" />
+              Request Free CA Access
+            </a>
+          </Button>
+          <Button asChild variant="outline" className="w-full">
+            <a href={`tel:${COMPANY.phoneHref}`}>
+              <Phone className="mr-2 h-4 w-4" />
+              {COMPANY.phone}
+            </a>
+          </Button>
+          <div className="text-center text-sm text-muted-foreground pt-2">
+            Prefer to browse first?{' '}
+            <Link href="/contact" className="text-primary hover:underline">
+              See all contact options
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   )
 }

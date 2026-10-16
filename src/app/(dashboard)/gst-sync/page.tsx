@@ -43,9 +43,9 @@ export default function GstSyncPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">GST Notice Sync</h1>
+          <h1 className="page-title">GST Notice Sync</h1>
           <p className="text-muted-foreground">
             Automatically capture and sync GST notices from the portal using our Chrome extension.
           </p>

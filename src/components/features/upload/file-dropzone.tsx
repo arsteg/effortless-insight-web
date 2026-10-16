@@ -97,6 +97,7 @@ export function FileDropzone({
             variant="ghost"
             size="icon"
             onClick={removeFile}
+            aria-label="Remove selected file"
             disabled={disabled}
           >
             <X className="h-4 w-4" />
@@ -109,7 +110,7 @@ export function FileDropzone({
   return (
     <div className={className}>
       <div
-        {...getRootProps()}
+        {...getRootProps({ role: 'button', 'aria-label': 'Choose a notice file', 'aria-disabled': disabled })}
         className={cn(
           'relative cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors',
           isDragActive && !isDragReject && 'border-primary bg-primary/5',
@@ -152,7 +153,7 @@ export function FileDropzone({
       </div>
 
       {error && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-destructive">
+        <div role="alert" className="mt-2 flex items-center gap-2 text-sm text-destructive">
           <AlertCircle className="h-4 w-4" />
           {error}
         </div>

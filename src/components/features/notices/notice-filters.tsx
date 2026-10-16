@@ -138,6 +138,7 @@ export function NoticeFilters({
           type="button"
           size="sm"
           variant={filters.overdue ? 'destructive' : 'outline'}
+          aria-pressed={!!filters.overdue}
           onClick={toggleOverdue}
           disabled={isLoading}
         >
@@ -147,6 +148,7 @@ export function NoticeFilters({
           type="button"
           size="sm"
           variant={filters.dueWithinDays ? 'default' : 'outline'}
+          aria-pressed={!!filters.dueWithinDays}
           onClick={toggleDueThisWeek}
           disabled={isLoading}
         >
@@ -154,13 +156,14 @@ export function NoticeFilters({
         </Button>
       </div>
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
+      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
         {/* Search */}
-        <form onSubmit={handleSearchSubmit} className="flex-1">
+        <form onSubmit={handleSearchSubmit} className="min-w-[200px] flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
+              aria-label="Search notices"
               placeholder="Search notices by number, GSTIN, or type..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
@@ -177,7 +180,7 @@ export function NoticeFilters({
             onValueChange={handleGstinChange}
             disabled={isLoading}
           >
-            <SelectTrigger className="w-full md:w-[200px]">
+            <SelectTrigger aria-label="Filter by GSTIN" className="w-full md:w-[200px]">
               <SelectValue placeholder="GSTIN" />
             </SelectTrigger>
             <SelectContent>
@@ -200,7 +203,7 @@ export function NoticeFilters({
           onValueChange={handleStatusChange}
           disabled={isLoading}
         >
-          <SelectTrigger className="w-full md:w-[160px]">
+          <SelectTrigger aria-label="Filter by status" className="w-full md:w-[160px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -219,7 +222,7 @@ export function NoticeFilters({
           onValueChange={handlePriorityChange}
           disabled={isLoading}
         >
-          <SelectTrigger className="w-full md:w-[140px]">
+          <SelectTrigger aria-label="Filter by priority" className="w-full md:w-[140px]">
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
           <SelectContent>

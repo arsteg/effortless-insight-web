@@ -36,7 +36,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Initial state
-      sidebarOpen: true,
+      sidebarOpen: false,
       sidebarCollapsed: false,
       selectedNotices: [],
       notificationCount: 0,

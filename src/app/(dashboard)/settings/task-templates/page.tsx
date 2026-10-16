@@ -140,7 +140,7 @@ export default function TaskTemplatesPage() {
             <ArrowLeft className="h-4 w-4" />
             Settings
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight">Task Templates</h1>
+          <h1 className="page-title">Task Templates</h1>
           <p className="text-muted-foreground">
             Reusable task definitions your team can apply when creating tasks on a notice.
           </p>

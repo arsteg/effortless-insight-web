@@ -81,7 +81,7 @@ export function NoticeHeader({
     (notice.interestAmount || 0)
 
   const getDeadlineColor = () => {
-    if (!notice.daysRemaining) return ''
+    if (notice.daysRemaining === undefined) return ''
     if (notice.daysRemaining < 0) return 'text-coral-600 dark:text-coral-400'
     if (notice.daysRemaining <= 3) return 'text-coral-600 dark:text-coral-400'
     if (notice.daysRemaining <= 7) return 'text-amber-600 dark:text-amber-400'
@@ -91,7 +91,7 @@ export function NoticeHeader({
   return (
     <div className="space-y-4">
       {/* Back link and actions */}
-      <div className="flex items-center justify-between">
+      <div className="page-header">
         <Link
           href="/notices"
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
@@ -99,7 +99,7 @@ export function NoticeHeader({
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back to Notices
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {onEdit && canEditNotices && (
             <Button variant="outline" size="sm" onClick={onEdit}>
               <Pencil className="mr-2 h-4 w-4" />
@@ -127,7 +127,7 @@ export function NoticeHeader({
           {(canAssignNotices || canEditNotices || canDeleteNotices) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" aria-label="Notice actions">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -171,9 +171,9 @@ export function NoticeHeader({
 
       {/* Main header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight nums md:text-3xl">
+            <h1 className="page-title break-all nums">
               {notice.noticeNumber || `Notice #${notice.id.slice(0, 8)}`}
             </h1>
             {canChangeStatus ? (

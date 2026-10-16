@@ -28,8 +28,8 @@ export default function DashboardError({ error, reset }: ErrorPageProps) {
             </div>
           </div>
           <CardTitle className="text-xl">Something went wrong</CardTitle>
-          <CardDescription>
-            An unexpected error occurred. Our team has been notified.
+          <CardDescription role="alert">
+            Please try again. If the problem continues, contact support.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -44,7 +44,7 @@ export default function DashboardError({ error, reset }: ErrorPageProps) {
               )}
             </div>
           )}
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button onClick={reset} className="flex-1">
               <RefreshCw className="mr-2 h-4 w-4" />
               Try Again

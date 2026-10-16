@@ -125,7 +125,7 @@ export default function EmailSyncPage() {
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold tracking-tight">Email Sync</h1>
+          <h1 className="page-title">Email Sync</h1>
           <p className="text-muted-foreground">
             Connect your email to automatically detect and import GST notices
           </p>

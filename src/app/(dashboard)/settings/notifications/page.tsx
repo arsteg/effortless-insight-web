@@ -373,7 +373,7 @@ export default function NotificationsSettingsPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Notification Settings</h1>
+          <h1 className="page-title">Notification Settings</h1>
           <p className="text-muted-foreground">
             Configure how and when you receive notifications.
           </p>
