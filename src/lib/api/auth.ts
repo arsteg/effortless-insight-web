@@ -62,6 +62,20 @@ export interface OAuthLoginUrlResponse {
 export interface OAuthCallbackRequest {
   code: string
   state: string  // Required for CSRF protection
+  deviceInfo?: {
+    platform: 'web' | 'ios' | 'android'
+    timezone?: string
+    screenWidth?: number
+    screenHeight?: number
+    colorDepth?: number
+    isTouchDevice?: boolean
+  }
+  // UTM tracking parameters
+  utmSource?: string
+  utmMedium?: string
+  utmCampaign?: string
+  utmTerm?: string
+  utmContent?: string
 }
 
 export interface UserOAuthInfoResponse {
@@ -112,13 +126,32 @@ export const authApi = {
   async verifySignupOtp(
     mobile: string,
     otp: string,
-    details?: { name?: string; email?: string }
+    details?: {
+      name?: string
+      email?: string
+      utmSource?: string
+      utmMedium?: string
+      utmCampaign?: string
+      utmTerm?: string
+      utmContent?: string
+    }
   ): Promise<MobileVerificationResponse> {
     const response = await apiClient.post<ApiResponse<MobileVerificationResponse>>(
       '/auth/signup/otp/verify',
       // name/email let the backend record the lead for admin follow-up if
       // the visitor verifies but never completes registration
-      { mobile, otp, name: details?.name || undefined, email: details?.email || undefined, source: 'web' }
+      {
+        mobile,
+        otp,
+        name: details?.name || undefined,
+        email: details?.email || undefined,
+        source: 'web',
+        utmSource: details?.utmSource || undefined,
+        utmMedium: details?.utmMedium || undefined,
+        utmCampaign: details?.utmCampaign || undefined,
+        utmTerm: details?.utmTerm || undefined,
+        utmContent: details?.utmContent || undefined,
+      }
     )
     track('signup_mobile_verified')
     return response.data.data

@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
+import { getDeviceMetadata } from '@/lib/device-metadata'
 import { useAuthStore } from '@/stores'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
@@ -79,13 +80,14 @@ function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
+      // Collect device metadata for session
+      const deviceInfo = getDeviceMetadata()
+
       await login({
         email: data.email,
         password: data.password,
         rememberMe: data.rememberMe,
-        deviceInfo: {
-          platform: 'web',
-        },
+        deviceInfo,
       })
 
       // If 2FA is required, the login function returns without error

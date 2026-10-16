@@ -40,6 +40,12 @@ export interface DeviceInfo {
   deviceId?: string
   deviceName?: string
   platform: 'web' | 'ios' | 'android'
+  // Device/browser metadata
+  timezone?: string
+  screenWidth?: number
+  screenHeight?: number
+  colorDepth?: number
+  isTouchDevice?: boolean
 }
 
 export interface RegisterRequest {
@@ -52,6 +58,14 @@ export interface RegisterRequest {
   mobileVerificationToken?: string
   /** Self-registered Chartered Accountant signup path (CA-as-distributor). */
   isCA?: boolean
+  /** Device metadata collected from client */
+  deviceInfo?: DeviceInfo
+  // UTM tracking parameters
+  utmSource?: string
+  utmMedium?: string
+  utmCampaign?: string
+  utmTerm?: string
+  utmContent?: string
 }
 
 export interface SignupOtpResponse {

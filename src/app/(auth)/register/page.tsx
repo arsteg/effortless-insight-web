@@ -9,6 +9,7 @@ import { AlertCircle, Eye, EyeOff, Loader2, CheckCircle2, ShieldCheck } from 'lu
 
 import { registerSchema, type RegisterFormData } from '@/lib/validations/auth'
 import { authApi } from '@/lib/api'
+import { getDeviceMetadata, storeUtmParams, getStoredUtmParams } from '@/lib/device-metadata'
 import type { ApiError } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -100,6 +101,11 @@ function RegisterForm() {
 
   const watchedMobile = form.watch('mobile')
 
+  // Store UTM parameters on mount so they persist across page navigations
+  useEffect(() => {
+    storeUtmParams()
+  }, [])
+
   // Reset verification if the user edits the mobile number after sending/verifying
   useEffect(() => {
     if (otpState !== 'idle' && watchedMobile !== otpMobileRef.current) {
@@ -169,9 +175,12 @@ function RegisterForm() {
     setOtpError(null)
     setOtpVerifying(true)
     try {
+      // Include UTM params so they're stored with the SignupAttempt
+      const utmParams = getStoredUtmParams()
       const result = await authApi.verifySignupOtp(otpMobileRef.current ?? '', otpValue, {
         name: form.getValues('name'),
         email: form.getValues('email'),
+        ...utmParams,
       })
       setVerificationToken(result.verificationToken)
       setOtpState('verified')
@@ -260,6 +269,10 @@ function RegisterForm() {
     setIsLoading(true)
     setServerError(null)
     try {
+      // Collect device metadata and UTM parameters
+      const deviceInfo = getDeviceMetadata()
+      const utmParams = getStoredUtmParams()
+
       await authApi.register({
         name: data.name,
         email: data.email,
@@ -268,6 +281,8 @@ function RegisterForm() {
         acceptTerms: data.acceptTerms,
         mobileVerificationToken: verificationToken,
         isCA: data.isCA,
+        deviceInfo,
+        ...utmParams,
       })
 
       setIsSuccess(true)

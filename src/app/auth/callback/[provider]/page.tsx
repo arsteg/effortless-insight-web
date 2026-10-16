@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { Loader2, AlertCircle } from 'lucide-react'
 
 import { authApi } from '@/lib/api/auth'
+import { getDeviceMetadata, getStoredUtmParams } from '@/lib/device-metadata'
 import { useAuthStore } from '@/stores'
 import { useToast } from '@/hooks/use-toast'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -50,9 +51,15 @@ function OAuthCallbackHandler() {
       }
 
       try {
+        // Collect device metadata and UTM parameters
+        const deviceInfo = getDeviceMetadata()
+        const utmParams = getStoredUtmParams()
+
         const result = await authApi.handleOAuthCallback(provider, {
           code,
           state,
+          deviceInfo,
+          ...utmParams,
         })
 
         // Check if 2FA is required
