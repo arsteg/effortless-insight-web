@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'GST Notice Management for Business Owners | EffortlessInsight',
   description:
     'From GST notice panic to complete control. Plain-English explanations, WhatsApp deadline reminders, and draft replies — built for business owners.',
+  alternates: { canonical: '/business' },
 }
 
 const content: AudiencePageContent = {

@@ -99,7 +99,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <Link href="/" className="flex items-center gap-3 font-semibold">
           <Image
             src="/logo.svg"
-            alt="EffortlessInsight"
+            alt="EffortlessInsight logo - Return to homepage"
             width={140}
             height={32}
             style={{ width: 'auto', height: 'auto' }}

@@ -65,7 +65,7 @@ export function LandingFooter() {
             <Link href="/" className="mb-5 inline-block">
               <Image
                 src="/logo.svg"
-                alt="EffortlessInsight"
+                alt="EffortlessInsight logo - Return to homepage"
                 width={200}
                 height={40}
                 className="h-9 w-auto brightness-0 invert"

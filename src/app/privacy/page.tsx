@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Privacy Policy | EffortlessInsight',
   description:
     'How EffortlessInsight and the GST Notice Guard browser extension collect, use, protect and retain your data — including GST portal data, stored in India and never sold.',
+  alternates: { canonical: '/privacy' },
 }
 
 // NOTE(legal): This policy was drafted to accurately reflect the product's

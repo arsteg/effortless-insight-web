@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Terms of Service | EffortlessInsight',
   description:
     'The terms that govern your use of EffortlessInsight, the GST notice management platform.',
+  alternates: { canonical: '/terms' },
 }
 
 // NOTE(legal): Drafted to reflect actual product behavior; have counsel

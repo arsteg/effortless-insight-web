@@ -5,7 +5,8 @@ import { AudiencePage, type AudiencePageContent } from '@/components/landing'
 export const metadata: Metadata = {
   title: 'GST Notice Management for Chartered Accountants | EffortlessInsight',
   description:
-    'Every client’s GST notices in one dashboard. Deadlines ranked, replies drafted, nothing slipping through — built for CA practices.',
+    "Every client's GST notices in one dashboard. Deadlines ranked, replies drafted, nothing slipping through — built for CA practices.",
+  alternates: { canonical: '/chartered-accountants' },
 }
 
 const content: AudiencePageContent = {

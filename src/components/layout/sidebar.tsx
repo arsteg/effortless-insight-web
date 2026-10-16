@@ -203,7 +203,7 @@ export function Sidebar() {
             {sidebarCollapsed ? (
               <Image
                 src="/small-logo.svg"
-                alt="EffortlessInsight"
+                alt="EffortlessInsight - GST notice management"
                 width={32}
                 height={32}
                 className="h-8 w-8"
@@ -211,7 +211,7 @@ export function Sidebar() {
             ) : (
               <Image
                 src="/logo.svg"
-                alt="EffortlessInsight"
+                alt="EffortlessInsight - GST notice management"
                 width={140}
                 height={32}
                 style={{ width: 'auto', height: '32px' }}
@@ -239,7 +239,7 @@ export function Sidebar() {
           <Link href="/dashboard">
             <Image
               src="/logo.svg"
-              alt="EffortlessInsight"
+              alt="EffortlessInsight - GST notice management"
               width={140}
               height={32}
               style={{ width: 'auto', height: '32px' }}

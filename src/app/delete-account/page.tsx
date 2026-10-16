@@ -17,7 +17,7 @@ export default function DeleteAccountPage() {
           <Link href="/">
             <Image
               src="/logo.svg"
-              alt="EffortlessInsight"
+              alt="EffortlessInsight logo - Return to homepage"
               width={280}
               height={56}
               className="h-12 w-auto"

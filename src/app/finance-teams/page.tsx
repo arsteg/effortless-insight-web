@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'GST Notice Management for Finance Teams | EffortlessInsight',
   description:
     'Enterprise-grade compliance operations: multi-GSTIN dashboards, workflows with approvals and SLAs, audit trails, and exportable reporting.',
+  alternates: { canonical: '/finance-teams' },
 }
 
 const content: AudiencePageContent = {

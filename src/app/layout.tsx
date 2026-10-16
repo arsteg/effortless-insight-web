@@ -47,6 +47,33 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+// Organization schema for site-wide entity identification
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: COMPANY.brand,
+  legalName: COMPANY.legalName,
+  url: SITE_URL,
+  logo: `${SITE_URL}/logo.png`,
+  description: 'AI-powered GST Notice Operating System for Indian businesses',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Aravali Heights, Sector 24',
+    addressLocality: 'Dharuhera',
+    addressRegion: 'Haryana',
+    postalCode: '123106',
+    addressCountry: 'IN',
+  },
+  contactPoint: {
+    '@type': 'ContactPoint',
+    telephone: COMPANY.phone,
+    email: COMPANY.email,
+    contactType: 'customer service',
+    availableLanguage: ['English', 'Hindi'],
+  },
+  sameAs: Object.values(COMPANY.socials).filter(Boolean),
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -55,6 +82,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         <Providers>
           <RouteTracker />
           {children}

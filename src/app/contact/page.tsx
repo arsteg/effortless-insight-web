@@ -4,17 +4,45 @@ import { ArrowRight, Mail, Building2, LifeBuoy, MessageSquareText } from 'lucide
 import { Button } from '@/components/ui/button'
 import { LandingHeader, LandingFooter } from '@/components/landing'
 import { COMPANY } from '@/lib/company'
+import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Contact | EffortlessInsight',
   description:
     'Talk to the EffortlessInsight team about GST notice management — sales questions, enterprise plans, support or security.',
+  alternates: { canonical: '/contact' },
 }
 
 // Channel policy: sales@ for pre-sales, info@ for everything else. Customer
 // support is deliberately NOT an email channel — it lives inside the app
 // (dashboard support), so no support@ mailbox exists.
 const CONTACT_EMAIL = COMPANY.email
+
+// ContactPage structured data for search engines
+const contactPageSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'Contact EffortlessInsight',
+  description:
+    'Contact the EffortlessInsight team for sales, support, or general inquiries about GST notice management.',
+  url: `${SITE_URL}/contact`,
+  mainEntity: {
+    '@type': 'Organization',
+    name: COMPANY.brand,
+    legalName: COMPANY.legalName,
+    url: SITE_URL,
+    telephone: COMPANY.phone,
+    email: COMPANY.email,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Aravali Heights, Sector 24',
+      addressLocality: 'Dharuhera',
+      addressRegion: 'Haryana',
+      postalCode: '123106',
+      addressCountry: 'IN',
+    },
+  },
+}
 
 const topics = [
   {
@@ -43,6 +71,10 @@ const topics = [
 export default function ContactPage() {
   return (
     <main className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageSchema) }}
+      />
       <LandingHeader />
 
       <section className="relative overflow-hidden pt-28 pb-14 md:pt-36 md:pb-20">

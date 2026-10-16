@@ -140,7 +140,7 @@ export function LandingHeader() {
           <Link href="/" className="flex-shrink-0 rounded-lg focus-ring">
             <Image
               src="/logo.svg"
-              alt="EffortlessInsight"
+              alt="EffortlessInsight logo - Return to homepage"
               width={280}
               height={56}
               className="h-9 w-auto md:h-10"

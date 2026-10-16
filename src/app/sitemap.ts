@@ -5,7 +5,13 @@ import { SITE_URL } from '@/lib/site'
 const BASE_URL = SITE_URL
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] }[] = [
+  const lastModified = new Date()
+
+  const routes: {
+    path: string
+    priority: number
+    changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency']
+  }[] = [
     { path: '', priority: 1.0, changeFrequency: 'weekly' },
     { path: '/pricing', priority: 0.9, changeFrequency: 'weekly' },
     { path: '/business', priority: 0.8, changeFrequency: 'monthly' },
@@ -19,6 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return routes.map(({ path, priority, changeFrequency }) => ({
     url: `${BASE_URL}${path}`,
+    lastModified,
     priority,
     changeFrequency,
   }))

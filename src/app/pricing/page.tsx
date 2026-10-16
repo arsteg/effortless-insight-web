@@ -15,6 +15,62 @@ import { usePlans } from '@/hooks/use-billing'
 import { formatAmount } from '@/lib/api/billing'
 import type { BillingCycle, Plan } from '@/types/billing'
 
+// FAQPage structured data for pricing FAQ section
+const pricingFaqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Can I try before I buy?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes! All paid plans come with a 14-day free trial. No credit card required to start your trial.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can I change plans later?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Absolutely. You can upgrade or downgrade your plan at any time. Upgrades take effect immediately with prorated billing. Downgrades take effect at the end of your current billing period.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'What payment methods do you accept?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'We accept all major credit cards, debit cards, UPI, and netbanking through our payment partner Razorpay. All payments are processed securely in INR.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Is there a discount for annual billing?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes — annual billing gives you 2 months free. The exact yearly price is shown on each plan card.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: "What happens when I reach my plan's notice limit?",
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'New notices wait until you upgrade or your next monthly cycle begins — everything already in your account stays fully accessible. Upgrades take effect immediately.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Do you offer refunds?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Instead of a money-back scheme, we let you try everything free for 14 days before paying — no card needed. After that you can cancel anytime. Duplicate charges and billing errors are always refunded in full.',
+      },
+    },
+  ],
+}
+
 export default function PricingPage() {
   const router = useRouter()
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('annually')
@@ -51,13 +107,17 @@ export default function PricingPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingFaqSchema) }}
+      />
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
           <Link href="/">
             <Image
               src="/logo.svg"
-              alt="EffortlessInsight"
+              alt="EffortlessInsight logo - Return to homepage"
               width={280}
               height={56}
               className="h-12 w-auto md:h-14"

@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: 'Refund Policy | EffortlessInsight',
   description:
     'EffortlessInsight refund and cancellation policy: free trial with no card, cancel anytime, and how refunds are handled.',
+  alternates: { canonical: '/refund' },
 }
 
 // NOTE(legal): Conservative default policy — try-before-you-buy instead of
