@@ -97,6 +97,16 @@ function OAuthCallbackHandler() {
             ? storedRedirect
             : '/dashboard'
 
+          // New Google/Microsoft accounts verify their mobile first. Keep an invitation
+          // redirect where auth-layout picks it up once that step is done.
+          if (user.mobileVerificationRequired) {
+            if (finalRedirect.startsWith('/invitations/') || finalRedirect.startsWith('/ca-invitations/')) {
+              localStorage.setItem('pendingInvitationUrl', finalRedirect)
+            }
+            router.push('/complete-signup')
+            return
+          }
+
           router.push(finalRedirect)
         }
       } catch (err: unknown) {

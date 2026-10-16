@@ -29,6 +29,14 @@ export function AuthLayout({ children }: AuthLayoutProps) {
     if (isInitialized && isAuthenticated && user) {
       const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
 
+      // Mobile OTP comes before everything else (onboarding, invitations, dashboard)
+      if (user.mobileVerificationRequired) {
+        if (pathname !== '/complete-signup') {
+          router.push('/complete-signup')
+        }
+        return
+      }
+
       // If on onboarding page and has organization, redirect to dashboard
       if (pathname === '/onboarding' && hasOrganization) {
         router.push('/dashboard')
@@ -80,8 +88,13 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   // Don't render auth pages (except onboarding and invitations) if authenticated with organization
   if (isInitialized && isAuthenticated && user) {
     const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
-    // Allow invitation pages for authenticated users
-    if (pathname.startsWith('/invitations/') || pathname.startsWith('/ca-invitations/')) {
+    if (user.mobileVerificationRequired) {
+      // Only the complete-signup page renders until the mobile is verified
+      if (pathname !== '/complete-signup') {
+        return null
+      }
+    } else if (pathname.startsWith('/invitations/') || pathname.startsWith('/ca-invitations/')) {
+      // Allow invitation pages for authenticated users
       // Continue rendering - user needs to accept/decline invitation
     } else if (pathname !== '/onboarding' && hasOrganization) {
       return null

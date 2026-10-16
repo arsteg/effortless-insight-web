@@ -64,6 +64,20 @@ export const registerSchema = z
 
 export type RegisterFormData = z.infer<typeof registerSchema>
 
+// Google/Microsoft sign-ups finish here: same mobile, terms and CA rules as /register
+export const completeSignupSchema = z.object({
+  mobile: z
+    .string()
+    .min(1, 'Mobile number is required')
+    .regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit Indian mobile number'),
+  acceptTerms: z.boolean().refine((val) => val === true, {
+    message: 'You must accept the terms and conditions',
+  }),
+  isCA: z.boolean().default(false),
+})
+
+export type CompleteSignupFormData = z.infer<typeof completeSignupSchema>
+
 export const forgotPasswordSchema = z.object({
   email: z
     .string()

@@ -159,6 +159,15 @@ apiClient.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // Handle 403 MOBILE_NOT_VERIFIED - the API only allows the complete-signup flow
+    // until the user verifies their mobile (Google/Microsoft sign-ups)
+    if (error.response?.status === 403 && error.response?.data?.code === 'MOBILE_NOT_VERIFIED') {
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/complete-signup')) {
+        window.location.href = '/complete-signup'
+      }
+      return Promise.reject(error)
+    }
+
     // Handle 401 - attempt token refresh (but not for auth endpoints)
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true
