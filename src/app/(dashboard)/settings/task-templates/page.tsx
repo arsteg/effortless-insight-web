@@ -63,6 +63,7 @@ import {
 import { usePermissions } from '@/hooks/use-permissions'
 import type { TaskTemplate, TaskPriority } from '@/types/collaboration'
 import { cn } from '@/lib/utils'
+import { optionalText, requiredText } from '@/lib/validations'
 
 const NOTICE_TYPES = [
   'DRC-01',
@@ -86,10 +87,13 @@ const PRIORITY_OPTIONS: { value: TaskPriority; label: string; badgeClass: string
 ]
 
 const templateSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Max 100 characters'),
-  description: z.string().max(500, 'Max 500 characters').optional(),
-  defaultTitle: z.string().min(1, 'Default task title is required').max(200, 'Max 200 characters'),
-  defaultDescription: z.string().max(2000, 'Max 2000 characters').optional(),
+  name: requiredText(z.string().min(1, 'Name is required').max(100, 'Max 100 characters'), 'Name'),
+  description: optionalText(z.string().max(500, 'Max 500 characters'), 'Description'),
+  defaultTitle: requiredText(
+    z.string().min(1, 'Default task title is required').max(200, 'Max 200 characters'),
+    'Default task title'
+  ),
+  defaultDescription: optionalText(z.string().max(2000, 'Max 2000 characters'), 'Default description'),
   defaultPriority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
   defaultEstimatedHours: z.number().min(0).max(999).optional(),
 })

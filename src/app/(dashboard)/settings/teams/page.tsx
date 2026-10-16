@@ -60,10 +60,11 @@ import {
 } from '@/hooks/use-collaboration'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { Team } from '@/types/collaboration'
+import { optionalText, requiredText } from '@/lib/validations'
 
 const teamSchema = z.object({
-  name: z.string().min(1, 'Team name is required').max(100, 'Max 100 characters'),
-  description: z.string().max(500, 'Max 500 characters').optional(),
+  name: requiredText(z.string().min(1, 'Team name is required').max(100, 'Max 100 characters'), 'Team name'),
+  description: optionalText(z.string().max(500, 'Max 500 characters'), 'Description'),
 })
 
 type TeamFormData = z.infer<typeof teamSchema>

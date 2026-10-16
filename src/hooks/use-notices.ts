@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { noticesApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import { dashboardKeys } from '@/hooks/use-dashboard'
+import { billingKeys } from '@/hooks/use-billing'
 import { getValidationErrorMessage } from '@/lib/api/error-utils'
 import type {
   Notice,
@@ -127,6 +128,13 @@ export function useAssignNotice() {
   })
 }
 
+// Deleting a failed notice gives its quota slot back, so refresh the usage the
+// upload page (['usage']) and billing widgets (billingKeys.usage()) read.
+function invalidateNoticeUsage(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ['usage'] })
+  queryClient.invalidateQueries({ queryKey: billingKeys.usage() })
+}
+
 // Delete notice mutation
 export function useDeleteNotice() {
   const queryClient = useQueryClient()
@@ -137,6 +145,7 @@ export function useDeleteNotice() {
       noticesApi.delete(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: noticeKeys.lists() })
+      invalidateNoticeUsage(queryClient)
       toast({
         title: 'Notice deleted',
         description: 'The notice has been deleted successfully.',
@@ -291,6 +300,7 @@ export function useBulkDeleteNotices() {
     },
     onSuccess: (_, ids) => {
       queryClient.invalidateQueries({ queryKey: noticeKeys.lists() })
+      invalidateNoticeUsage(queryClient)
       toast({
         title: 'Notices deleted',
         description: `${ids.length} notice(s) have been deleted.`,

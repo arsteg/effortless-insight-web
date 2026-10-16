@@ -4,14 +4,19 @@ import { z } from 'zod'
 const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
 
 const baseOnboardingFields = {
+  // Spaces between words are fine; leading spaces and space-only values are not
   name: z
     .string()
     .min(1, 'Organization name is required')
-    .min(2, 'Organization name must be at least 2 characters')
-    .max(100, 'Organization name must be less than 100 characters'),
+    .max(100, 'Organization name must be less than 100 characters')
+    .refine((val) => val.trim().length > 0, 'Organization name cannot be only spaces')
+    .refine((val) => !/^\s/.test(val), 'Organization name cannot start with a space')
+    .refine((val) => val.trim().length >= 2, 'Organization name must be at least 2 characters'),
   legalName: z
     .string()
-    .optional(),
+    .optional()
+    .refine((val) => !val || val.trim().length > 0, 'Legal name cannot be only spaces')
+    .refine((val) => !val || !val.trim() || !/^\s/.test(val), 'Legal name cannot start with a space'),
   industry: z
     .string()
     .optional(),
@@ -20,7 +25,9 @@ const baseOnboardingFields = {
     .min(1, 'State is required'),
   city: z
     .string()
-    .optional(),
+    .optional()
+    .refine((val) => !val || val.trim().length > 0, 'City cannot be only spaces')
+    .refine((val) => !val || !val.trim() || !/^\s/.test(val), 'City cannot start with a space'),
   annualTurnoverRange: z
     .string()
     .optional(),

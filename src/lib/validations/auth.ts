@@ -16,11 +16,14 @@ export type LoginFormData = z.infer<typeof loginSchema>
 
 export const registerSchema = z
   .object({
+    // Spaces between words are fine; leading spaces and space-only names are not
     name: z
       .string()
       .min(1, 'Name is required')
-      .min(2, 'Name must be at least 2 characters')
-      .max(100, 'Name must be less than 100 characters'),
+      .max(100, 'Name must be less than 100 characters')
+      .refine((val) => val.trim().length > 0, 'Name cannot be only spaces')
+      .refine((val) => !/^\s/.test(val), 'Name cannot start with a space')
+      .refine((val) => val.trim().length >= 2, 'Name must be at least 2 characters'),
     email: z
       .string()
       .min(1, 'Email is required')

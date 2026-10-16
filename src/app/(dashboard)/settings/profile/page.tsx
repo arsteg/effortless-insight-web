@@ -24,9 +24,19 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useProfile, useUpdateProfile, useUploadAvatar, useDeleteAvatar } from '@/hooks/use-settings'
 import { useTheme } from '@/components/theme-provider'
 
+// Spaces between words are fine; leading spaces and space-only values are not
 const profileFormSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  mobile: z.string().optional(),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .refine((val) => val.trim().length > 0, 'Name cannot be only spaces')
+    .refine((val) => !/^\s/.test(val), 'Name cannot start with a space')
+    .refine((val) => val.trim().length >= 2, 'Name must be at least 2 characters'),
+  mobile: z
+    .string()
+    .optional()
+    .refine((val) => !val || val.trim().length > 0, 'Mobile number cannot be only spaces')
+    .refine((val) => !val || !/^\s/.test(val), 'Mobile number cannot start with a space'),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
