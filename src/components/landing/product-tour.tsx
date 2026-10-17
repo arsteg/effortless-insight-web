@@ -132,7 +132,7 @@ function SyncMock() {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2.5 rounded-xl bg-primary-50 p-3 text-xs text-primary-800">
+        <div className="flex items-center gap-2.5 rounded-xl border border-border bg-secondary/60 p-3 text-xs text-foreground">
           <RefreshCw className="h-4 w-4 flex-shrink-0 text-primary-600" aria-hidden />
           New DRC-01 fetched from portal · analysis started automatically
         </div>
@@ -357,7 +357,7 @@ function MobileMock() {
   return (
     <PhoneFrame
       header={
-        <div className="bg-primary-600 px-4 py-3 text-white">
+        <div className="bg-azure-900 px-4 py-3 text-white">
           <p className="text-sm font-semibold">Notices</p>
         </div>
       }
@@ -378,7 +378,7 @@ function MobileMock() {
             <p className="mt-1 text-sm font-medium text-gray-800">{n.client}</p>
           </div>
         ))}
-        <div className="rounded-xl bg-primary-50 p-3 text-center text-xs font-medium text-primary-700">
+        <div className="rounded-xl border border-border bg-secondary/60 p-3 text-center text-xs font-medium text-foreground">
           Approve draft replies on the go
         </div>
       </div>
@@ -540,7 +540,7 @@ export function ProductTour() {
               className={cn(
                 'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
                 active.id === tab.id
-                  ? 'border-transparent bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-300/60'
+                  ? 'border-transparent bg-primary text-white shadow-card'
                   : 'border-gray-200 bg-white text-gray-700 shadow-sm hover:-translate-y-0.5 hover:border-primary-300 hover:text-primary-700 hover:shadow-md'
               )}
             >
@@ -575,7 +575,7 @@ export function ProductTour() {
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>
-          <div className="rounded-3xl bg-gradient-to-br from-primary-100 via-azure-50 to-lavender-100 p-4 shadow-inner md:p-7">
+          <div className="rounded-3xl bg-gradient-to-br from-secondary via-card to-lavender-50 p-4 shadow-inner md:p-7">
             <active.mock />
           </div>
         </div>

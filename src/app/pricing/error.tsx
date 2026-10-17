@@ -20,7 +20,7 @@ export default function PricingError({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="max-w-lg w-full">
         <CardHeader className="text-center pb-4">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-coral-100 mb-4 mx-auto">

@@ -22,11 +22,11 @@ export function Hero() {
       {/* Restrained color field: one soft top wash + a single subtle accent */}
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-[620px] bg-gradient-to-b from-primary-50/70 to-transparent"
+        className="absolute inset-x-0 top-0 h-[620px] bg-gradient-to-b from-secondary/80 to-transparent"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 right-0 h-[520px] w-[520px] rounded-full bg-azure-100/50 blur-3xl"
+        className="pointer-events-none absolute -top-40 right-0 h-[520px] w-[520px] rounded-full bg-azure-100/30 blur-3xl"
       />
       {/* Hairline grid texture for depth, masked to fade out */}
       <div
@@ -38,15 +38,12 @@ export function Hero() {
         <div className="grid items-center gap-14 lg:grid-cols-2 lg:gap-10">
           {/* Copy */}
           <div className="max-w-xl">
-            <p className="eyebrow mb-6 rounded-full border border-primary-200/70 bg-white/70 px-3.5 py-1.5 text-primary-700 shadow-soft backdrop-blur">
-              <span className="relative flex h-2 w-2" aria-hidden>
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500" />
-              </span>
+            <p className="eyebrow mb-6 rounded-full border border-border bg-white/70 px-3.5 py-1.5 text-primary-700 shadow-soft backdrop-blur">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary-500" aria-hidden />
               GST Notice Operating System
             </p>
 
-            <h1 className="font-display text-[2.75rem] font-extrabold leading-[1.05] tracking-tightest text-gray-950 md:text-6xl lg:text-[4.25rem]">
+            <h1 className="font-display text-[2.75rem] font-bold leading-[1.05] tracking-tightest text-gray-950 md:text-6xl lg:text-[4.25rem]">
               A GST notice shouldn&apos;t
               <span className="text-gradient block">ruin your week.</span>
             </h1>
@@ -134,7 +131,7 @@ export function Hero() {
             {/* Tilted backdrop card for depth */}
             <div
               aria-hidden
-              className="absolute inset-0 -rotate-[2.5deg] rounded-[1.75rem] bg-gradient-to-br from-primary-100/80 to-azure-100/60"
+              className="absolute inset-0 -rotate-[2.5deg] rounded-[1.75rem] bg-gradient-to-br from-secondary to-azure-50"
             />
             <div className="relative rounded-3xl border border-gray-200/70 bg-white/95 p-6 shadow-premium ring-1 ring-gray-900/5 backdrop-blur">
               {/* Notice header */}
@@ -176,7 +173,7 @@ export function Hero() {
             </div>
 
             {/* WhatsApp reminder float */}
-            <div className="animate-float absolute -bottom-16 -left-4 hidden rounded-2xl border border-gray-200/70 bg-white p-3.5 shadow-elevated ring-1 ring-gray-900/5 sm:block">
+            <div className="absolute -bottom-16 -left-4 hidden rounded-2xl border border-gray-200/70 bg-white p-3.5 shadow-elevated ring-1 ring-gray-900/5 sm:block">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-mint-100">
                   <svg className="h-5 w-5 text-mint-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden>

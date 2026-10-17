@@ -5,16 +5,16 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
   {
     variants: {
       variant: {
         default:
-          'bg-gradient-to-b from-azure-500 to-azure-600 text-primary-foreground shadow-soft hover:shadow-card hover:brightness-[1.03]',
+          'bg-primary text-primary-foreground shadow-soft hover:bg-primary/90 hover:shadow-card',
         destructive:
           'bg-coral-500 text-destructive-foreground shadow-soft hover:bg-coral-600',
         outline:
-          'border border-input bg-card/70 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground hover:border-azure-200',
+          'border border-input bg-card/70 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground hover:border-foreground/15',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-secondary/70',
         ghost: 'hover:bg-accent hover:text-accent-foreground',

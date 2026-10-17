@@ -38,7 +38,7 @@ export function SocialProof() {
     <section className="bg-white py-14 md:py-20">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="inline-flex items-center rounded-full border border-primary-100 bg-primary-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-700">
+          <p className="inline-flex items-center rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-700">
             Why trust us
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -54,9 +54,9 @@ export function SocialProof() {
           {proofs.map((proof) => (
             <div
               key={proof.title}
-              className="rounded-2xl border border-gray-200 bg-white p-8 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-100/50"
+              className="rounded-2xl border border-gray-200 bg-white p-8 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-lg"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-md shadow-primary-200/60">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-azure-50 text-azure-700 ring-1 ring-inset ring-azure-100">
                 <proof.icon className="h-5 w-5" aria-hidden />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-gray-950">{proof.title}</h3>

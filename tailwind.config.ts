@@ -1,6 +1,22 @@
 import type { Config } from 'tailwindcss'
 import tailwindcssAnimate from 'tailwindcss-animate'
 
+// Single softened azure scale (hue 202, ~45-70% saturation) shared by
+// primary-*, azure-*, blue-* and sky-*.
+const azureScale = {
+  50: '#f2f7fa',
+  100: '#e1edf4',
+  200: '#c3dbea',
+  300: '#8fbfdc',
+  400: '#4ea0d0',
+  500: '#2787be',
+  600: '#1f79ad',
+  700: '#1b638d',
+  800: '#1a4d70',
+  900: '#183a54',
+  950: '#102538',
+}
+
 const config: Config = {
   darkMode: ['class'],
   content: [
@@ -26,17 +42,7 @@ const config: Config = {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-          950: '#082f49',
+          ...azureScale,
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -65,18 +71,12 @@ const config: Config = {
         // Calm Intelligence accent families (see DESIGN_SYSTEM.md)
         azure: {
           DEFAULT: 'hsl(var(--azure))',
-          50: '#eaf5fd',
-          100: '#d2eafb',
-          200: '#a9d6f6',
-          300: '#74bcef',
-          400: '#3aa0e7',
-          500: '#0e93e0',
-          600: '#0a78bd',
-          700: '#0a6199',
-          800: '#0d4f7b',
-          900: '#103f61',
-          950: '#0a2740',
+          ...azureScale,
         },
+        // Legacy blue/sky utilities resolve to the same azure scale so every
+        // blue on screen is one consistent, calmer hue.
+        blue: azureScale,
+        sky: azureScale,
         mint: {
           DEFAULT: 'hsl(var(--mint))',
           50: '#e6f6ef',
@@ -188,8 +188,8 @@ const config: Config = {
           '50%': { transform: 'translateY(-10px)' },
         },
         'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 0 0 rgba(14, 165, 233, 0.4)' },
-          '50%': { boxShadow: '0 0 20px 10px rgba(14, 165, 233, 0.1)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(31, 121, 173, 0.18)' },
+          '50%': { boxShadow: '0 0 20px 10px rgba(31, 121, 173, 0.06)' },
         },
       },
       animation: {

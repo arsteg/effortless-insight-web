@@ -81,7 +81,7 @@ function BarFigure({ title, bars }: { title: string; bars: Bar[] }) {
               <div
                 className={`h-3 rounded-full ${
                   bar.accent
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600'
+                    ? 'bg-primary'
                     : 'bg-[#94a3b8]'
                 }`}
                 style={{ width: `${Math.max(bar.pct, 2)}%` }}

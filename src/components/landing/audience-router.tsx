@@ -60,7 +60,7 @@ export function AudienceRouter() {
               href={audience.href}
               className="group flex flex-col rounded-2xl border border-gray-200/80 bg-white p-8 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-elevated"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-md shadow-primary-200/70 transition-transform group-hover:scale-105">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-azure-50 text-azure-700 ring-1 ring-inset ring-azure-100 transition-transform group-hover:scale-105">
                 <audience.icon className="h-5 w-5" aria-hidden />
               </div>
               <h3 className="mt-5 text-lg font-semibold text-gray-950">{audience.title}</h3>

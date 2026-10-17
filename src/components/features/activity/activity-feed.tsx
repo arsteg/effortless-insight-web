@@ -66,7 +66,7 @@ const ACTIVITY_COLORS: Record<ActivityType, string> = {
   task_created: 'text-mint-500 bg-mint-100',
   task_completed: 'text-mint-500 bg-mint-100',
   task_updated: 'text-gray-500 bg-gray-100',
-  task_assigned: 'text-cyan-500 bg-cyan-100',
+  task_assigned: 'text-azure-600 bg-azure-50',
   task_status_changed: 'text-amber-500 bg-amber-100',
   document_uploaded: 'text-lavender-500 bg-lavender-100',
   document_requested: 'text-pink-500 bg-pink-100',
@@ -76,10 +76,10 @@ const ACTIVITY_COLORS: Record<ActivityType, string> = {
   comment_edited: 'text-gray-500 bg-gray-100',
   comment_deleted: 'text-coral-500 bg-coral-100',
   comment_reaction: 'text-amber-500 bg-amber-100',
-  notice_assigned: 'text-cyan-500 bg-cyan-100',
+  notice_assigned: 'text-azure-600 bg-azure-50',
   notice_status_changed: 'text-amber-500 bg-amber-100',
   ai_analysis_completed: 'text-lavender-500 bg-lavender-100',
-  workflow_stage_changed: 'text-cyan-500 bg-cyan-100',
+  workflow_stage_changed: 'text-azure-600 bg-azure-50',
 }
 
 const FILTER_OPTIONS = [

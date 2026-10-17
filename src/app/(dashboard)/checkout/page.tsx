@@ -484,8 +484,8 @@ function CheckoutContent() {
 
                 {/* Trial Notice */}
                 {selectedPlan.trialDays > 0 && (
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <div className="p-4 bg-card border border-border border-l-4 border-l-azure-500 rounded-lg">
+                    <p className="text-sm text-foreground">
                       <strong>{selectedPlan.trialDays}-day free trial:</strong> You will be asked to
                       authorize a payment method. No charge will be made until your trial ends.
                     </p>
