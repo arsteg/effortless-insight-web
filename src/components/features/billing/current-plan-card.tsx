@@ -113,10 +113,10 @@ export function CurrentPlanCard({
 
         {/* Trial Info - No actions during trial */}
         {isTrialing && subscription.trialEnd && (
-          <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+          <Alert className="border-border border-l-4 border-l-azure-500 bg-card">
             <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <AlertTitle className="text-blue-800 dark:text-blue-200">Trial Period</AlertTitle>
-            <AlertDescription className="text-blue-700 dark:text-blue-300">
+            <AlertTitle className="text-foreground">Trial Period</AlertTitle>
+            <AlertDescription className="text-muted-foreground">
               <p>You are in Trial Mode.</p>
               <p className="mt-1 flex items-center gap-1.5">
                 <CreditCard className="h-4 w-4" />

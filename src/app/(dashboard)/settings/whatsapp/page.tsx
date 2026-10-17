@@ -269,7 +269,7 @@ export default function WhatsAppSettingsPage() {
               </div>
 
               {/* Send Test Message Button */}
-              <div className="flex items-center justify-between rounded-lg border p-4 bg-blue-50 dark:bg-blue-950/20">
+              <div className="flex items-center justify-between rounded-lg border p-4 bg-secondary/60">
                 <div className="space-y-0.5">
                   <Label className="font-medium">Test Integration</Label>
                   <p className="text-sm text-muted-foreground">

@@ -121,7 +121,7 @@ function ActivityItem({ activity, isLast }: ActivityItemProps) {
       case 'task_created':
         return <CheckCircle2 className="h-4 w-4 text-blue-500" />
       case 'comment_added':
-        return <MessageSquare className="h-4 w-4 text-cyan-500" />
+        return <MessageSquare className="h-4 w-4 text-azure-600" />
       case 'response_drafted':
         return <Edit className="h-4 w-4 text-amber-500" />
       case 'response_submitted':

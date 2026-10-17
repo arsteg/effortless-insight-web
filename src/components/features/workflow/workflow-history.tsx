@@ -58,8 +58,8 @@ const EVENT_CONFIG: Record<WorkflowEventType, {
   },
   reassignment: {
     icon: UserCheck,
-    color: 'text-cyan-600',
-    bgColor: 'bg-cyan-100',
+    color: 'text-azure-600',
+    bgColor: 'bg-azure-50',
     label: 'Reassigned',
   },
   sla_warning: {

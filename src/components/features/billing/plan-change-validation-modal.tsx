@@ -121,15 +121,15 @@ function formatBillingCycle(cycle: string): string {
 
 function ProrationPreviewSection({ proration }: { proration: ProrationPreview }) {
   const colorClass = proration.isUpgrade
-    ? 'border-blue-500/50 bg-blue-50 dark:bg-blue-950/20'
+    ? 'border-azure-500/40 bg-card'
     : 'border-amber-500/50 bg-amber-50 dark:bg-amber-900/20'
 
   const textClass = proration.isUpgrade
-    ? 'text-blue-800 dark:text-blue-400'
+    ? 'text-foreground'
     : 'text-amber-800 dark:text-amber-400'
 
   const descClass = proration.isUpgrade
-    ? 'text-blue-700 dark:text-blue-300'
+    ? 'text-muted-foreground'
     : 'text-amber-700 dark:text-amber-300'
 
   return (

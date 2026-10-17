@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 
 // No maximumScale: pinch-zoom must stay available for low-vision users
 export const viewport: Viewport = {
-  themeColor: '#0ea5e9',
+  themeColor: '#1f79ad',
   width: 'device-width',
   initialScale: 1,
 }

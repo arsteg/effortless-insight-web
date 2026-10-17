@@ -64,14 +64,14 @@ export function StorySection() {
 
           {/* Arrow */}
           <div className="flex items-center justify-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-200">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-azure-50 text-azure-700 ring-1 ring-inset ring-azure-100">
               <ArrowRight className="hidden h-6 w-6 lg:block" aria-hidden />
               <ArrowDown className="h-6 w-6 lg:hidden" aria-hidden />
             </span>
           </div>
 
           {/* After: the explanation */}
-          <div className="flex flex-col rounded-2xl border border-primary-200 bg-white p-6 shadow-xl shadow-primary-100/70 ring-1 ring-primary-100">
+          <div className="flex flex-col rounded-2xl border border-primary-200 bg-white p-6 shadow-xl ring-1 ring-primary-100">
             <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-primary-600">
               What EffortlessInsight tells you
             </p>

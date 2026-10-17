@@ -8,29 +8,29 @@
    * pastel accent families. See DESIGN_SYSTEM.md for the shared spec.
    */
   :root {
-    --background: 38 36% 97.5%; /* warm paper white */
+    --background: 40 28% 96.5%; /* warm paper white, a touch deeper so cards lift off it */
     --foreground: 222 32% 16%; /* ink navy (never pure black) */
-    --card: 40 44% 99%;
+    --card: 40 40% 99.5%;
     --card-foreground: 222 32% 16%;
-    --popover: 40 44% 99%;
+    --popover: 40 40% 99.5%;
     --popover-foreground: 222 32% 16%;
-    --primary: 202 90% 48%; /* refined azure — brand */
+    --primary: 202 70% 40%; /* softened azure — brand; 4.7:1 on white */
     --primary-foreground: 40 44% 99%;
-    --secondary: 40 24% 95%;
+    --secondary: 40 20% 93.5%;
     --secondary-foreground: 222 30% 20%;
-    --muted: 40 24% 95%;
-    --muted-foreground: 220 14% 46%;
-    --accent: 202 85% 95%; /* soft azure wash */
-    --accent-foreground: 202 82% 30%;
+    --muted: 40 20% 93.5%;
+    --muted-foreground: 220 12% 42%;
+    --accent: 40 18% 93%; /* neutral warm wash for hovers — blue stays for actions */
+    --accent-foreground: 222 32% 16%;
     --destructive: 9 82% 60%; /* warm coral, not harsh red */
     --destructive-foreground: 40 44% 99%;
-    --border: 40 20% 90%;
-    --input: 40 20% 90%;
-    --ring: 202 90% 48%;
+    --border: 40 16% 87.5%;
+    --input: 40 16% 85%;
+    --ring: 202 70% 40%;
     --radius: 0.875rem;
 
     /* Accent family bases (also mirrored as tailwind color scales) */
-    --azure: 202 90% 48%;
+    --azure: 202 70% 40%;
     --mint: 160 62% 40%;
     --coral: 9 82% 64%;
     --amber: 35 92% 55%;
@@ -45,21 +45,21 @@
     --card-foreground: 40 30% 96%;
     --popover: 222 30% 13%;
     --popover-foreground: 40 30% 96%;
-    --primary: 202 88% 60%;
+    --primary: 202 62% 58%;
     --primary-foreground: 222 40% 12%;
     --secondary: 222 22% 20%;
     --secondary-foreground: 40 30% 96%;
     --muted: 222 22% 20%;
     --muted-foreground: 220 16% 68%;
-    --accent: 222 26% 22%;
-    --accent-foreground: 202 85% 82%;
+    --accent: 222 20% 19%;
+    --accent-foreground: 40 30% 96%;
     --destructive: 9 72% 58%;
     --destructive-foreground: 40 30% 96%;
     --border: 222 20% 22%;
     --input: 222 20% 24%;
-    --ring: 202 88% 60%;
+    --ring: 202 62% 58%;
 
-    --azure: 202 88% 62%;
+    --azure: 202 62% 60%;
     --mint: 160 58% 52%;
     --coral: 9 82% 68%;
     --amber: 38 92% 62%;
@@ -84,17 +84,17 @@
 
   /* Brand-tinted text selection */
   ::selection {
-    background-color: hsl(202 90% 48% / 0.16);
+    background-color: hsl(202 70% 40% / 0.14);
     color: hsl(222 32% 16%);
   }
 
   /* Typography improvements */
   h1 {
-    @apply text-3xl font-bold tracking-tight leading-tight md:text-4xl lg:text-5xl;
+    @apply text-3xl font-semibold tracking-tight leading-tight md:text-4xl lg:text-5xl;
   }
 
   h2 {
-    @apply text-2xl font-bold tracking-tight leading-snug md:text-3xl;
+    @apply text-2xl font-semibold tracking-tight leading-snug md:text-3xl;
   }
 
   h3 {
@@ -238,7 +238,7 @@
   }
 
   .page-title {
-    @apply text-2xl font-bold tracking-tight md:text-3xl;
+    @apply text-2xl font-semibold tracking-tight md:text-3xl;
   }
 
   .page-description {
@@ -377,10 +377,10 @@
 
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
+      box-shadow: 0 0 0 0 rgba(31, 121, 173, 0.18);
     }
     50% {
-      box-shadow: 0 0 20px 10px rgba(14, 165, 233, 0.1);
+      box-shadow: 0 0 20px 10px rgba(31, 121, 173, 0.06);
     }
   }
 
@@ -444,7 +444,7 @@
 
   /* Focus utilities */
   .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2;
   }
 
   /* Glass morphism */
@@ -458,7 +458,7 @@
 
   /* Gradient text — premium calm: azure into lavender */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-azure-600 via-azure-500 to-lavender-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-azure-700 via-azure-600 to-lavender-600;
   }
 
   /* Section eyebrow: small, tracked, uppercase label above headings */
@@ -480,5 +480,17 @@
   /* Smooth scroll for sections */
   .scroll-mt-header {
     scroll-margin-top: 80px;
+  }
+}
+
+/* Respect OS "reduce motion": no entrance, looping or hover-lift animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

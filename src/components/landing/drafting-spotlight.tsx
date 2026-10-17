@@ -42,7 +42,7 @@ export function DraftingSpotlight() {
     <section id="drafting" className="scroll-mt-header bg-white py-14 md:py-20">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="inline-flex items-center rounded-full border border-primary-100 bg-primary-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-700">
+          <p className="inline-flex items-center rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-700">
             The reply
           </p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950 md:text-4xl">
@@ -74,7 +74,7 @@ export function DraftingSpotlight() {
                     className="absolute left-5 top-10 h-[calc(100%-2rem)] w-px bg-gradient-to-b from-primary-200 to-primary-100"
                   />
                 )}
-                <span className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-md shadow-primary-200/70">
+                <span className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-azure-50 text-azure-700 ring-1 ring-inset ring-azure-100">
                   <stage.icon className="h-5 w-5" aria-hidden />
                 </span>
                 <div className="pt-0.5">
@@ -89,9 +89,9 @@ export function DraftingSpotlight() {
           <div className="relative">
             <div
               aria-hidden
-              className="absolute inset-0 rotate-1 rounded-3xl bg-gradient-to-br from-primary-100 to-azure-100"
+              className="absolute inset-0 rotate-1 rounded-3xl bg-gradient-to-br from-secondary to-azure-50"
             />
-            <div className="relative rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl shadow-primary-200/40 ring-1 ring-gray-100">
+            <div className="relative rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl ring-1 ring-gray-100">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-4">
                 <p className="font-semibold text-gray-900">Draft reply · DRC-01</p>
                 <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
@@ -138,7 +138,7 @@ export function DraftingSpotlight() {
           <p className="text-sm font-medium text-gray-500">
             AI drafts. You and your CA decide. Nothing is ever filed without you.
           </p>
-          <Button size="lg" asChild className="px-8 py-6 text-base shadow-lg shadow-primary-200/60">
+          <Button size="lg" asChild className="px-8 py-6 text-base shadow-lg">
             <Link href="/register">
               See your first draft free
               <ArrowRight className="ml-2 h-5 w-5" />

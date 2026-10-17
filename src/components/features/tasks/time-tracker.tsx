@@ -224,7 +224,7 @@ export function TimeTracker({ taskId, estimatedHours, className }: TimeTrackerPr
           {isTimerRunning ? (
             <>
               <div className="flex-1">
-                <div className="text-2xl font-mono font-bold text-primary">
+                <div className="text-2xl font-mono font-bold text-foreground">
                   {formatDuration(elapsedSeconds)}
                 </div>
                 <p className="text-xs text-muted-foreground">Timer running...</p>

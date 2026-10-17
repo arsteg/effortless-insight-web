@@ -92,7 +92,7 @@ export function SecuritySection() {
       {/* Ambient glow so the dark section feels lit, not flat */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-primary-500/10 blur-3xl"
+        className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-primary-500/5 blur-3xl"
       />
       <div className="container relative mx-auto px-4">
         <div className="mx-auto max-w-2xl text-center">

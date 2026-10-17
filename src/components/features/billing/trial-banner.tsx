@@ -37,7 +37,7 @@ export function TrialBanner({ subscription, className }: TrialBannerProps) {
   return (
     <Alert
       className={cn(
-        'border-2 border-blue-500 bg-blue-50 dark:bg-blue-950/20',
+        'border border-border border-l-4 border-l-azure-500 bg-card',
         className
       )}
     >
@@ -45,11 +45,11 @@ export function TrialBanner({ subscription, className }: TrialBannerProps) {
       <div className="flex-1">
         <AlertDescription className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="font-medium text-blue-900 dark:text-blue-100">
+            <span className="font-medium text-foreground">
               You are in Trial Mode.
             </span>
             {trialEndDate && subscription.pricing && (
-              <span className="text-blue-800 dark:text-blue-200 flex items-center gap-1.5">
+              <span className="text-foreground flex items-center gap-1.5">
                 <CreditCard className="h-4 w-4" />
                 On {trialEndDate}, {formatAmount(subscription.pricing.total, subscription.pricing.currency)} will be automatically debited.
               </span>

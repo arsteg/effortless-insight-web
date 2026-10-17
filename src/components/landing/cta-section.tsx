@@ -10,7 +10,7 @@ export function CTASection() {
           {/* Single restrained glow + hairline grid texture */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-28 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-primary-500/20 blur-3xl"
+            className="pointer-events-none absolute -top-28 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-primary-500/15 blur-3xl"
           />
           <div
             aria-hidden
@@ -31,7 +31,7 @@ export function CTASection() {
             <Button
               size="lg"
               asChild
-              className="group h-12 bg-white px-8 text-base font-semibold text-gray-950 shadow-lg transition-all hover:bg-gray-100 hover:shadow-xl"
+              className="group h-12 bg-white px-8 text-base font-semibold text-gray-950 shadow-lg transition-all hover:bg-gray-100 hover:shadow-elevated"
             >
               <Link href="/register">
                 Start free 14-day trial

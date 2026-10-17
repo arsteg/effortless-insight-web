@@ -112,11 +112,11 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <main className="relative flex-1 flex items-center justify-center overflow-hidden p-4 md:p-6 bg-gradient-to-b from-background to-secondary/50">
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-32 -left-24 h-[420px] w-[420px] rounded-full bg-azure-200/30 blur-3xl"
+          className="pointer-events-none absolute -top-32 -left-24 h-[420px] w-[420px] rounded-full bg-azure-100/40 blur-3xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -bottom-32 -right-24 h-[420px] w-[420px] rounded-full bg-lavender-200/30 blur-3xl"
+          className="pointer-events-none absolute -bottom-32 -right-24 h-[420px] w-[420px] rounded-full bg-lavender-100/40 blur-3xl"
         />
         <div className="relative w-full max-w-md">
           {children}

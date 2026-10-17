@@ -258,10 +258,10 @@ export default function BillingSettingsPage() {
 
       {/* Upgrade-only policy message */}
       {subscription && globalSettings?.downgradesAllowed === false && (
-        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+        <Alert className="border-border border-l-4 border-l-azure-500 bg-card">
           <InfoIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <AlertTitle className="text-blue-800 dark:text-blue-200">Upgrade-Only Policy</AlertTitle>
-          <AlertDescription className="text-blue-700 dark:text-blue-300">
+          <AlertTitle className="text-foreground">Upgrade-Only Policy</AlertTitle>
+          <AlertDescription className="text-muted-foreground">
             Once subscribed, you can only upgrade to a higher plan. Downgrades to lower plans are not available.
             If you need to change your plan or have any questions, please contact our support team.
           </AlertDescription>

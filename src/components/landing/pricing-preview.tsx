@@ -104,7 +104,7 @@ export function PricingPreview() {
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="mb-10 text-center">
-          <span className="mb-3 inline-flex items-center rounded-full border border-primary-100 bg-primary-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-700">
+          <span className="mb-3 inline-flex items-center rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-700">
             Pricing
           </span>
           <h2 className="mb-4 text-3xl font-bold text-gray-950 md:text-4xl">
@@ -135,12 +135,12 @@ export function PricingPreview() {
                   key={plan.code}
                   className={`relative flex flex-col rounded-2xl border bg-white p-7 transition-all duration-300 ${
                     plan.isPopular
-                      ? 'border-transparent shadow-2xl shadow-primary-200/60 ring-2 ring-primary-500 lg:scale-105'
-                      : 'border-gray-100 shadow-lg hover:-translate-y-1 hover:shadow-xl'
+                      ? 'border-transparent shadow-2xl ring-2 ring-primary-500 lg:scale-105'
+                      : 'border-gray-100 shadow-lg hover:-translate-y-1 hover:shadow-elevated'
                   }`}
                 >
                   {plan.isPopular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-1 text-sm font-semibold text-white shadow-lg">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-sm font-semibold text-white shadow-lg">
                       Most Popular
                     </div>
                   )}
@@ -186,7 +186,7 @@ export function PricingPreview() {
                     <Button
                       className={
                         plan.isPopular
-                          ? 'w-full bg-gradient-to-r from-primary-600 to-primary-500 shadow-lg shadow-primary-300/60 hover:from-primary-600 hover:to-primary-600'
+                          ? 'w-full bg-primary shadow-card hover:bg-primary/90'
                           : 'w-full'
                       }
                       variant={plan.isPopular ? 'default' : 'outline'}

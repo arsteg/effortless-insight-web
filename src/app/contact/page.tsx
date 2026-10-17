@@ -48,7 +48,7 @@ export default function ContactPage() {
       <section className="relative overflow-hidden pt-28 pb-14 md:pt-36 md:pb-20">
         <div
           aria-hidden
-          className="absolute inset-x-0 top-0 h-[420px] bg-gradient-to-b from-primary-50/70 to-transparent"
+          className="absolute inset-x-0 top-0 h-[420px] bg-gradient-to-b from-secondary/80 to-transparent"
         />
         <div className="container relative mx-auto px-4">
           <div className="mx-auto max-w-2xl text-center">
@@ -61,7 +61,7 @@ export default function ContactPage() {
             </p>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="mt-7 inline-flex items-center gap-2.5 rounded-2xl border border-primary-200 bg-white px-6 py-4 text-lg font-semibold text-primary-700 shadow-lg shadow-primary-100/60 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+              className="mt-7 inline-flex items-center gap-2.5 rounded-2xl border border-primary-200 bg-white px-6 py-4 text-lg font-semibold text-primary-700 shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-elevated"
             >
               <Mail className="h-5 w-5" aria-hidden />
               {CONTACT_EMAIL}
@@ -74,7 +74,7 @@ export default function ContactPage() {
                 key={topic.title}
                 className="rounded-2xl border border-gray-200 bg-white p-7"
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-md shadow-primary-200/60">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-azure-50 text-azure-700 ring-1 ring-inset ring-azure-100">
                   <topic.icon className="h-5 w-5" aria-hidden />
                 </div>
                 <h2 className="mt-4 font-semibold text-gray-950">{topic.title}</h2>

@@ -122,7 +122,7 @@ function SubscriptionRequiredContent() {
   const Icon = errorInfo.icon
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-primary-50 to-white p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">

@@ -80,7 +80,7 @@ function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
       return <CheckCircle2 className="h-4 w-4 text-mint-500" />
     }
     if (type.includes('comment')) {
-      return <MessageSquare className="h-4 w-4 text-cyan-500" />
+      return <MessageSquare className="h-4 w-4 text-azure-600" />
     }
     if (type.includes('response') || type.includes('submit')) {
       return <Send className="h-4 w-4 text-lavender-500" />

@@ -143,7 +143,7 @@ function SelectPlanContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
+    <div className="min-h-screen bg-gradient-to-b from-secondary/60 to-background">
       <div className="container max-w-6xl mx-auto py-12 px-4">
         {/* Header */}
         <div className="text-center mb-12">
@@ -261,7 +261,7 @@ function CaAccessRequestContent({ userEmail }: { userEmail?: string }) {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
+    <div className="min-h-screen bg-gradient-to-b from-secondary/60 to-background">
       <div className="container max-w-2xl mx-auto py-16 px-4">
         <Card className="text-center">
           <CardHeader>

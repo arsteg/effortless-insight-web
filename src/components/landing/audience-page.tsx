@@ -31,11 +31,11 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
       <section className="relative overflow-hidden pt-28 pb-14 md:pt-36 md:pb-20">
         <div
           aria-hidden
-          className="absolute inset-x-0 top-0 h-[500px] bg-gradient-to-b from-primary-50/70 to-transparent"
+          className="absolute inset-x-0 top-0 h-[500px] bg-gradient-to-b from-secondary/80 to-transparent"
         />
         <div className="container relative mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="mb-5 inline-block rounded-full border border-primary-100 bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700">
+            <p className="mb-5 inline-block rounded-full border border-border bg-card px-3 py-1 text-sm font-medium text-primary-700">
               {content.eyebrow}
             </p>
             <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-gray-950 md:text-5xl">
@@ -46,7 +46,7 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
               {content.subheadline}
             </p>
             <div className="mt-8">
-              <Button size="lg" asChild className="px-8 py-6 text-base shadow-lg shadow-primary-200/60">
+              <Button size="lg" asChild className="px-8 py-6 text-base shadow-lg">
                 <Link href="/register">
                   Start free 14-day trial
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -87,9 +87,9 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
             {content.benefits.map((benefit) => (
               <div
                 key={benefit.title}
-                className="rounded-2xl border border-gray-200 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-xl hover:shadow-primary-100/60"
+                className="rounded-2xl border border-gray-200 p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-elevated"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-md shadow-primary-200/70">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-azure-50 text-azure-700 ring-1 ring-inset ring-azure-100">
                   <benefit.icon className="h-5 w-5" aria-hidden />
                 </div>
                 <h3 className="mt-5 text-lg font-semibold text-gray-950">{benefit.title}</h3>
@@ -99,7 +99,7 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
           </div>
 
           {content.checklist && (
-            <div className="mx-auto mt-12 max-w-5xl rounded-2xl border border-primary-100 bg-primary-50/50 p-8">
+            <div className="mx-auto mt-12 max-w-5xl rounded-2xl border border-border bg-card/50 p-8">
               <h3 className="font-semibold text-gray-950">{content.checklist.title}</h3>
               <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
                 {content.checklist.items.map((item) => (
