@@ -69,7 +69,7 @@ export default function DashboardPage() {
   const params = getDateRange(dateRange)
   const { data, isLoading, error } = useDashboard(params)
 
-  const firstName = user?.name?.split(' ')[0] || 'there'
+  const firstName = user?.name?.trim().split(/\s+/)[0] || 'there'
 
   // Calculate compliance score as percentage of closed notices
   const complianceScore = data?.notices

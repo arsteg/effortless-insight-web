@@ -17,6 +17,8 @@ export interface User {
   lastLogin?: string
   /** Self-registered Chartered Accountant account (CA-as-distributor identity). */
   isCA?: boolean
+  /** Must verify mobile with OTP on /complete-signup before using the app (Google/Microsoft sign-ups). */
+  mobileVerificationRequired?: boolean
 }
 
 export interface UserOrganization {

@@ -16,11 +16,14 @@ export type LoginFormData = z.infer<typeof loginSchema>
 
 export const registerSchema = z
   .object({
+    // Spaces between words are fine; leading spaces and space-only names are not
     name: z
       .string()
       .min(1, 'Name is required')
-      .min(2, 'Name must be at least 2 characters')
-      .max(100, 'Name must be less than 100 characters'),
+      .max(100, 'Name must be less than 100 characters')
+      .refine((val) => val.trim().length > 0, 'Name cannot be only spaces')
+      .refine((val) => !/^\s/.test(val), 'Name cannot start with a space')
+      .refine((val) => val.trim().length >= 2, 'Name must be at least 2 characters'),
     email: z
       .string()
       .min(1, 'Email is required')
@@ -60,6 +63,20 @@ export const registerSchema = z
   })
 
 export type RegisterFormData = z.infer<typeof registerSchema>
+
+// Google/Microsoft sign-ups finish here: same mobile, terms and CA rules as /register
+export const completeSignupSchema = z.object({
+  mobile: z
+    .string()
+    .min(1, 'Mobile number is required')
+    .regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit Indian mobile number'),
+  acceptTerms: z.boolean().refine((val) => val === true, {
+    message: 'You must accept the terms and conditions',
+  }),
+  isCA: z.boolean().default(false),
+})
+
+export type CompleteSignupFormData = z.infer<typeof completeSignupSchema>
 
 export const forgotPasswordSchema = z.object({
   email: z

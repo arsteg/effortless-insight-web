@@ -40,16 +40,17 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useOrganization, useUpdateOrganization, useAddGstin, useRemoveGstin, useValidateGstin } from '@/hooks/use-settings'
 import { usePermissions } from '@/hooks/use-permissions'
+import { optionalText, requiredText } from '@/lib/validations'
 
 const organizationFormSchema = z.object({
-  name: z.string().min(2, 'Organization name must be at least 2 characters'),
-  legalName: z.string().optional(),
-  displayName: z.string().optional(),
+  name: requiredText(z.string().min(1, 'Organization name is required'), 'Organization name', 2),
+  legalName: optionalText(z.string(), 'Legal name'),
+  displayName: optionalText(z.string(), 'Display name'),
   industry: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
-  phone: z.string().optional(),
+  phone: optionalText(z.string(), 'Phone'),
   website: z.string().url().optional().or(z.literal('')),
-  pan: z.string().optional(),
+  pan: optionalText(z.string(), 'PAN'),
 })
 
 type OrganizationFormValues = z.infer<typeof organizationFormSchema>

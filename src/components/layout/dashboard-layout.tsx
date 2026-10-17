@@ -51,6 +51,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     if (isInitialized) {
       if (!isAuthenticated) {
         router.push('/login')
+      } else if (user?.mobileVerificationRequired) {
+        router.push('/complete-signup')
       } else if (user && !hasOrganization) {
         router.push('/onboarding')
       }
@@ -74,8 +76,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return null
   }
 
-  // Don't render dashboard if no organization (redirect to onboarding)
-  if (!hasOrganization) {
+  // Don't render dashboard if mobile not verified (redirect to complete-signup)
+  // or no organization (redirect to onboarding)
+  if (user?.mobileVerificationRequired || !hasOrganization) {
     return null
   }
 

@@ -1,4 +1,4 @@
-import { apiClient, setTokens, clearTokens } from './client'
+import { apiClient, setTokens, clearTokens, refreshAccessToken } from './client'
 import { track } from '@/lib/analytics'
 import type {
   ApiResponse,
@@ -155,6 +155,27 @@ export const authApi = {
     )
     track('signup_mobile_verified')
     return response.data.data
+  },
+
+  // Complete signup (Google/Microsoft accounts): verify mobile while signed in
+  async requestCompleteSignupOtp(mobile: string): Promise<SignupOtpResponse> {
+    const response = await apiClient.post<ApiResponse<SignupOtpResponse>>(
+      '/auth/complete-signup/otp',
+      { mobile }
+    )
+    return response.data.data
+  },
+
+  async completeSignup(data: {
+    mobile: string
+    otp: string
+    acceptTerms: boolean
+    isCA: boolean
+  }): Promise<void> {
+    await apiClient.post('/auth/complete-signup', data)
+    // The current token still says mobile_verified=false; get one that says true
+    await refreshAccessToken()
+    track('signup_mobile_verified')
   },
 
   async verifyEmail(data: VerifyEmailRequest): Promise<void> {
