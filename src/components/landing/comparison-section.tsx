@@ -148,9 +148,9 @@ export function ComparisonSection() {
           {HIGHLIGHTS.map((item) => (
             <div
               key={item.title}
-              className="rounded-2xl border border-gray-200 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-100/50"
+              className="rounded-2xl border border-gray-200 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-lg"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 text-white shadow-md shadow-primary-200/60">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-azure-50 text-azure-700 ring-1 ring-inset ring-azure-100">
                 <item.icon className="h-5 w-5" aria-hidden />
               </div>
               <h3 className="mt-4 font-semibold text-gray-950">{item.title}</h3>

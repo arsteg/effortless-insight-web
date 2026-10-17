@@ -106,7 +106,7 @@ export default function PricingPage() {
     : undefined
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-primary-50 to-white">
+    <main className="min-h-screen bg-background">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingFaqSchema) }}
@@ -243,12 +243,12 @@ export default function PricingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-primary-600 py-12 md:py-20">
+      <section className="bg-azure-900 py-12 md:py-20">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
             Start Your Free Trial Today
           </h2>
-          <p className="text-primary-100 mb-8 text-lg">
+          <p className="text-azure-100/80 mb-8 text-lg">
             No credit card required. Get full access for 14 days.
           </p>
           <Link href="/register">

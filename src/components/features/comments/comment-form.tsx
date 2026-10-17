@@ -199,7 +199,7 @@ export function CommentForm({
           rows={3}
           className={cn(
             'w-full rounded-lg border bg-background px-3 py-2 text-sm',
-            'resize-none focus:outline-none focus:ring-2 focus:ring-ring',
+            'resize-none focus:outline-none focus:ring-2 focus:ring-ring/60',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'placeholder:text-muted-foreground'
           )}
