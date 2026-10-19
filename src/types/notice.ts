@@ -39,6 +39,9 @@ export interface Notice {
   taxAmount?: number
   penaltyAmount?: number
   interestAmount?: number
+  lateFeeAmount?: number
+  cessAmount?: number
+  otherChargesAmount?: number
   status: NoticeStatus
   priority: NoticePriority
   processingStatus?: ProcessingStatus
@@ -57,7 +60,6 @@ export interface Notice {
 
 // Notice detail
 export interface NoticeDetail extends Notice {
-  interestAmount?: number
   periodFrom?: string
   periodTo?: string
   issuingAuthority?: string
@@ -80,9 +82,49 @@ export interface NoticeAiReport {
   requiredDocuments?: RequiredDocument[]
   legalReferences?: LegalReference[]
   confidenceScores?: Record<string, number>
+  /** List of reasons explaining why this risk level was assigned */
+  riskReasons?: string[]
+  /** Detailed risk assessment breakdown with component scores */
+  riskAssessment?: RiskAssessment
+  /** List of calculation discrepancies found in the notice */
+  calculationDiscrepancies?: CalculationDiscrepancy[]
+  /** Pre-filing review checklist items */
+  prefilingChecklist?: PreFilingChecklistItem[]
   modelUsed?: string
   processingTimeMs?: number
   createdAt: string
+}
+
+/** Detailed risk assessment breakdown */
+export interface RiskAssessment {
+  score: number
+  level: RiskLevel
+  noticeCategoryScore: number
+  taxAmountScore: number
+  deadlineUrgencyScore: number
+  penaltyPotentialScore: number
+  priorHistoryScore: number
+  complexityScore: number
+  reasoning?: string[]
+}
+
+/** Represents a calculation discrepancy found in the notice */
+export interface CalculationDiscrepancy {
+  field: string
+  expected: number
+  actual: number
+  difference: number
+  message: string
+  severity: 'warning' | 'error'
+}
+
+/** Pre-filing review checklist item */
+export interface PreFilingChecklistItem {
+  category: 'limitation' | 'documents' | 'calculations' | 'deadlines' | 'procedural' | 'compliance'
+  item: string
+  status: 'pass' | 'warning' | 'fail' | 'unknown'
+  details?: string
+  priority: 1 | 2 | 3 // 1=critical, 2=important, 3=informational
 }
 
 export interface ActionItem {
@@ -260,6 +302,28 @@ export interface AutoDraftMetadata {
   inputTokens: number
   outputTokens: number
   estimatedCost: number
+}
+
+// Handover Summary
+export interface HandoverSummary {
+  background: string
+  workCompleted: string[]
+  pendingItems: string[]
+  nextSteps: string[]
+  keyDeadlines: HandoverDeadline[]
+  keyContacts: string[]
+  riskSummary?: string
+  generatedAt: string
+  processingTimeMs: number
+}
+
+export interface HandoverDeadline {
+  date: string
+  description: string
+}
+
+export interface GenerateHandoverSummaryRequest {
+  additionalContext?: string
 }
 
 // Reminders

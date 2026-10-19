@@ -78,7 +78,10 @@ export function NoticeHeader({
   const totalAmount =
     (notice.taxAmount || 0) +
     (notice.penaltyAmount || 0) +
-    (notice.interestAmount || 0)
+    (notice.interestAmount || 0) +
+    (notice.lateFeeAmount || 0) +
+    (notice.cessAmount || 0) +
+    (notice.otherChargesAmount || 0)
 
   const getDeadlineColor = () => {
     if (notice.daysRemaining === undefined) return ''
@@ -221,14 +224,32 @@ export function NoticeHeader({
           <div>
             <p className="eyebrow text-muted-foreground">Total Demand</p>
             <p className="mt-1 text-2xl font-bold nums">{formatCurrency(totalAmount)}</p>
-            {(notice.taxAmount || notice.penaltyAmount || notice.interestAmount) && (
-              <div className="mt-1 text-xs text-muted-foreground">
-                {notice.taxAmount && <span>Tax: {formatCurrency(notice.taxAmount)}</span>}
-                {notice.penaltyAmount && (
-                  <span className="ml-2">Penalty: {formatCurrency(notice.penaltyAmount)}</span>
-                )}
-                {notice.interestAmount && (
-                  <span className="ml-2">Interest: {formatCurrency(notice.interestAmount)}</span>
+            {(notice.taxAmount || notice.penaltyAmount || notice.interestAmount ||
+              notice.lateFeeAmount || notice.cessAmount || notice.otherChargesAmount) && (
+              <div className="mt-1 text-xs text-muted-foreground space-y-0.5">
+                <div className="flex flex-wrap gap-x-2">
+                  {notice.taxAmount != null && notice.taxAmount > 0 && (
+                    <span>Tax: {formatCurrency(notice.taxAmount)}</span>
+                  )}
+                  {notice.penaltyAmount != null && notice.penaltyAmount > 0 && (
+                    <span>Penalty: {formatCurrency(notice.penaltyAmount)}</span>
+                  )}
+                  {notice.interestAmount != null && notice.interestAmount > 0 && (
+                    <span>Interest: {formatCurrency(notice.interestAmount)}</span>
+                  )}
+                </div>
+                {(notice.lateFeeAmount || notice.cessAmount || notice.otherChargesAmount) && (
+                  <div className="flex flex-wrap gap-x-2">
+                    {notice.lateFeeAmount != null && notice.lateFeeAmount > 0 && (
+                      <span>Late Fee: {formatCurrency(notice.lateFeeAmount)}</span>
+                    )}
+                    {notice.cessAmount != null && notice.cessAmount > 0 && (
+                      <span>Cess: {formatCurrency(notice.cessAmount)}</span>
+                    )}
+                    {notice.otherChargesAmount != null && notice.otherChargesAmount > 0 && (
+                      <span>Other: {formatCurrency(notice.otherChargesAmount)}</span>
+                    )}
+                  </div>
                 )}
               </div>
             )}

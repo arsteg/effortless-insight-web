@@ -246,6 +246,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
               isLoading={isLoadingNotice}
               onRetry={handleRetryAnalysis}
               isRetrying={isRetrying}
+              noticeId={noticeId}
             />
           </FeatureGate>
         </TabsContent>

@@ -19,6 +19,8 @@ import type {
   Reminder,
   CreateReminderRequest,
   SimilarNotice,
+  HandoverSummary,
+  GenerateHandoverSummaryRequest,
 } from '@/types'
 
 export const noticesApi = {
@@ -331,5 +333,17 @@ export const noticesApi = {
       responseType: 'blob',
     })
     return response.data
+  },
+
+  // Generate handover summary for case transfer
+  async generateHandoverSummary(
+    noticeId: string,
+    options?: GenerateHandoverSummaryRequest
+  ): Promise<HandoverSummary> {
+    const response = await apiClient.post<ApiResponse<HandoverSummary>>(
+      `/notices/${noticeId}/generate-handover-summary`,
+      options || {}
+    )
+    return response.data.data
   },
 }

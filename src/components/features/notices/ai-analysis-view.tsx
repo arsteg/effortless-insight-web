@@ -17,10 +17,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
 import { RiskBadge } from './risk-badge'
 import { AIDisclaimer } from './ai-disclaimer'
+import { CalculationDiscrepancies } from './calculation-discrepancies'
+import { HandoverSummarySection } from './handover-summary'
+import { PrefilingChecklist } from './prefiling-checklist'
 import { FeatureGate } from '@/components/features/subscription/feature-gate'
 import { FeatureCodes } from '@/hooks/use-feature-access'
 import { cn } from '@/lib/utils'
-import type { NoticeAiReport, ProcessingStatus } from '@/types'
+import type { NoticeAiReport, ProcessingStatus, RiskAssessment } from '@/types'
 
 interface AIAnalysisViewProps {
   report?: NoticeAiReport
@@ -29,6 +32,8 @@ interface AIAnalysisViewProps {
   isLoading?: boolean
   onRetry?: () => void
   isRetrying?: boolean
+  /** Notice ID for features that need it (e.g., handover summary) */
+  noticeId?: string
 }
 
 export function AIAnalysisView({
@@ -38,6 +43,7 @@ export function AIAnalysisView({
   isLoading = false,
   onRetry,
   isRetrying = false,
+  noticeId,
 }: AIAnalysisViewProps) {
   if (isLoading) {
     return <AIAnalysisSkeleton />
@@ -122,6 +128,11 @@ export function AIAnalysisView({
       {/* AI disclaimer — always shown above analysis output */}
       <AIDisclaimer />
 
+      {/* Calculation Discrepancies Alert */}
+      {report.calculationDiscrepancies && report.calculationDiscrepancies.length > 0 && (
+        <CalculationDiscrepancies discrepancies={report.calculationDiscrepancies} />
+      )}
+
       {/* Risk Assessment */}
       <Card>
         <CardHeader>
@@ -130,7 +141,7 @@ export function AIAnalysisView({
             Risk Assessment
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <RiskBadge score={report.riskScore} level={report.riskLevel} />
             {report.confidenceScores?.risk && (
@@ -139,6 +150,56 @@ export function AIAnalysisView({
               </span>
             )}
           </div>
+
+          {/* Risk Reasons */}
+          {report.riskReasons && report.riskReasons.length > 0 && (
+            <div className="pt-3 border-t">
+              <p className="text-sm font-medium text-muted-foreground mb-2">Why this risk level?</p>
+              <ul className="space-y-2">
+                {report.riskReasons.map((reason, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm">
+                    <span
+                      className={cn(
+                        'mt-1.5 h-1.5 w-1.5 rounded-full shrink-0',
+                        reason.toLowerCase().includes('critical') || reason.toLowerCase().includes('urgent')
+                          ? 'bg-coral-500'
+                          : reason.toLowerCase().includes('high')
+                            ? 'bg-amber-500'
+                            : 'bg-azure-500'
+                      )}
+                    />
+                    <span className="text-muted-foreground">{reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Fallback to risk assessment reasoning */}
+          {(!report.riskReasons || report.riskReasons.length === 0) &&
+            report.riskAssessment?.reasoning &&
+            report.riskAssessment.reasoning.length > 0 && (
+              <div className="pt-3 border-t">
+                <p className="text-sm font-medium text-muted-foreground mb-2">Why this risk level?</p>
+                <ul className="space-y-2">
+                  {report.riskAssessment.reasoning.map((reason, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <span
+                        className={cn(
+                          'mt-1.5 h-1.5 w-1.5 rounded-full shrink-0',
+                          reason.toLowerCase().includes('critical') || reason.toLowerCase().includes('urgent')
+                            ? 'bg-coral-500'
+                            : reason.toLowerCase().includes('high')
+                              ? 'bg-amber-500'
+                              : 'bg-azure-500'
+                        )}
+                      />
+                      <span className="text-muted-foreground">{reason}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
         </CardContent>
       </Card>
 
@@ -278,6 +339,11 @@ export function AIAnalysisView({
         </Card>
       )}
 
+      {/* Pre-filing Review Checklist */}
+      {report.prefilingChecklist && report.prefilingChecklist.length > 0 && (
+        <PrefilingChecklist items={report.prefilingChecklist} />
+      )}
+
       {/* Legal References */}
       {report.legalReferences && report.legalReferences.length > 0 && (
         <Card>
@@ -298,6 +364,11 @@ export function AIAnalysisView({
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Handover Summary */}
+      {noticeId && (
+        <HandoverSummarySection noticeId={noticeId} />
       )}
 
       {/* Model Info */}
