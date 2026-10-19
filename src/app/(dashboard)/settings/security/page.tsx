@@ -64,15 +64,21 @@ const passwordFormSchema = z
     newPassword: z
       .string()
       .min(8, 'Password must be at least 8 characters')
+      .max(128, 'Password cannot exceed 128 characters')
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
         'Password must contain uppercase, lowercase, and number'
-      ),
+      )
+      .regex(/[^a-zA-Z0-9]/, 'Password must contain at least one special character'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
+  })
+  .refine((data) => data.newPassword !== data.currentPassword, {
+    message: 'New password must be different from current password',
+    path: ['newPassword'],
   })
 
 type PasswordFormValues = z.infer<typeof passwordFormSchema>

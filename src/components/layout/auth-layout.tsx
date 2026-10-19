@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 
 import { useAuthStore } from '@/stores'
@@ -15,7 +15,12 @@ interface AuthLayoutProps {
 export function AuthLayout({ children }: AuthLayoutProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, isAuthenticated, isInitialized, initialize } = useAuthStore()
+  const { user, isAuthenticated, isInitialized, initialize, logout } = useAuthStore()
+  const isLoggingOutRef = useRef(false)
+
+  // Sign in / Sign up mean "start fresh": drop a half-finished Google/Microsoft
+  // signup instead of forcing the user back onto /complete-signup
+  const isEntryPage = pathname === '/login' || pathname === '/register'
 
   // Initialize auth on mount
   useEffect(() => {
@@ -31,7 +36,14 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
       // Mobile OTP comes before everything else (onboarding, invitations, dashboard)
       if (user.mobileVerificationRequired) {
-        if (pathname !== '/complete-signup') {
+        if (isEntryPage) {
+          if (!isLoggingOutRef.current) {
+            isLoggingOutRef.current = true
+            logout().finally(() => {
+              isLoggingOutRef.current = false
+            })
+          }
+        } else if (pathname !== '/complete-signup') {
           router.push('/complete-signup')
         }
         return
@@ -83,13 +95,14 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         }
       }
     }
-  }, [isInitialized, isAuthenticated, user, pathname, router])
+  }, [isInitialized, isAuthenticated, user, pathname, router, isEntryPage, logout])
 
   // Don't render auth pages (except onboarding and invitations) if authenticated with organization
   if (isInitialized && isAuthenticated && user) {
     const hasOrganization = user.organization || (user.organizations && user.organizations.length > 0)
     if (user.mobileVerificationRequired) {
       // Only the complete-signup page renders until the mobile is verified
+      // (login/register render once the pending session is cleared above)
       if (pathname !== '/complete-signup') {
         return null
       }

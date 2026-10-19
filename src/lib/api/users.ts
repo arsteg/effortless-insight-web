@@ -3,7 +3,6 @@ import type { ApiResponse, User } from '@/types'
 
 export interface UpdateProfileRequest {
   name?: string
-  mobile?: string
 }
 
 export interface UpdateAvatarResponse {

@@ -249,8 +249,8 @@ export default function TasksPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h4 className="font-medium truncate">{task.title}</h4>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium break-words">{task.title}</h4>
                           <Link
                             href={`/notices/${task.notice.id}`}
                             className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
