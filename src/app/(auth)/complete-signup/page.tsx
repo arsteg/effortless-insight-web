@@ -173,7 +173,7 @@ export default function CompleteSignupPage() {
 
   return (
     <Card>
-      <CardHeader className="space-y-1">
+      <CardHeader className="space-y-4">
         <CardTitle className="text-2xl font-bold">Complete your signup</CardTitle>
         <CardDescription>
           Verify your mobile number to start using EffortlessInsight

@@ -32,11 +32,6 @@ const profileFormSchema = z.object({
     .refine((val) => val.trim().length > 0, 'Name cannot be only spaces')
     .refine((val) => !/^\s/.test(val), 'Name cannot start with a space')
     .refine((val) => val.trim().length >= 2, 'Name must be at least 2 characters'),
-  mobile: z
-    .string()
-    .optional()
-    .refine((val) => !val || val.trim().length > 0, 'Mobile number cannot be only spaces')
-    .refine((val) => !val || !/^\s/.test(val), 'Mobile number cannot start with a space'),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
@@ -62,12 +57,10 @@ export default function ProfileSettingsPage() {
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       name: '',
-      mobile: '',
     },
     values: user
       ? {
           name: user.name,
-          mobile: user.mobile || '',
         }
       : undefined,
   })
@@ -221,22 +214,13 @@ export default function ProfileSettingsPage() {
                 </FormDescription>
               </div>
 
-              <FormField
-                control={form.control}
-                name="mobile"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mobile Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="+91 98765 43210" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Used for SMS notifications and two-factor authentication.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <FormLabel>Mobile Number</FormLabel>
+                <Input value={user?.mobile || ''} disabled />
+                <FormDescription>
+                  Mobile cannot be changed. Contact support if needed.
+                </FormDescription>
+              </div>
 
               <Button type="submit" disabled={updateProfileMutation.isPending}>
                 {updateProfileMutation.isPending ? (

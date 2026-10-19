@@ -48,17 +48,6 @@ function SelectPlanContent() {
     }
   }, [isCA, caAccessStatus?.hasActiveAccess, router])
 
-  // Debug logging to help diagnose CA access issues
-  useEffect(() => {
-    console.log('[SelectPlan] State:', {
-      isAuthInitialized,
-      userId: user?.id,
-      isCA,
-      isLoadingCaAccess,
-      caAccessStatus,
-    })
-  }, [isAuthInitialized, user?.id, isCA, isLoadingCaAccess, caAccessStatus])
-
   // Wait for auth to be initialized before making any decisions
   // This prevents race conditions where user.isCA is incorrectly false
   // during Zustand persist hydration

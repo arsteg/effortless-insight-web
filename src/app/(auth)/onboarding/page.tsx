@@ -98,8 +98,6 @@ function OnboardingForm() {
 
   const startTrialMutation = useStartTrial()
   const isCA = !!user?.isCA
-  console.log('user:', user)
-  console.log('isCA:', isCA)
 
   // `user` (and therefore isCA) may not be hydrated from the auth store yet on
   // first render, so the resolver is wrapped to always read the latest value

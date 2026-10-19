@@ -12,6 +12,7 @@ import type {
   OrganizationSettings,
   SessionListResponse,
   ChangePasswordRequest,
+  ApiError,
 } from '@/types'
 import type { UpdateProfileRequest } from '@/lib/api/users'
 
@@ -220,10 +221,12 @@ export function useChangePassword() {
         variant: 'success',
       })
     },
-    onError: (error: Error) => {
+    onError: (error: ApiError) => {
+      // ASP.NET validation puts the real reasons in `errors`; show the first one
+      const firstFieldError = error.errors ? Object.values(error.errors).flat()[0] : undefined
       toast({
         title: 'Failed to change password',
-        description: error.message || 'Please check your current password and try again.',
+        description: firstFieldError || error.message || 'Please check your current password and try again.',
         variant: 'destructive',
       })
     },

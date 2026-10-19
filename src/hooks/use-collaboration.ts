@@ -101,6 +101,7 @@ export function useCreateTask(noticeId: string) {
 
 export function useUpdateTask(noticeId: string) {
   const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   return useMutation({
     mutationFn: ({ taskId, data }: { taskId: string; data: UpdateTaskRequest }) =>
@@ -110,6 +111,13 @@ export function useUpdateTask(noticeId: string) {
       queryClient.invalidateQueries({ queryKey: ['task', taskId] })
       queryClient.invalidateQueries({ queryKey: ['myTasks'] })
       queryClient.invalidateQueries({ queryKey: ['activity', noticeId] })
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: 'Error',
+        description: getValidationErrorMessage(error, 'Failed to update task'),
+        variant: 'destructive',
+      })
     },
   })
 }

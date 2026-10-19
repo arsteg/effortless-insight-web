@@ -58,7 +58,7 @@ interface NoticeTableProps {
   filters?: NoticeFilters
 }
 
-type SortableColumn = 'noticeNumber' | 'noticeType' | 'responseDeadline' | 'extendedDeadline' | 'taxAmount' | 'status' | 'priority' | 'createdAt'
+type SortableColumn = 'noticeNumber' | 'noticeType' | 'responseDeadline' | 'extendedDeadline' | 'totalDemand' | 'status' | 'priority' | 'createdAt'
 
 export function NoticeTable({
   notices,
@@ -185,10 +185,10 @@ export function NoticeTable({
                 variant="ghost"
                 size="sm"
                 className="-ml-3 h-8"
-                onClick={() => handleSort('taxAmount')}
+                onClick={() => handleSort('totalDemand')}
               >
                 Amount
-                {getSortIcon('taxAmount')}
+                {getSortIcon('totalDemand')}
               </Button>
             </TableHead>
             <TableHead>
@@ -276,19 +276,7 @@ export function NoticeTable({
                 />
               </TableCell>
               <TableCell>
-                <div className="font-medium nums">
-                  {formatCurrency(notice.taxAmount)}
-                </div>
-                {notice.penaltyAmount !== undefined && notice.penaltyAmount > 0 && (
-                  <div className="text-xs text-muted-foreground">
-                    +{formatCurrency(notice.penaltyAmount)} penalty
-                  </div>
-                )}
-                {notice.interestAmount !== undefined && notice.interestAmount > 0 && (
-                  <div className="text-xs text-muted-foreground">
-                    +{formatCurrency(notice.interestAmount)} interest
-                  </div>
-                )}
+                <NoticeAmount notice={notice} />
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-1">
@@ -402,6 +390,31 @@ function DeadlineCell({ deadline, daysRemaining }: DeadlineCellProps) {
         </div>
       )}
     </div>
+  )
+}
+
+// Total Demand (tax + penalty + interest), matching the Notice Details header
+function NoticeAmount({ notice }: { notice: Notice }) {
+  const { taxAmount, penaltyAmount, interestAmount } = notice
+  if (taxAmount == null && penaltyAmount == null && interestAmount == null) {
+    return <div className="font-medium nums">—</div>
+  }
+
+  const total = (taxAmount || 0) + (penaltyAmount || 0) + (interestAmount || 0)
+  const parts = [
+    taxAmount ? `Tax ${formatCurrency(taxAmount)}` : null,
+    penaltyAmount ? `Penalty ${formatCurrency(penaltyAmount)}` : null,
+    interestAmount ? `Interest ${formatCurrency(interestAmount)}` : null,
+  ].filter(Boolean)
+
+  return (
+    <>
+      <div className="font-medium nums">{formatCurrency(total)}</div>
+      {/* Breakdown only adds information when there is penalty or interest */}
+      {penaltyAmount || interestAmount ? (
+        <div className="text-xs text-muted-foreground nums">{parts.join(' · ')}</div>
+      ) : null}
+    </>
   )
 }
 
