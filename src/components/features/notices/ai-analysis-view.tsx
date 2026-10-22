@@ -366,10 +366,11 @@ export function AIAnalysisView({
         </Card>
       )}
 
-      {/* Handover Summary */}
+      {/* Handover Summary - HIDDEN FOR NOW
       {noticeId && (
         <HandoverSummarySection noticeId={noticeId} />
       )}
+      */}
 
       {/* Model Info */}
       {(report.modelUsed || report.processingTimeMs) && (

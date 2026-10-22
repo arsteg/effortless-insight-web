@@ -23,7 +23,7 @@ import {
   AIAnalysisView,
   DocumentsManager,
   ActivityTimeline,
-  ResponseEditor,
+  ResponseEditorWrapper,
   EditNoticeDialog,
   ArchiveNoticeDialog,
   UnarchiveNoticeDialog,
@@ -281,7 +281,7 @@ export default function NoticeDetailPage({ params }: NoticeDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="response" className="mt-6">
-          <ResponseEditor noticeId={noticeId} />
+          <ResponseEditorWrapper noticeId={noticeId} />
         </TabsContent>
 
         <TabsContent value="documents" className="mt-6">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useNoticeResponse } from '@/hooks/use-notice-response'
 import {
   Loader2,
   Save,
@@ -69,7 +70,7 @@ import {
   useDeleteAttachment,
   useDownloadAttachment,
 } from '@/hooks/use-attachments'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { formatFileSize } from '@/lib/utils'
 import type { NoticeResponse, Attachment } from '@/types'
 
@@ -116,10 +117,7 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
   )
 
   // Fetch latest response
-  const { data: response, isLoading } = useQuery({
-    queryKey: ['notices', noticeId, 'response'],
-    queryFn: () => noticesApi.getLatestResponse(noticeId).catch(() => null),
-  })
+  const { data: response, isLoading, isError, refetch } = useNoticeResponse(noticeId)
 
   // Initialize content from response
   useEffect(() => {
@@ -131,7 +129,8 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
 
   // Save draft mutation
   const saveDraftMutation = useMutation({
-    mutationFn: (draftContent: string) => noticesApi.saveDraft(noticeId, draftContent),
+    mutationFn: (draftContent: string) => noticesApi.saveDraft(noticeId, draftContent,
+      draftContent === response?.draftContent ? response.allegationDraft : undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notices', noticeId, 'response'] })
       toast({
@@ -284,6 +283,8 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
   })
 
   const handleSaveDraft = () => {
+    if (response?.allegationDraft && content !== response.draftContent &&
+        !window.confirm('Saving edited text in Simple Draft will replace the structured allegation reply. To keep separate allegation cards, edit and save in Allegation-wise instead. Continue?')) return
     saveDraftMutation.mutate(content)
   }
 
@@ -389,6 +390,8 @@ export function ResponseEditor({ noticeId }: ResponseEditorProps) {
     if (fileType?.includes('image')) return <File className="h-4 w-4 text-blue-500" />
     return <File className="h-4 w-4 text-gray-500" />
   }
+
+  if (isError) return <div role="alert">Could not load your saved reply. <Button onClick={() => refetch()}>Retry</Button></div>
 
   if (isLoading) {
     return (

@@ -272,6 +272,7 @@ export interface DownloadUrlResponse {
 
 // Responses (notice response drafts)
 export interface NoticeResponse {
+  allegationDraft?: import('./allegation').AllegationWiseDraftResponse
   id: string
   noticeId: string
   draftContent?: string

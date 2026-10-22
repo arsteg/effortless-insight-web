@@ -22,6 +22,13 @@ import type {
   HandoverSummary,
   GenerateHandoverSummaryRequest,
 } from '@/types'
+import type {
+  AllegationWiseDraftRequest,
+  AllegationWiseDraftResponse,
+  Allegation,
+  AllegationResponse,
+  RegenerateAllegationRequest,
+} from '@/types/allegation'
 
 export const noticesApi = {
   // Notice CRUD
@@ -224,10 +231,10 @@ export const noticesApi = {
     return response.data.data
   },
 
-  async saveDraft(noticeId: string, draftContent: string): Promise<NoticeResponse> {
+  async saveDraft(noticeId: string, draftContent: string, allegationDraft?: AllegationWiseDraftResponse): Promise<NoticeResponse> {
     const response = await apiClient.post<ApiResponse<NoticeResponse>>(
       `/notices/${noticeId}/responses/draft`,
-      { draftContent }
+      { draftContent, allegationDraft }
     )
     return response.data.data
   },
@@ -283,6 +290,31 @@ export const noticesApi = {
     const response = await apiClient.post<ApiResponse<AutoDraftResponse>>(
       `/notices/${noticeId}/responses/auto-draft`,
       options || {}
+    )
+    return response.data.data
+  },
+
+  // Allegation-wise (point-wise) draft using AI
+  async generateAllegationWiseDraft(
+    noticeId: string,
+    options?: AllegationWiseDraftRequest
+  ): Promise<AllegationWiseDraftResponse> {
+    const response = await apiClient.post<ApiResponse<AllegationWiseDraftResponse>>(
+      `/notices/${noticeId}/responses/allegation-wise-draft`,
+      options || {},
+      { timeout: 300000 } // 5 minutes for large notices with many allegations
+    )
+    return response.data.data
+  },
+
+  // Regenerate response for a single allegation
+  async regenerateAllegationResponse(
+    noticeId: string,
+    request: RegenerateAllegationRequest
+  ): Promise<AllegationResponse> {
+    const response = await apiClient.post<ApiResponse<AllegationResponse>>(
+      `/notices/${noticeId}/responses/regenerate-allegation`,
+      request
     )
     return response.data.data
   },
