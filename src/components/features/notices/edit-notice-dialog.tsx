@@ -182,7 +182,7 @@ export function EditNoticeDialog({
       updateData.noticeType = data.noticeType;
     if (data.noticeCategory !== notice.noticeCategory)
       updateData.noticeCategory = data.noticeCategory;
-    if (data.gstin !== notice.gstin) updateData.gstin = data.gstin;
+    // GSTIN is read-only here; it is never sent in the update
     if (data.issueDate !== (notice.issueDate?.split("T")[0] || "")) {
       if (data.issueDate) {
         updateData.issueDate = data.issueDate;
@@ -256,7 +256,7 @@ export function EditNoticeDialog({
                   <FormItem>
                     <FormLabel>GSTIN</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., 29AABCU9603R1ZM" {...field} />
+                      <Input placeholder="e.g., 29AABCU9603R1ZM" {...field} disabled />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -1,9 +1,20 @@
 'use client'
 
 import { MemberList, InviteMemberDialog, InvitationList } from '@/components/features/team'
+import { FeatureGate } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import { useOrganizationStore } from '@/stores/organization-store'
 
+// Team is a paid feature: opening /team directly on a plan without it shows the upgrade prompt
 export default function TeamPage() {
+  return (
+    <FeatureGate feature={FeatureCodes.Collaboration} featureDisplayName="Team" showLoadingState>
+      <TeamContent />
+    </FeatureGate>
+  )
+}
+
+function TeamContent() {
   const { currentOrganization } = useOrganizationStore()
   const currentUserRole = currentOrganization?.role || 'viewer'
 

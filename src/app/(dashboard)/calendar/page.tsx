@@ -71,14 +71,14 @@ const FILTER_STORAGE_KEY = 'calendar-type-filters'
 const priorityColors = {
   critical: 'bg-coral-500 text-white',
   high: 'bg-amber-500 text-white',
-  medium: 'bg-amber-500 text-black',
+  medium: 'bg-azure-500 text-white',
   low: 'bg-mint-500 text-white',
 }
 
 const priorityBorderColors = {
   critical: 'border-l-coral-500',
   high: 'border-l-amber-500',
-  medium: 'border-l-amber-500',
+  medium: 'border-l-azure-500',
   low: 'border-l-mint-500',
 }
 

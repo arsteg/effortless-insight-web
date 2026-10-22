@@ -67,7 +67,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 const PRIORITY_COLORS: Record<string, string> = {
   critical: 'bg-coral-100 text-coral-800 border-coral-200',
   high: 'bg-amber-100 text-amber-800 border-amber-200',
-  medium: 'bg-amber-100 text-amber-800 border-amber-200',
+  medium: 'bg-azure-100 text-azure-800 border-azure-200',
   low: 'bg-gray-100 text-gray-800 border-gray-200',
 }
 
