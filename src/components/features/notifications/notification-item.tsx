@@ -51,7 +51,7 @@ function getPriorityColor(priority: string) {
     case 'high':
       return 'bg-amber-100 text-amber-800 border-amber-200'
     case 'medium':
-      return 'bg-amber-100 text-amber-800 border-amber-200'
+      return 'bg-azure-100 text-azure-800 border-azure-200'
     case 'low':
       return 'bg-gray-100 text-gray-800 border-gray-200'
     default:
@@ -67,7 +67,7 @@ function getIconBackground(priority: string) {
     case 'high':
       return 'bg-amber-500'
     case 'medium':
-      return 'bg-amber-500'
+      return 'bg-azure-500'
     case 'low':
       return 'bg-gray-400'
     default:

@@ -12,6 +12,7 @@ export interface NoticeMetrics {
   totalDemandAmount: number
   byType: Record<string, number>
   byPriority: Record<string, number>
+  byStatus: Record<string, number>
 }
 
 export interface TaskMetrics {

@@ -52,6 +52,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useToast } from '@/hooks/use-toast'
 import { useMembers } from '@/hooks/use-team'
+import { FeatureGate } from '@/components/features/subscription/feature-gate'
+import { FeatureCodes } from '@/hooks/use-feature-access'
 import {
   useTeams,
   useCreateTeam,
@@ -78,7 +80,16 @@ function getInitials(name: string): string {
     .slice(0, 2)
 }
 
+// Teams is part of the paid Team feature: opening it directly on a plan without it shows the upgrade prompt
 export default function TeamsSettingsPage() {
+  return (
+    <FeatureGate feature={FeatureCodes.Collaboration} featureDisplayName="Teams" showLoadingState>
+      <TeamsSettingsContent />
+    </FeatureGate>
+  )
+}
+
+function TeamsSettingsContent() {
   const { toast } = useToast()
   const { isAdmin } = usePermissions()
   const [showForm, setShowForm] = useState(false)

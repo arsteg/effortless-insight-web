@@ -78,15 +78,8 @@ export default function DashboardPage() {
       : 100
     : undefined
 
-  // Build status chart data from individual counts
-  const noticesByStatus: Record<string, number> | undefined = data?.notices
-    ? {
-        open: data.notices.open,
-        closed: data.notices.closed,
-        processing: data.notices.processing,
-        in_progress: data.notices.inProgress,
-      }
-    : undefined
+  // One count per actual status (open already includes processing/in_progress, so it can't be a slice)
+  const noticesByStatus: Record<string, number> | undefined = data?.notices?.byStatus
 
   return (
     <div className="space-y-6">

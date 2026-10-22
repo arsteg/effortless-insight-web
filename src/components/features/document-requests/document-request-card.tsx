@@ -94,7 +94,7 @@ const STATUS_CONFIG: Record<
 const PRIORITY_CONFIG: Record<TaskPriority, { label: string; className: string }> = {
   critical: { label: 'Critical', className: 'bg-coral-100 text-coral-800 border-coral-200' },
   high: { label: 'High', className: 'bg-amber-100 text-amber-800 border-amber-200' },
-  medium: { label: 'Medium', className: 'bg-amber-100 text-amber-800 border-amber-200' },
+  medium: { label: 'Medium', className: 'bg-azure-100 text-azure-800 border-azure-200' },
   low: { label: 'Low', className: 'bg-mint-100 text-mint-800 border-mint-200' },
 }
 

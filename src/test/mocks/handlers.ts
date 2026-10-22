@@ -46,6 +46,14 @@ export const mockDashboardResponse: DashboardMetrics = {
       high: 10,
       critical: 5,
     },
+    byStatus: {
+      uploaded: 10,
+      processing: 5,
+      analyzed: 10,
+      in_progress: 8,
+      responded: 5,
+      closed: 7,
+    },
   },
   tasks: {
     total: 25,
