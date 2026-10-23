@@ -33,8 +33,12 @@ const gettingStarted = [
     a: 'Every 6 hours by default, configurable from 1 to 24 hours, with manual sync anytime. If the GST portal is temporarily down, we retry automatically and resume as soon as it recovers.',
   },
   {
+    q: 'How much does it cost?',
+    a: 'There is a free Notify Only tier — automatic notice detection with email and push reminders, forever. AI explanations, drafted replies and the WhatsApp assistant start at ₹25/week (₹999/year), with team and enterprise plans above that. Verified CA practices use the platform free. Current prices are always on the pricing page.',
+  },
+  {
     q: 'What happens after the 14-day trial?',
-    a: 'You choose a paid plan, or simply drop to the Free tier (10 notices a month) — no card is taken up front, so nothing is charged automatically. Your data remains exportable either way.',
+    a: 'You choose a paid plan, or simply drop to the free Notify Only tier — notices are still detected and you still get email and push reminders; AI analysis, drafted replies and WhatsApp pause until you upgrade. No card is taken up front, so nothing is charged automatically. Your data remains exportable either way.',
   },
 ]
 
@@ -105,7 +109,8 @@ export function FaqSection() {
             </h3>
             <FaqList items={securityOps} />
             <p className="mt-6 text-sm text-gray-500">
-              Something we haven&apos;t covered? Write to{' '}
+              Something we haven&apos;t covered? Raise a ticket from the Support
+              section inside the app, or write to{' '}
               <a
                 href={`mailto:${COMPANY.email}`}
                 className="font-medium text-primary-600 underline-offset-2 hover:underline"

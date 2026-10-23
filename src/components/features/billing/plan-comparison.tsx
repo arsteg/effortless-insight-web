@@ -59,14 +59,24 @@ const FEATURE_ROWS: FeatureRow[] = [
     getValue: () => true,
   },
   {
-    name: 'Basic AI analysis',
+    name: 'Automatic notice detection & reminders',
     category: 'Core Features',
-    getValue: () => true,
+    getValue: (plan) => plan.features.includes('notice_detection'),
   },
   {
-    name: 'Full AI analysis',
+    name: 'AI explanation & risk score',
     category: 'Core Features',
-    getValue: (plan) => plan.features.includes('full_ai_analysis'),
+    getValue: (plan) => plan.features.includes('ai_explanation'),
+  },
+  {
+    name: 'AI-drafted replies',
+    category: 'Core Features',
+    getValue: (plan) => plan.features.includes('draft_reply'),
+  },
+  {
+    name: 'WhatsApp reminders & assistant',
+    category: 'Core Features',
+    getValue: (plan) => plan.features.includes('whatsapp_assistant'),
   },
   {
     name: 'Custom workflows',
@@ -83,12 +93,12 @@ const FEATURE_ROWS: FeatureRow[] = [
   {
     name: 'Role-based access',
     category: 'Collaboration',
-    getValue: (plan) => plan.features.includes('rbac') || plan.limits.users === -1,
+    getValue: (plan) => plan.features.includes('collaboration') || plan.limits.users === -1,
   },
   {
-    name: 'Audit logs',
+    name: 'Data export & reports',
     category: 'Collaboration',
-    getValue: (plan) => plan.features.includes('audit_logs'),
+    getValue: (plan) => plan.features.includes('data_export'),
   },
 
   // Integration & API

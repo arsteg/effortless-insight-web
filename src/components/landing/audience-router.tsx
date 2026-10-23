@@ -19,9 +19,9 @@ const audiences = [
     title: 'Chartered Accountants',
     body: 'Monitor every client’s notices automatically, never miss a deadline, and take on more clients without more staff.',
     wins: [
+      'Free for verified CA practices — unlimited client GSTINs',
       'Every client GSTIN monitored — you’re first to know, not last',
       'First-draft replies so you finalize in minutes and bill the same',
-      'Never lose a client to a missed notice again',
     ],
     href: '/chartered-accountants',
     cta: 'See the CA workspace',
@@ -94,7 +94,7 @@ export function AudienceRouter() {
             We automate the monitoring and the first draft. You keep the
             judgment, the filing and the client relationship — the expert work,
             and the fee, stay yours. More clients handled, fewer notices missed,
-            zero blank pages.
+            zero blank pages. And for verified CA practices, the platform is free.
           </p>
         </div>
       </div>

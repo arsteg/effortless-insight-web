@@ -199,7 +199,7 @@ function ChatMock() {
         </div>
       </div>
       <p className="mt-3 text-center text-[11px] text-gray-500">
-        Answers grounded in your actual notice — English or Hindi
+        Grounded in your actual notices — typed or spoken, English · Hindi · Hinglish
       </p>
     </BrowserFrame>
   )
@@ -433,13 +433,13 @@ const tabs = [
   {
     id: 'chat',
     icon: MessageSquareText,
-    label: 'AI Chat',
+    label: 'Ask AI',
     outcome: 'Ask anything, in plain language',
-    body: 'Every answer is grounded in your actual notice — not generic tax advice. Ask in English, Hindi, or the mix you actually speak.',
+    body: 'An assistant that knows your whole workspace — every notice, deadline and task. Type or speak, in English, Hindi, or the mix you actually speak.',
     facts: [
-      '“Is this contestable?” “What proof do I need?” “When is it really due?” — answered from your notice',
-      'Clarifies deadline rules like issue date vs receipt date',
-      'Available 24/7, right inside the notice workspace',
+      '“Is this contestable?” “What proof do I need?” “What’s due this week?” — answered from your own notices, never generic tax advice',
+      'Voice in, voice out — speak in English or Hindi and hear the answer back',
+      'Read-only by design: anything it proposes to change runs only after you confirm',
     ],
     mock: ChatMock,
   },
@@ -465,7 +465,7 @@ const tabs = [
     facts: [
       'Commands: status, notices, deadlines, tasks — instant answers, no app switch',
       'Proactive alerts for approaching deadlines and high-risk notices',
-      'Secure OTP-verified linking; available on the Professional plan and above',
+      'Secure OTP-verified linking — included with every paid plan',
     ],
     mock: WhatsAppMock,
   },
@@ -500,7 +500,7 @@ const tabs = [
     icon: Smartphone,
     label: 'Mobile',
     outcome: 'The whole platform in your pocket',
-    body: 'Review notices, chase deadlines and approve draft replies from anywhere — the factory floor included. Launching soon on iOS & Android.',
+    body: 'Review notices, chase deadlines and approve draft replies from anywhere — the factory floor included. Live on Google Play today; iOS coming soon.',
     facts: [
       'Scan paper notices with your camera — straight into AI analysis',
       'Push notifications for deadlines, assignments and high-risk alerts',

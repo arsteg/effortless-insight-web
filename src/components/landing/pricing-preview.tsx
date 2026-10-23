@@ -30,14 +30,17 @@ function getTopFeatures(plan: Plan): string[] {
     features.push(plan.limits.additionalUsersAllowed ? `${userText} (add more seats)` : userText)
   }
 
-  if (plan.features.includes('full_ai_analysis')) {
-    features.push('Full AI analysis & draft replies')
-  } else {
-    features.push('AI analysis & summaries')
+  if (plan.features.includes('ai_explanation')) {
+    features.push('AI analysis & plain-English summaries')
   }
-
-  if (plan.features.includes('whatsapp_notifications')) {
-    features.push('WhatsApp notifications & assistant')
+  if (plan.features.includes('draft_reply')) {
+    features.push('AI-drafted replies')
+  }
+  if (
+    plan.features.includes('whatsapp_assistant') ||
+    plan.features.includes('whatsapp_notifications')
+  ) {
+    features.push('WhatsApp reminders & assistant')
   }
   if (plan.features.includes('advanced_analytics')) {
     features.push('Advanced analytics')
@@ -99,6 +102,13 @@ export function PricingPreview() {
         )
       : undefined
 
+  // Cheapest weekly price in the catalog — lets copy say "from ₹X/week"
+  // without hardcoding a number the Admin app can change.
+  const weeklyPrices = (plans ?? [])
+    .map((p) => p.pricing.weekly)
+    .filter((n): n is number => typeof n === 'number' && n > 0)
+  const cheapestWeekly = weeklyPrices.length > 0 ? Math.min(...weeklyPrices) : undefined
+
   return (
     <section id="pricing" className="scroll-mt-header bg-gradient-to-b from-white to-gray-50 py-14 md:py-20">
       <div className="container mx-auto px-4">
@@ -112,9 +122,12 @@ export function PricingPreview() {
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-gray-600">
             A single late reply can mean interest, penalties and weeks of
-            follow-up. Start free, upgrade when the volume does
+            follow-up. Start free
+            {cheapestWeekly
+              ? `, upgrade from ${formatAmount(cheapestWeekly)}/week — pay weekly, monthly or yearly`
+              : ', upgrade when the volume does'}
             {averageAnnualDiscount
-              ? ` — pay yearly and save ~${averageAnnualDiscount}%.`
+              ? ` (yearly saves ~${averageAnnualDiscount}%).`
               : '.'}
           </p>
         </div>
@@ -160,6 +173,11 @@ export function PricingPreview() {
                         </>
                       )}
                     </div>
+                    {!isFree && !plan.contactSales && plan.pricing.weekly ? (
+                      <p className="mt-1 text-xs text-gray-500">
+                        or {formatAmount(plan.pricing.weekly)}/week
+                      </p>
+                    ) : null}
                     {plan.limits.additionalUsersAllowed && plan.pricing.perSeat?.monthly ? (
                       <p className="mt-1 text-xs text-gray-500">
                         +{formatAmount(plan.pricing.perSeat.monthly)}/user/month

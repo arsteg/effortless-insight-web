@@ -5,7 +5,7 @@ import { AudiencePage, type AudiencePageContent } from '@/components/landing'
 export const metadata: Metadata = {
   title: 'GST Notice Management for Chartered Accountants | EffortlessInsight',
   description:
-    "Every client's GST notices in one dashboard. Deadlines ranked, replies drafted, nothing slipping through — built for CA practices.",
+    "Every client's GST notices in one dashboard. Deadlines ranked, replies drafted, nothing slipping through — free for verified CA practices.",
   alternates: { canonical: '/chartered-accountants' },
 }
 
@@ -14,7 +14,7 @@ const content: AudiencePageContent = {
   headline: 'More clients.',
   headlineAccent: 'Same team. Zero missed deadlines.',
   subheadline:
-    'EffortlessInsight watches every client’s GST portal, ranks every deadline, and drafts the first reply — so you handle more clients with the same team and finalize with your name on every filing. The busywork is ours; the judgment, the filing and the fee stay yours.',
+    'EffortlessInsight watches every client’s GST portal, ranks every deadline, and drafts the first reply — so you handle more clients with the same team and finalize with your name on every filing. The busywork is ours; the judgment, the filing and the fee stay yours. And for verified CA practices, the platform is free.',
   painPoints: [
     {
       title: 'The juggling',
@@ -55,6 +55,7 @@ const content: AudiencePageContent = {
     title: 'Client collaboration, built in',
     items: [
       'Shared workspace per client and per notice',
+      'One-click client invites — each client gets their own workspace, you keep access',
       'Document requests clients can answer from their phone',
       'Threaded comments and @mentions with your staff',
       'Approval chains — preparer, reviewer, partner',

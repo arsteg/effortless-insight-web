@@ -13,7 +13,7 @@ const capabilities = [
   { value: 'Minutes', label: 'From notice to full analysis' },
   { value: '150+', label: 'Notice types covered' },
   { value: '11', label: 'GST categories' },
-  { value: 'EN + HI', label: 'English & Hindi' },
+  { value: 'EN + HI', label: 'English, Hindi & Hinglish' },
 ]
 
 export function Hero() {

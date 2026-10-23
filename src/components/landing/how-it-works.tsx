@@ -27,7 +27,7 @@ const steps = [
 // what actually happens between sync and report. Deliberately no per-stage
 // timings: we don't publish speed numbers we haven't measured.
 const pipeline = [
-  { stage: 'Document read', desc: 'The notice PDF or scan is read, including tables and stamps' },
+  { stage: 'Document read', desc: 'The notice PDF, scan or photo is read — tables, stamps and handwriting included' },
   { stage: 'Key details extracted', desc: 'GSTIN, amounts, dates, notice number and cited sections identified' },
   { stage: 'Notice classified', desc: 'Matched against 150+ notice types across 11 GST categories' },
   { stage: 'Legal context matched', desc: 'Relevant GST rules, circulars and precedents pulled in' },

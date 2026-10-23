@@ -38,7 +38,7 @@ const content: AudiencePageContent = {
     {
       icon: BellRing,
       title: 'Deadlines that chase you',
-      body: 'Reminders at 7, 3 and 1 day before every due date — by email, push, and WhatsApp on the Professional plan. Ask the WhatsApp assistant "deadlines" anytime.',
+      body: 'Reminders at 7, 3 and 1 day before every due date — by email, push, and WhatsApp on every paid plan. Ask the WhatsApp assistant "deadlines" anytime.',
     },
     {
       icon: ShieldCheck,

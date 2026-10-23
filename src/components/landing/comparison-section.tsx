@@ -53,7 +53,7 @@ const ROWS: { capability: string; values: Support[] }[] = [
     values: ['yes', 'limited', 'unknown', 'unknown', 'limited', 'unknown'],
   },
   {
-    capability: 'Grounded AI chat on your own notice',
+    capability: 'AI assistant grounded in your notices (text + voice)',
     values: ['yes', 'unknown', 'unknown', 'unknown', 'unknown', 'unknown'],
   },
   {

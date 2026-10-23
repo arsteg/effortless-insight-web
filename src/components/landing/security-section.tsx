@@ -10,6 +10,7 @@ import {
   Landmark,
   ArrowRight,
   Mail,
+  Bot,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -83,6 +84,11 @@ const facts = [
     title: 'Every action logged',
     body: 'A full audit trail of every sync, retrieval and access event, with timestamps — exportable for your auditors.',
   },
+  {
+    icon: Bot,
+    title: 'AI that can’t act alone',
+    body: 'The AI assistant reads your data; it never changes it. Anything it proposes to do becomes a confirmation card — nothing runs until you approve it.',
+  },
 ]
 
 const compliance = [
@@ -109,7 +115,7 @@ export function SecuritySection() {
             Your tax data. Treated like tax data.
           </h2>
           <p className="mt-4 text-lg text-gray-400">
-            How access works, and six facts worth knowing before you connect
+            How access works, and the facts worth knowing before you connect
             anything to your GSTIN.
           </p>
         </div>

@@ -48,7 +48,7 @@ export function CTASection() {
             </Button>
           </div>
           <p className="relative mt-6 text-sm text-gray-500">
-            No credit card · OTP-verified access · No password storage · Data hosted in India
+            No credit card · Paid plans from ₹25/week · No password storage · Data hosted in India
           </p>
         </div>
       </div>

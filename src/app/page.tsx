@@ -100,6 +100,14 @@ const structuredData = {
         },
         {
           '@type': 'Question',
+          name: 'How much does it cost?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'There is a free Notify Only tier — automatic notice detection with email and push reminders, forever. AI explanations, drafted replies and the WhatsApp assistant start at ₹25/week (₹999/year), with team and enterprise plans above that. Verified CA practices use the platform free.',
+          },
+        },
+        {
+          '@type': 'Question',
           name: 'Is my data encrypted, and where is it stored?',
           acceptedAnswer: {
             '@type': 'Answer',
