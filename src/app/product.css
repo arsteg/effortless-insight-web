@@ -97,23 +97,6 @@ body:has(.product-ui) [data-ui="dialog"] > button:last-child { min-width: 1.75re
 .product-skip-link { position: fixed; top: .5rem; left: 1rem; z-index: 100; padding: .75rem 1rem; border-radius: .5rem; background: hsl(var(--card)); transform: translateY(-200%); }
 .product-skip-link:focus { transform: translateY(0); }
 
-/* ---- Diary-tab navigation (top bar) ------------------------------------- */
-/* The header doubles as the bound top edge of a diary: nav tabs project down
-   from it and the active tab merges into the page surface below. A soft drop
-   shadow (no hard rule) separates the bar from the page without cutting a line
-   across the active tab (see sidebar.tsx / header.tsx). */
-.diary-topbar {
-  box-shadow: 0 8px 18px -12px rgb(16 37 56 / .18);
-}
-.dark .diary-topbar {
-  box-shadow: 0 10px 20px -12px rgb(0 0 0 / .5);
-}
-/* Slim, unobtrusive scrollbar so every tab stays reachable on narrow viewports. */
-.diary-rail-scroll { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
-.diary-rail-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
-.diary-rail-scroll::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 9999px; }
-.diary-rail-scroll::-webkit-scrollbar-track { background: transparent; }
-
 @media (max-width: 639px) {
   .product-ui .page-header { flex-direction: column; }
   .product-ui .page-header > :last-child:not(:first-child) { max-width: 100%; flex-wrap: wrap; }

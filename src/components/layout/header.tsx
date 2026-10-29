@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { NotificationCenter } from '@/components/features/notifications'
 import { ClientSelector } from '@/components/layout/client-selector'
-import { DesktopNavTabs } from './sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,7 +50,7 @@ export function Header() {
   }
 
   return (
-    <header className="diary-topbar sticky top-0 z-40 flex min-h-16 shrink-0 flex-wrap items-center gap-2 bg-card px-4 py-3 md:flex-nowrap md:gap-3 md:px-6 md:py-0">
+    <header className="sticky top-0 z-40 flex min-h-16 shrink-0 flex-wrap items-center gap-2 border-b bg-card px-4 py-3 md:gap-3 md:px-6">
       {/* Mobile menu button */}
       <Button
         id="mobile-menu-trigger"
@@ -65,7 +64,7 @@ export function Header() {
       </Button>
 
       {/* Logo */}
-      <Link href="/dashboard" className="flex shrink-0 items-center gap-2 font-semibold">
+      <Link href="/dashboard" className="flex shrink-0 items-center gap-2 font-semibold md:hidden">
         <Image
           src="/small-logo.svg"
           alt="EffortlessInsight - GST notice management"
@@ -75,10 +74,6 @@ export function Header() {
         />
         <span className="hidden md:inline-block">EffortlessInsight</span>
       </Link>
-
-      {/* Primary navigation — diary index tabs, styled distinctly from the
-          header's icon controls (desktop/tablet; mobile uses the drawer). */}
-      <DesktopNavTabs />
 
       {/* Organization Switcher - excludes role="ca" memberships, which get
           their own dropdown (ClientSelector) below so a CA's client list
@@ -132,9 +127,8 @@ export function Header() {
       {/* BO/Client Switcher - CA-only, scoped to accepted clients */}
       <ClientSelector />
 
-      {/* Spacer — only needed on mobile, where the nav tabs (which carry the
-          flex-1 on desktop) are hidden in favour of the drawer. */}
-      <div className="flex-1 md:hidden" />
+      {/* Spacer */}
+      <div className="flex-1" />
 
       {/* Notifications */}
       <NotificationCenter />
